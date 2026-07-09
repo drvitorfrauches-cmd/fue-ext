@@ -16,11 +16,48 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const os = require("os");
+const tls = require("tls");
 
-const DATA_FILE = path.join(__dirname, "data.json");
-const UPLOADS_DIR = path.join(__dirname, "uploads");
+// DATA_DIR: onde ficam data.json e a pasta uploads/. Por padrão, do lado do server.js
+// (uso local/rede local). Em nuvem (Railway, etc.), aponte pra um volume persistente
+// definindo a variável de ambiente DATA_DIR (ex: DATA_DIR=/data), senão os dados somem
+// a cada novo deploy/reinício.
+const DATA_DIR = process.env.DATA_DIR ? process.env.DATA_DIR : __dirname;
+const DATA_FILE = path.join(DATA_DIR, "data.json");
+const UPLOADS_DIR = path.join(DATA_DIR, "uploads");
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const MAX_BODY_BYTES = 15 * 1024 * 1024; // 15MB — folga generosa pra fotos comprimidas
+const RESET_TOKEN_TTL_MS = 30 * 60 * 1000; // link de redefinição de senha expira em 30 minutos
+// SECURE_COOKIES: marca o cookie de login como "Secure" (só trafega em HTTPS). Deixe
+// desligado (padrão) pra uso na rede local, que roda em HTTP puro. Ligue definindo a
+// variável de ambiente SECURE_COOKIES=true quando estiver atrás de HTTPS (nuvem).
+const SECURE_COOKIES = process.env.SECURE_COOKIES === "true";
+
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+
+// ================== CONFIGURAÇÃO DE E-MAIL (recuperação de senha) ==================
+// Duas formas de configurar, escolha uma:
+//  (a) Uso local/rede local: preencha os valores AQUI embaixo direto no arquivo.
+//  (b) Nuvem (recomendado): defina as variáveis de ambiente SMTP_ENABLED=true,
+//      SMTP_USER e SMTP_PASS no painel do serviço de hospedagem, em vez de deixar a
+//      senha escrita dentro do arquivo — mais seguro se este arquivo for pra um
+//      repositório Git. Variáveis de ambiente, se definidas, sempre têm prioridade
+//      sobre os valores escritos aqui.
+//
+// Passo a passo pra gerar uma "senha de app" do Gmail (não é a senha normal da conta):
+//   1. Ative a verificação em duas etapas em https://myaccount.google.com/security
+//   2. Acesse https://myaccount.google.com/apppasswords
+//   3. Crie uma senha de app com qualquer nome (ex: "Contagem ao Vivo")
+//   4. Copie a senha de 16 letras gerada e use como SMTP_PASS (ou cole em "pass" abaixo)
+//   5. Se for editar aqui no arquivo: troque "enabled" para true e reinicie o servidor
+const SMTP_CONFIG = {
+  enabled: process.env.SMTP_ENABLED === "true" ? true : false,
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
+  port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 465,
+  user: process.env.SMTP_USER || "seuemail@gmail.com",
+  pass: process.env.SMTP_PASS || "xxxx xxxx xxxx xxxx",
+  fromName: process.env.SMTP_FROM_NAME || "Contagem ao Vivo"
+};
 
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
@@ -107,6 +144,7 @@ var db = loadData();
 if (!db.sessions) db.sessions = {};
 if (!db.users) db.users = {};
 if (!db.authTokens) db.authTokens = {};
+if (!db.resetTokens) db.resetTokens = {};
 // Normaliza cirurgias salvas antes desta atualização (migra pro formato com quadrantes).
 Object.keys(db.sessions).forEach(function (id) {
   var s = db.sessions[id];
@@ -183,6 +221,30 @@ function parseCookies(req) {
   });
   return out;
 }
+// Descobre o endereço "de fora" pra montar links (e-mail de redefinição, etc.).
+// Se o host da requisição for um domínio público (nuvem, ex: meuapp.up.railway.app),
+// usa esse domínio direto. Se for localhost/IP privado (rede local), escaneia os
+// adaptadores de rede pra achar o IP do wifi, evitando gerar um link com "localhost"
+// que só funciona no próprio computador.
+function isUnusableHost(host) {
+  var h = (host || "").split(":")[0];
+  return h === "localhost" || h === "127.0.0.1" || h === "";
+}
+function externalBaseUrl(req) {
+  var hostHeader = req.headers.host || "";
+  if (!isUnusableHost(hostHeader)) {
+    // Já é um endereço que funciona pra outros aparelhos: IP de rede local pelo qual
+    // o próprio pedido chegou, ou um domínio público de verdade (nuvem). Usa direto.
+    var proto = req.headers["x-forwarded-proto"] || (SECURE_COOKIES ? "https" : "http");
+    return proto + "://" + hostHeader;
+  }
+  // Só cai aqui quando o pedido chegou via "localhost", que não serve pra outros aparelhos.
+  var ips = [];
+  var nets = os.networkInterfaces();
+  Object.keys(nets).forEach(function (name) { (nets[name] || []).forEach(function (net) { if (net.family === "IPv4" && !net.internal) ips.push(net.address); }); });
+  var host = ips.length ? ips[0] : "localhost";
+  return "http://" + host + ":" + PORT;
+}
 function getAuthedUser(req) {
   var cookies = parseCookies(req);
   var token = cookies["fue_auth"];
@@ -192,10 +254,82 @@ function getAuthedUser(req) {
   return db.users[entry.userId] || null;
 }
 function setAuthCookie(res, token) {
-  res.setHeader("Set-Cookie", "fue_auth=" + token + "; HttpOnly; Path=/; Max-Age=2592000; SameSite=Lax");
+  var secure = SECURE_COOKIES ? "; Secure" : "";
+  res.setHeader("Set-Cookie", "fue_auth=" + token + "; HttpOnly; Path=/; Max-Age=2592000; SameSite=Lax" + secure);
 }
 function clearAuthCookie(res) {
-  res.setHeader("Set-Cookie", "fue_auth=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax");
+  var secure = SECURE_COOKIES ? "; Secure" : "";
+  res.setHeader("Set-Cookie", "fue_auth=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax" + secure);
+}
+
+// ---------- envio de e-mail via SMTP puro (TLS implícito, porta 465) — sem nenhuma biblioteca externa ----------
+function smtpSendMail(opts) {
+  return new Promise(function (resolve, reject) {
+    if (!SMTP_CONFIG.enabled) { reject(new Error("Envio de e-mail não está configurado neste servidor (SMTP_CONFIG.enabled = false).")); return; }
+    var settled = false;
+    var buf = "";
+    var pending = null;
+    var socket = tls.connect({ host: SMTP_CONFIG.host, port: SMTP_CONFIG.port, servername: SMTP_CONFIG.host });
+    var timer = setTimeout(function () { finish(new Error("Tempo esgotado ao falar com o servidor de e-mail.")); }, 20000);
+
+    function finish(err) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      try { socket.end(); } catch (e) {}
+      if (err) reject(err); else resolve();
+    }
+    function checkBuffer() {
+      if (!pending) return;
+      var idx = buf.indexOf("\r\n");
+      while (idx !== -1) {
+        var line = buf.slice(0, idx);
+        buf = buf.slice(idx + 2);
+        if (/^\d{3} /.test(line)) {
+          var code = parseInt(line.slice(0, 3), 10);
+          var p = pending; pending = null;
+          if (code >= 200 && code < 400) p.res(line); else p.rej(new Error("Servidor de e-mail respondeu: " + line));
+          return;
+        }
+        idx = buf.indexOf("\r\n");
+      }
+    }
+    function waitReply() { return new Promise(function (res2, rej2) { pending = { res: res2, rej: rej2 }; checkBuffer(); }); }
+    function cmd(line) { socket.write(line + "\r\n"); return waitReply(); }
+
+    socket.on("data", function (chunk) { buf += chunk.toString("utf8"); checkBuffer(); });
+    socket.on("error", function (err) { finish(err); });
+    socket.on("close", function () { if (!settled) finish(new Error("Conexão com o servidor de e-mail encerrada inesperadamente.")); });
+
+    socket.once("secureConnect", function () {
+      waitReply()
+        .then(function () { return cmd("EHLO localhost"); })
+        .then(function () { return cmd("AUTH LOGIN"); })
+        .then(function () { return cmd(Buffer.from(SMTP_CONFIG.user, "utf8").toString("base64")); })
+        .then(function () { return cmd(Buffer.from(SMTP_CONFIG.pass, "utf8").toString("base64")); })
+        .then(function () { return cmd("MAIL FROM:<" + SMTP_CONFIG.user + ">"); })
+        .then(function () { return cmd("RCPT TO:<" + opts.to + ">"); })
+        .then(function () { return cmd("DATA"); })
+        .then(function () {
+          var fromHeader = SMTP_CONFIG.fromName ? (SMTP_CONFIG.fromName + " <" + SMTP_CONFIG.user + ">") : SMTP_CONFIG.user;
+          var lines = [
+            "From: " + fromHeader,
+            "To: " + opts.to,
+            "Subject: " + opts.subject,
+            "MIME-Version: 1.0",
+            "Content-Type: text/plain; charset=utf-8",
+            ""
+          ];
+          var bodyEscaped = String(opts.text).replace(/\r\n/g, "\n").split("\n").map(function (l) {
+            return l.charAt(0) === "." ? "." + l : l;
+          }).join("\r\n");
+          return cmd(lines.join("\r\n") + "\r\n" + bodyEscaped + "\r\n.");
+        })
+        .then(function () { return cmd("QUIT"); })
+        .then(function () { finish(null); })
+        .catch(function (err) { finish(err); });
+    });
+  });
 }
 
 // ---------- helpers HTTP ----------
@@ -347,6 +481,11 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        <div class=\"field\"><label>E-mail</label><input type=\"email\" id=\"login-email\" autocomplete=\"username\"></div>\n" +
 "        <div class=\"field\"><label>Senha</label><input type=\"password\" id=\"login-password\" autocomplete=\"current-password\"></div>\n" +
 "        <button class=\"btn block lg\" onclick=\"App.doLogin()\">Entrar</button>\n" +
+"        <button class=\"btn secondary\" style=\"margin-top:8px;\" onclick=\"App.toggleForgotPassword()\">Esqueci minha senha</button>\n" +
+"        <div id=\"forgot-password-panel\" style=\"display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--c-border);\">\n" +
+"          <div class=\"field\"><label>Seu e-mail cadastrado</label><input type=\"email\" id=\"forgot-email\"></div>\n" +
+"          <button class=\"btn secondary\" onclick=\"App.doForgotPassword()\">Enviar link de redefinição</button>\n" +
+"        </div>\n" +
 "      </div>\n" +
 "      <div id=\"authpanel-cadastro\" style=\"display:none;\">\n" +
 "        <div class=\"field\"><label>Nome completo</label><input type=\"text\" id=\"reg-nome\"></div>\n" +
@@ -357,6 +496,16 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        <div class=\"field\"><label>Confirmar senha</label><input type=\"password\" id=\"reg-password2\" autocomplete=\"new-password\"></div>\n" +
 "        <button class=\"btn block lg\" onclick=\"App.doRegister()\">Criar conta</button>\n" +
 "      </div>\n" +
+"    </div>\n" +
+"  </section>\n" +
+"\n" +
+"  <section id=\"screen-reset\" class=\"screen\">\n" +
+"    <div class=\"card\">\n" +
+"      <h2>Nova senha</h2>\n" +
+"      <p class=\"hint\">Escolha uma nova senha pra sua conta.</p>\n" +
+"      <div class=\"field\"><label>Nova senha</label><input type=\"password\" id=\"reset-password\" autocomplete=\"new-password\"></div>\n" +
+"      <div class=\"field\"><label>Confirmar nova senha</label><input type=\"password\" id=\"reset-password2\" autocomplete=\"new-password\"></div>\n" +
+"      <button class=\"btn block lg\" onclick=\"App.doResetPassword()\">Salvar nova senha</button>\n" +
 "    </div>\n" +
 "  </section>\n" +
 "\n" +
@@ -619,9 +768,17 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  return String(str==null?'':str).replace(/[&<>\"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;','\\'':'&#39;'}[c];});\n" +
 "}\n" +
 "function elapsedMs(timer){ return (timer.accumulatedMs||0) + (timer.running ? (Date.now()-timer.startedAt) : 0); }\n" +
-"var state = {currentId:null, session:null, pollHandle:null, connOk:true, increments:DEFAULT_INCREMENTS.slice(), activeTab:'extracao', activeQuadrant:QUADRANTS[0].id, audioEnabled:false, audioInterval:100, lastAnnounced:0, baseUrl:null, alertParcialEnabled:false, alertParcialThreshold:null, alertParcialFired:false, alertTotalEnabled:false, alertTotalThreshold:null, alertTotalFired:false, currentUser:null};\n" +
+"var state = {currentId:null, session:null, pollHandle:null, connOk:true, increments:DEFAULT_INCREMENTS.slice(), activeTab:'extracao', activeQuadrant:QUADRANTS[0].id, audioEnabled:false, audioInterval:100, lastAnnounced:0, baseUrl:null, alertParcialEnabled:false, alertParcialThreshold:null, alertParcialFired:false, alertTotalEnabled:false, alertTotalThreshold:null, alertTotalFired:false, currentUser:null, resetToken:null};\n" +
 "function shareUrlFor(id){ return (state.baseUrl||window.location.origin) + '/s/' + id; }\n" +
 "function resolveBaseUrl(){\n" +
+"  var host = window.location.hostname;\n" +
+"  var isLocalhost = (host === 'localhost' || host === '127.0.0.1');\n" +
+"  if (!isLocalhost){\n" +
+"    // Acessado por um IP de rede ou por um domínio de verdade (nuvem) — já está correto.\n" +
+"    state.baseUrl = window.location.origin;\n" +
+"    return Promise.resolve();\n" +
+"  }\n" +
+"  // Só corrige quando acessado como \"localhost\", que não funciona em outros aparelhos.\n" +
 "  return fetch('/api/network-info').then(function(r){ return r.json(); }).then(function(info){\n" +
 "    var ip = (info.ips && info.ips.length) ? info.ips[0] : null;\n" +
 "    state.baseUrl = ip ? ('http://'+ip+':'+info.port) : window.location.origin;\n" +
@@ -704,6 +861,29 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    state.currentUser = null; renderUserBar(); showScreen('auth'); App.switchAuthTab('login');\n" +
 "    toast('Você saiu.');\n" +
 "  }).catch(function(){});\n" +
+"};\n" +
+"App.toggleForgotPassword = function(){\n" +
+"  var el = document.getElementById('forgot-password-panel');\n" +
+"  el.style.display = (el.style.display==='none') ? '' : 'none';\n" +
+"};\n" +
+"App.doForgotPassword = function(){\n" +
+"  var email = document.getElementById('forgot-email').value.trim();\n" +
+"  if (!email){ toast('Digite seu e-mail.'); return; }\n" +
+"  api('/api/forgot-password','POST',{email:email}).then(function(){\n" +
+"    toast('Se esse e-mail estiver cadastrado, enviamos um link de redefinição.', 4500);\n" +
+"  }).catch(function(err){ toast('Erro: '+err.message); });\n" +
+"};\n" +
+"App.doResetPassword = function(){\n" +
+"  var password = document.getElementById('reset-password').value;\n" +
+"  var password2 = document.getElementById('reset-password2').value;\n" +
+"  if (!password){ toast('Digite a nova senha.'); return; }\n" +
+"  if (password !== password2){ toast('As senhas não coincidem.'); return; }\n" +
+"  if (password.length < 6){ toast('A senha precisa ter pelo menos 6 caracteres.'); return; }\n" +
+"  api('/api/reset-password','POST',{token:state.resetToken, password:password}).then(function(){\n" +
+"    toast('Senha alterada. Faça login com a nova senha.', 3500);\n" +
+"    history.pushState({},'','/');\n" +
+"    App.checkAuthAndShowHome();\n" +
+"  }).catch(function(err){ toast('Erro: '+err.message); });\n" +
 "};\n" +
 "App.showSettings = function(){ renderSettingsScreen(); showScreen('settings'); };\n" +
 "App.addIncrementField = function(){ state.increments.push(1); renderSettingsScreen(); };\n" +
@@ -1118,9 +1298,12 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  loadIncrementSettings();\n" +
 "  resolveBaseUrl().then(function(){ if (state.session) render(); });\n" +
 "  var m = window.location.pathname.match(/^\\/s\\/([a-f0-9]+)$/);\n" +
+"  var mReset = window.location.pathname.match(/^\\/reset\\/([a-f0-9]+)$/);\n" +
 "  if (m){\n" +
 "    // Acesso direto a uma cirurgia via link — não exige login (fluxo das auxiliares).\n" +
 "    state.currentId=m[1]; loadAudioPrefs(m[1]); showScreen('counting'); App.switchTab('extracao'); fetchAndRender().then(function(){ startPolling(); });\n" +
+"  } else if (mReset){\n" +
+"    state.resetToken = mReset[1]; showScreen('reset');\n" +
 "  } else {\n" +
 "    App.checkAuthAndShowHome();\n" +
 "  }\n" +
@@ -1197,6 +1380,49 @@ var server = http.createServer(function (req, res) {
     var meUser = getAuthedUser(req);
     if (!meUser) { send(res, 401, { error: "Não autenticado." }); return; }
     send(res, 200, { user: publicUser(meUser) });
+    return;
+  }
+
+  if (p === "/api/forgot-password" && req.method === "POST") {
+    readBody(req).then(function (body) {
+      var email = String(body.email || "").trim().toLowerCase();
+      var user = findUserByEmail(email);
+      if (!user) {
+        console.log("[recuperar senha] pedido para e-mail não cadastrado: " + email);
+        send(res, 200, { ok: true }); // resposta genérica — não revela se o e-mail existe
+        return;
+      }
+      var token = newId(24);
+      db.resetTokens[token] = { userId: user.id, createdAt: Date.now(), expiresAt: Date.now() + RESET_TOKEN_TTL_MS };
+      saveData();
+      var resetUrl = externalBaseUrl(req) + "/reset/" + token;
+      var text = "Olá, " + user.nomeCompleto + ".\n\n" +
+        "Você pediu pra redefinir sua senha no Contagem ao Vivo.\n\n" +
+        "Toque no link abaixo (ou copie e cole no navegador) pra escolher uma nova senha. " +
+        "Esse link expira em 30 minutos e só funciona uma vez:\n\n" + resetUrl + "\n\n" +
+        "Se você não pediu isso, é só ignorar este e-mail — sua senha continua a mesma.";
+      smtpSendMail({ to: user.email, subject: "Redefinir sua senha — Contagem ao Vivo", text: text })
+        .then(function () { console.log("[recuperar senha] e-mail enviado para " + user.email); })
+        .catch(function (err) { console.log("[recuperar senha] ERRO ao enviar e-mail para " + user.email + ": " + err.message); });
+      send(res, 200, { ok: true });
+    }).catch(function () { send(res, 400, { error: "Corpo inválido." }); });
+    return;
+  }
+
+  if (p === "/api/reset-password" && req.method === "POST") {
+    readBody(req).then(function (body) {
+      var token = String(body.token || "");
+      var password = String(body.password || "");
+      var entry = db.resetTokens[token];
+      if (!entry || entry.expiresAt < Date.now()) { send(res, 400, { error: "Link inválido ou expirado. Peça um novo pela tela de login." }); return; }
+      if (password.length < 6) { send(res, 400, { error: "A senha precisa ter pelo menos 6 caracteres." }); return; }
+      var user = db.users[entry.userId];
+      if (!user) { send(res, 400, { error: "Conta não encontrada." }); return; }
+      user.passwordHash = hashPassword(password);
+      delete db.resetTokens[token];
+      saveData();
+      send(res, 200, { ok: true });
+    }).catch(function () { send(res, 400, { error: "Corpo inválido." }); });
     return;
   }
 
