@@ -75,9 +75,11 @@ const CATS = [
   { id: "t4_3", label: "4 → 3 fios", hairs: 3, group: "parcial" },
   { id: "t4_2", label: "4 → 2 fios", hairs: 2, group: "parcial" },
   { id: "t4_1", label: "4 → 1 fio",  hairs: 1, group: "parcial" },
+  { id: "parcial_geral", label: "Transecção parcial", hairs: 0, group: "parcial_reduzida" },
   { id: "ttotal", label: "Transecção total (folículo perdido)", hairs: 0, group: "total" }
 ];
 const CAT_IDS = new Set(CATS.map(function (c) { return c.id; }));
+const SESSION_MODES = new Set(["completo", "reduzido"]);
 
 // Mesmos 4 quadrantes de extração do app v1. A ORDEM importa: é usada para calcular
 // o Mamba "deste quadrante" a partir de leituras acumuladas consecutivas.
@@ -107,6 +109,14 @@ const PREINC_AREAS = [
 const PREINC_IDS = new Set(PREINC_AREAS.map(function (a) { return a.id; }));
 const PHOTO_CATS = ["marcacao", "posop"];
 
+// Distribuição planejada de unidades foliculares (por número de fios) em cada área de pré-incisão.
+const DIST_FIOS = [
+  { id: "f1", label: "1 fio" },
+  { id: "f2", label: "2 fios" },
+  { id: "f3", label: "3 fios" }
+];
+const DIST_FIO_IDS = new Set(DIST_FIOS.map(function (d) { return d.id; }));
+
 function emptyCounts() {
   var c = {};
   CATS.forEach(function (cat) { c[cat.id] = 0; });
@@ -124,6 +134,15 @@ function emptyPreinc() {
   var c = {};
   PREINC_AREAS.forEach(function (a) { c[a.id] = 0; });
   return c;
+}
+function emptyPreincDist() {
+  var d = {};
+  PREINC_AREAS.forEach(function (a) {
+    var row = {};
+    DIST_FIOS.forEach(function (f) { row[f.id] = 0; });
+    d[a.id] = row;
+  });
+  return d;
 }
 function emptyTimer() {
   return { accumulatedMs: 0, running: false, startedAt: null };
@@ -149,6 +168,7 @@ if (!db.resetTokens) db.resetTokens = {};
 Object.keys(db.sessions).forEach(function (id) {
   var s = db.sessions[id];
   if (s.ownerId === undefined) s.ownerId = null;
+  if (!SESSION_MODES.has(s.mode)) s.mode = "completo";
   if (!s.quadrants) {
     s.quadrants = emptyQuadrants();
     // Cirurgia salva antes dos quadrantes existirem — os dados antigos (contagem única)
@@ -170,6 +190,14 @@ Object.keys(db.sessions).forEach(function (id) {
     });
   }
   if (!s.preincCounts) s.preincCounts = emptyPreinc();
+  if (!s.preincDist) {
+    s.preincDist = emptyPreincDist();
+  } else {
+    PREINC_AREAS.forEach(function (a) {
+      if (!s.preincDist[a.id]) s.preincDist[a.id] = {};
+      DIST_FIOS.forEach(function (f) { if (s.preincDist[a.id][f.id] === undefined) s.preincDist[a.id][f.id] = 0; });
+    });
+  }
   if (!s.photos) s.photos = { marcacao: [], posop: [] };
   if (!s.timer) s.timer = emptyTimer();
   if (!s.preincTimer) s.preincTimer = emptyTimer();
@@ -419,6 +447,22 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  .group-integro .cat-btn{background:var(--c-integro);} .group-parcial .cat-btn{background:var(--c-parcial);} .group-total .cat-btn{background:var(--c-total);}\n" +
 "  .group-integro{border-left:4px solid var(--c-integro);} .group-parcial{border-left:4px solid var(--c-parcial);} .group-total{border-left:4px solid var(--c-total);}\n" +
 "  .group-preinc{border-left:4px solid var(--c-preinc);}\n" +
+"  #group-preincisoes{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;}\n" +
+"  .preinc-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 8px;border:1px solid var(--c-border);border-left:4px solid var(--c-preinc);border-radius:8px;background:#fff;text-align:center;}\n" +
+"  .preinc-item .cat-label{font-size:12.5px;font-weight:600;line-height:1.25;}\n" +
+"  .preinc-item .cat-count{width:100%;}\n" +
+"  .dist-subrow{display:flex;gap:4px;width:100%;border-top:1px dashed var(--c-border);padding-top:6px;margin-top:2px;}\n" +
+"  .dist-sub{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;}\n" +
+"  .dist-sub-lbl{font-size:9px;font-weight:700;color:var(--c-muted);text-transform:uppercase;letter-spacing:.2px;}\n" +
+"  .dist-cell{cursor:pointer;border-radius:6px;padding:4px 2px;width:100%;font-size:13px;font-weight:700;border:1px dashed var(--c-border);background:#fafcfc;}\n" +
+"  .dist-cell:active{background:#e8f4f5;}\n" +
+"  .chart-box{background:#fff;border:1px solid var(--c-border);border-radius:8px;padding:12px 8px 4px;margin-bottom:12px;overflow-x:auto;}\n" +
+"  .chart-box svg{display:block;}\n" +
+"  .dash-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--c-border);border-radius:8px;overflow:hidden;font-size:12.5px;}\n" +
+"  .dash-table th,.dash-table td{padding:7px 6px;text-align:center;border-bottom:1px solid var(--c-border);white-space:nowrap;}\n" +
+"  .dash-table th{background:#f3f7f7;font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;color:var(--c-muted);}\n" +
+"  .dash-table td:first-child,.dash-table th:first-child{text-align:left;padding-left:10px;}\n" +
+"  .dash-table-wrap{overflow-x:auto;}\n" +
 "  .cat-count.clickable{cursor:pointer;border-style:solid;border-color:var(--c-primary);}\n" +
 "  .cat-count.clickable:active{background:#e8f4f5;}\n" +
 "  .increments-editor .inc-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}\n" +
@@ -463,6 +507,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    <div><h1><span class=\"conn-dot\" id=\"conn-dot\"></span>Contagem ao Vivo</h1><div class=\"sub\">rede local · sem nuvem</div></div>\n" +
 "    <div class=\"row\" style=\"gap:8px;align-items:center;\">\n" +
 "      <span id=\"user-bar\"></span>\n" +
+"      <button class=\"icon-btn\" id=\"dashboard-btn\" style=\"display:none;\" onclick=\"App.showDashboard()\">Dashboard</button>\n" +
 "      <button class=\"icon-btn\" onclick=\"App.showSettings()\">Config</button>\n" +
 "      <button class=\"icon-btn\" onclick=\"App.goHome()\">Início</button>\n" +
 "    </div>\n" +
@@ -514,6 +559,14 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      <h2>Suas cirurgias</h2>\n" +
 "      <p class=\"hint\">Só você vê essa lista. Depois de criar a cirurgia, compartilhe o link dela com as auxiliares — elas atualizam os dados ao vivo sem precisar de conta.</p>\n" +
 "      <div class=\"field\"><label>Código / iniciais do paciente</label><input type=\"text\" id=\"new-codigo\" placeholder=\"Ex: JS-090726\"></div>\n" +
+"      <div class=\"field\">\n" +
+"        <label>Modo de contagem</label>\n" +
+"        <div class=\"row\" style=\"gap:8px;\">\n" +
+"          <button type=\"button\" class=\"btn\" id=\"new-mode-completo\" onclick=\"App.setNewMode('completo')\">Completo</button>\n" +
+"          <button type=\"button\" class=\"btn secondary\" id=\"new-mode-reduzido\" onclick=\"App.setNewMode('reduzido')\">Reduzido</button>\n" +
+"        </div>\n" +
+"        <p class=\"hint\" style=\"margin-top:6px;\">Completo: cada transecção parcial é registrada no tipo exato (2→1, 3→2 etc). Reduzido: os fios da transecção parcial entram junto com os folículos íntegros, e só um contador único de transecção parcial é usado pra calcular a taxa — sem detalhar o tipo. Não dá pra trocar depois de criada.</p>\n" +
+"      </div>\n" +
 "      <button class=\"btn block lg\" onclick=\"App.createSession()\">+ Nova cirurgia (criar sessão)</button>\n" +
 "    </div>\n" +
 "    <div id=\"surgery-list\"></div>\n" +
@@ -534,11 +587,38 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    </div>\n" +
 "  </section>\n" +
 "\n" +
+"  <section id=\"screen-dashboard\" class=\"screen\">\n" +
+"    <div class=\"card\">\n" +
+"      <h2>Dashboard</h2>\n" +
+"      <p class=\"hint\">Estatísticas calculadas só com cirurgias <b>finalizadas</b> — cirurgias em andamento têm dados parciais e ficam de fora, pra não distorcer as médias.</p>\n" +
+"      <div id=\"dash-empty\" class=\"empty-state\" style=\"display:none;\">Você ainda não tem nenhuma cirurgia finalizada. As estatísticas aparecem aqui assim que a primeira for finalizada.</div>\n" +
+"      <div id=\"dash-content\" style=\"display:none;\">\n" +
+"        <div class=\"summary-bar static\" id=\"dash-summary\"></div>\n" +
+"        <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-primary)\"></span>Índice fios/folículo por cirurgia</h3>\n" +
+"        <p class=\"hint\" style=\"margin-top:-4px;\">Cada barra é uma cirurgia finalizada, em ordem cronológica.</p>\n" +
+"        <div id=\"dash-index-chart\" class=\"chart-box\"></div>\n" +
+"        <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-parcial)\"></span>Taxa de transecção por cirurgia</h3>\n" +
+"        <p class=\"hint\" style=\"margin-top:-4px;\">Modo completo e modo reduzido calculam a taxa de formas diferentes — por isso ficam em abas separadas, não misture os números.</p>\n" +
+"        <div class=\"row\" style=\"gap:8px;margin-bottom:10px;\">\n" +
+"          <button type=\"button\" class=\"btn\" id=\"dash-mode-completo\" onclick=\"App.switchDashboardMode('completo')\">Completo</button>\n" +
+"          <button type=\"button\" class=\"btn secondary\" id=\"dash-mode-reduzido\" onclick=\"App.switchDashboardMode('reduzido')\">Reduzido</button>\n" +
+"          <button type=\"button\" class=\"btn secondary\" id=\"dash-mode-todos\" onclick=\"App.switchDashboardMode('todos')\">Todos</button>\n" +
+"        </div>\n" +
+"        <div class=\"summary-bar static\" id=\"dash-rate-summary\"></div>\n" +
+"        <p class=\"hint\" id=\"dash-rate-todos-hint\" style=\"display:none;margin-top:6px;\">Aqui é só pra ver a evolução cronológica de todas as cirurgias juntas — cada barra usa a taxa correta da própria cirurgia. Não existe uma \"taxa média geral\" porque completo e reduzido calculam a taxa de formas diferentes. Pra ver a média, use as abas Completo ou Reduzido.</p>\n" +
+"        <div id=\"dash-rate-chart\" class=\"chart-box\"></div>\n" +
+"        <div id=\"dash-rate-empty\" class=\"hint\" style=\"display:none;\">Nenhuma cirurgia finalizada nesse modo ainda.</div>\n" +
+"        <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-preinc)\"></span>Cirurgias finalizadas</h3>\n" +
+"        <div id=\"dash-table\"></div>\n" +
+"      </div>\n" +
+"    </div>\n" +
+"  </section>\n" +
+"\n" +
 "  <section id=\"screen-counting\" class=\"screen\">\n" +
 "    <div class=\"card\">\n" +
 "      <div class=\"row\" style=\"justify-content:space-between;align-items:flex-start;\">\n" +
 "        <div><h2 id=\"cnt-codigo\">—</h2><div class=\"hint\" id=\"cnt-meta\">—</div></div>\n" +
-"        <span class=\"badge\" id=\"cnt-status\">—</span>\n" +
+"        <div style=\"display:flex;flex-direction:column;gap:6px;align-items:flex-end;\"><span class=\"badge\" id=\"cnt-status\">—</span><span class=\"badge\" id=\"cnt-mode\" style=\"background:var(--c-primary-dark);\">—</span></div>\n" +
 "      </div>\n" +
 "      <div class=\"field\" style=\"margin-top:14px;margin-bottom:0;\">\n" +
 "        <label>Endereço desta cirurgia (compartilhe com os outros celulares)</label>\n" +
@@ -634,7 +714,9 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      </div>\n" +
 "\n" +
 "      <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-integro)\"></span>Folículos íntegros</h3><div id=\"group-integro\"></div>\n" +
-"      <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-parcial)\"></span>Transecção parcial (folículo aproveitado)</h3><div id=\"group-parcial\"></div>\n" +
+"      <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-parcial)\"></span>Transecção parcial (folículo aproveitado)</h3>\n" +
+"      <p class=\"hint\" id=\"parcial-reduzido-hint\" style=\"display:none;margin-top:-4px;margin-bottom:10px;\">Modo reduzido: registre os fios desse folículo normalmente em \"Folículos íntegros\" e toque aqui só pra contar a transecção parcial (não soma de novo no total).</p>\n" +
+"      <div id=\"group-parcial\"></div>\n" +
 "      <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-total)\"></span>Transecção total (folículo perdido)</h3><div id=\"group-total\"></div>\n" +
 "    </div>\n" +
 "\n" +
@@ -651,8 +733,9 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        <div class=\"summary-item\"><div class=\"val\" id=\"preinc-total\">0</div><div class=\"lbl\">Total de pré-incisões</div></div>\n" +
 "      </div>\n" +
 "      <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-preinc)\"></span>Pré-incisões por área</h3>\n" +
-"      <p class=\"hint\" style=\"margin-top:-4px;margin-bottom:10px;\">Toque no número pra digitar o total daquela área.</p>\n" +
+"      <p class=\"hint\" style=\"margin-top:-4px;margin-bottom:10px;\">Toque no número de cima pra digitar o total da área. UF1/UF2/UF3 embaixo = quantas unidades foliculares de 1, 2 ou 3 fios vão pra essa área.</p>\n" +
 "      <div id=\"group-preincisoes\"></div>\n" +
+"      <div class=\"summary-bar static\" id=\"preinc-dist-totals\"></div>\n" +
 "    </div>\n" +
 "\n" +
 "    <div id=\"panel-fotos\" style=\"display:none;\">\n" +
@@ -694,8 +777,10 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  {id:'t4_3',label:'4 → 3 fios',hairs:3,group:'parcial'},\n" +
 "  {id:'t4_2',label:'4 → 2 fios',hairs:2,group:'parcial'},\n" +
 "  {id:'t4_1',label:'4 → 1 fio',hairs:1,group:'parcial'},\n" +
+"  {id:'parcial_geral',label:'Transecção parcial',hairs:0,group:'parcial_reduzida'},\n" +
 "  {id:'ttotal',label:'Transecção total (folículo perdido)',hairs:0,group:'total'}\n" +
 "];\n" +
+"var SESSION_MODES = ['completo','reduzido'];\n" +
 "var QUADRANTS = [\n" +
 "  {id:'temporal_dir',label:'Temporal direito'},\n" +
 "  {id:'temporal_esq',label:'Temporal esquerdo'},\n" +
@@ -710,22 +795,26 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  {id:'topete1',label:'Topete 1'},{id:'topete2',label:'Topete 2'},\n" +
 "  {id:'scalp',label:'Scalp'},{id:'coroa',label:'Coroa'}\n" +
 "];\n" +
+"var DIST_FIOS = [{id:'f1',label:'1 fio'},{id:'f2',label:'2 fios'},{id:'f3',label:'3 fios'}];\n" +
 "var DEFAULT_INCREMENTS = [10,50,100];\n" +
 "function quadrantById(id){ for (var i=0;i<QUADRANTS.length;i++){ if (QUADRANTS[i].id===id) return QUADRANTS[i]; } return null; }\n" +
-"function computeSummary(counts){\n" +
-"  var integros=0, parciais=0, totalPerdidos=0, totalFios=0;\n" +
+"function computeSummary(counts, mode){\n" +
+"  var integros=0, parciais=0, totalPerdidos=0, totalFios=0, parcialGeral=counts['parcial_geral']||0;\n" +
 "  CATS.forEach(function(c){\n" +
 "    var n = counts[c.id]||0;\n" +
 "    if (c.group==='integro'){ integros+=n; totalFios+=n*c.hairs; }\n" +
 "    else if (c.group==='parcial'){ parciais+=n; totalFios+=n*c.hairs; }\n" +
 "    else if (c.group==='total'){ totalPerdidos+=n; }\n" +
 "  });\n" +
-"  var foliculosExtraidos = integros+parciais;\n" +
-"  var foliculosManipulados = integros+parciais+totalPerdidos;\n" +
+"  var reduzido = mode==='reduzido';\n" +
+"  var parcialParaTaxa = reduzido ? parcialGeral : parciais;\n" +
+"  var foliculosExtraidos = reduzido ? integros : (integros+parciais);\n" +
+"  var foliculosManipulados = reduzido ? (integros+totalPerdidos) : (integros+parciais+totalPerdidos);\n" +
 "  var indice = foliculosExtraidos>0 ? totalFios/foliculosExtraidos : 0;\n" +
-"  var taxaParcial = foliculosManipulados>0 ? parciais/foliculosManipulados*100 : 0;\n" +
+"  var taxaParcialDenom = reduzido ? integros : foliculosManipulados;\n" +
+"  var taxaParcial = taxaParcialDenom>0 ? parcialParaTaxa/taxaParcialDenom*100 : 0;\n" +
 "  var taxaTotal = foliculosManipulados>0 ? totalPerdidos/foliculosManipulados*100 : 0;\n" +
-"  return {integros:integros,parciais:parciais,totalPerdidos:totalPerdidos,foliculosExtraidos:foliculosExtraidos,foliculosManipulados:foliculosManipulados,totalFios:totalFios,indice:indice,taxaParcial:taxaParcial,taxaTotal:taxaTotal};\n" +
+"  return {integros:integros,parciais:parciais,parcialGeral:parcialGeral,totalPerdidos:totalPerdidos,foliculosExtraidos:foliculosExtraidos,foliculosManipulados:foliculosManipulados,totalFios:totalFios,indice:indice,taxaParcial:taxaParcial,taxaTotal:taxaTotal};\n" +
 "}\n" +
 "function combinedExtractionCounts(s){\n" +
 "  var combined = {}; CATS.forEach(function(c){ combined[c.id]=0; });\n" +
@@ -768,7 +857,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  return String(str==null?'':str).replace(/[&<>\"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;','\\'':'&#39;'}[c];});\n" +
 "}\n" +
 "function elapsedMs(timer){ return (timer.accumulatedMs||0) + (timer.running ? (Date.now()-timer.startedAt) : 0); }\n" +
-"var state = {currentId:null, session:null, pollHandle:null, connOk:true, increments:DEFAULT_INCREMENTS.slice(), activeTab:'extracao', activeQuadrant:QUADRANTS[0].id, audioEnabled:false, audioInterval:100, lastAnnounced:0, baseUrl:null, alertParcialEnabled:false, alertParcialThreshold:null, alertParcialFired:false, alertTotalEnabled:false, alertTotalThreshold:null, alertTotalFired:false, currentUser:null, resetToken:null};\n" +
+"var state = {currentId:null, session:null, pollHandle:null, connOk:true, increments:DEFAULT_INCREMENTS.slice(), activeTab:'extracao', activeQuadrant:QUADRANTS[0].id, audioEnabled:false, audioInterval:100, lastAnnounced:0, baseUrl:null, alertParcialEnabled:false, alertParcialThreshold:null, alertParcialFired:false, alertTotalEnabled:false, alertTotalThreshold:null, alertTotalFired:false, currentUser:null, resetToken:null, newSessionMode:'completo'};\n" +
 "function shareUrlFor(id){ return (state.baseUrl||window.location.origin) + '/s/' + id; }\n" +
 "function resolveBaseUrl(){\n" +
 "  var host = window.location.hostname;\n" +
@@ -818,6 +907,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  } else {\n" +
 "    el.innerHTML = '';\n" +
 "  }\n" +
+"  document.getElementById('dashboard-btn').style.display = state.currentUser ? 'inline-block' : 'none';\n" +
 "}\n" +
 "App.checkAuthAndShowHome = function(){\n" +
 "  api('/api/me').then(function(r){\n" +
@@ -886,6 +976,138 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  }).catch(function(err){ toast('Erro: '+err.message); });\n" +
 "};\n" +
 "App.showSettings = function(){ renderSettingsScreen(); showScreen('settings'); };\n" +
+"App.showDashboard = function(){\n" +
+"  if (!state.currentUser){ toast('Faça login pra ver o dashboard.'); return; }\n" +
+"  showScreen('dashboard');\n" +
+"  api('/api/sessions').then(function(list){\n" +
+"    state.dashboardSessions = list.filter(function(s){ return s.status==='finalizada'; });\n" +
+"    state.dashboardMode = state.dashboardMode || 'completo';\n" +
+"    renderDashboardScreen();\n" +
+"  }).catch(function(){ toast('Não consegui falar com o servidor.'); });\n" +
+"};\n" +
+"App.switchDashboardMode = function(mode){ state.dashboardMode = mode; renderDashboardScreen(); };\n" +
+"function computeDashboardData(sessions){\n" +
+"  var sorted = sessions.slice().sort(function(a,b){ return a.createdAt-b.createdAt; });\n" +
+"  var rows = sorted.map(function(s){\n" +
+"    var combined = combinedExtractionCounts(s);\n" +
+"    var sum = computeSummary(combined, s.mode||'completo');\n" +
+"    return {\n" +
+"      id: s.id, codigo: s.codigo, mode: s.mode||'completo', createdAt: s.createdAt,\n" +
+"      extraidos: sum.foliculosExtraidos, totalFios: sum.totalFios, indice: sum.indice,\n" +
+"      taxaParcial: sum.taxaParcial, taxaTotal: sum.taxaTotal,\n" +
+"      preincTotalVal: preincTotal(s.preincCounts)\n" +
+"    };\n" +
+"  });\n" +
+"  var withData = rows.filter(function(r){ return r.extraidos>0; });\n" +
+"  var mean = function(arr, key){ if (!arr.length) return 0; var sum=0; arr.forEach(function(r){ sum+=r[key]; }); return sum/arr.length; };\n" +
+"  var sumOf = function(arr, key){ var t=0; arr.forEach(function(r){ t+=r[key]; }); return t; };\n" +
+"  var byMode = { completo: withData.filter(function(r){ return r.mode==='completo'; }), reduzido: withData.filter(function(r){ return r.mode==='reduzido'; }) };\n" +
+"  var preincTotals = rows.map(function(r){ return r.preincTotalVal; });\n" +
+"  var preincSum = preincTotals.reduce(function(a,b){ return a+b; }, 0);\n" +
+"  return {\n" +
+"    rows: rows,\n" +
+"    withData: withData,\n" +
+"    totalCirurgias: rows.length,\n" +
+"    indiceMedio: mean(withData, 'indice'),\n" +
+"    preincMedia: rows.length ? preincSum/rows.length : 0,\n" +
+"    preincTotal: preincSum,\n" +
+"    foliculosExtraidosGeral: sumOf(rows, 'extraidos'),\n" +
+"    fiosGeral: sumOf(rows, 'totalFios'),\n" +
+"    byMode: byMode,\n" +
+"    taxaParcialMedia: { completo: mean(byMode.completo,'taxaParcial'), reduzido: mean(byMode.reduzido,'taxaParcial') },\n" +
+"    taxaTotalMedia: { completo: mean(byMode.completo,'taxaTotal'), reduzido: mean(byMode.reduzido,'taxaTotal') }\n" +
+"  };\n" +
+"}\n" +
+"function fmtBig(n){ return n.toLocaleString('pt-BR'); }\n" +
+"function shortDate(ts){ var d=new Date(ts); return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0'); }\n" +
+"function buildBarChartSvg(items, color, valueFmt){\n" +
+"  if (!items.length) return '<p class=\"hint\">Sem dados suficientes ainda.</p>';\n" +
+"  var h=170, barW=26, gap=14, padTop=20, padBottom=32, plotH=h-padTop-padBottom;\n" +
+"  var w = Math.max(220, items.length*(barW+gap)+gap);\n" +
+"  var maxVal = 0; items.forEach(function(it){ if (it.value>maxVal) maxVal=it.value; });\n" +
+"  if (maxVal<=0) maxVal=1;\n" +
+"  var bars = items.map(function(it,i){\n" +
+"    var barH = Math.max(2,(it.value/maxVal)*plotH);\n" +
+"    var x = gap+i*(barW+gap);\n" +
+"    var y = padTop+(plotH-barH);\n" +
+"    var lbl = escapeHtml(it.label);\n" +
+"    var val = valueFmt ? valueFmt(it.value) : it.value;\n" +
+"    return '<g><rect x=\"'+x+'\" y=\"'+y+'\" width=\"'+barW+'\" height=\"'+barH+'\" rx=\"3\" fill=\"'+color+'\"><title>'+lbl+': '+val+'</title></rect>'+\n" +
+"      '<text x=\"'+(x+barW/2)+'\" y=\"'+(y-5)+'\" font-size=\"10\" text-anchor=\"middle\" fill=\"#2b3a3a\">'+val+'</text>'+\n" +
+"      '<text x=\"'+(x+barW/2)+'\" y=\"'+(h-padBottom+13)+'\" font-size=\"9\" text-anchor=\"middle\" fill=\"#7a8a8a\">'+lbl+'</text></g>';\n" +
+"  }).join('');\n" +
+"  return '<svg viewBox=\"0 0 '+w+' '+h+'\" width=\"'+w+'\" height=\"'+h+'\">'+\n" +
+"    '<line x1=\"0\" y1=\"'+(padTop+plotH)+'\" x2=\"'+w+'\" y2=\"'+(padTop+plotH)+'\" stroke=\"#dbe6e6\"/>'+bars+'</svg>';\n" +
+"}\n" +
+"function buildRateChartSvg(items){\n" +
+"  if (!items.length) return '';\n" +
+"  var h=170, barW=11, pairGap=3, groupGap=16, padTop=20, padBottom=32, plotH=h-padTop-padBottom;\n" +
+"  var groupW = barW*2+pairGap;\n" +
+"  var w = Math.max(240, items.length*(groupW+groupGap)+groupGap);\n" +
+"  var maxVal=0; items.forEach(function(it){ maxVal=Math.max(maxVal,it.parcial,it.total); });\n" +
+"  maxVal = Math.max(5, maxVal*1.15);\n" +
+"  var groups = items.map(function(it,i){\n" +
+"    var gx = groupGap+i*(groupW+groupGap);\n" +
+"    var hP = Math.max(1,(it.parcial/maxVal)*plotH), hT = Math.max(1,(it.total/maxVal)*plotH);\n" +
+"    var yP = padTop+(plotH-hP), yT = padTop+(plotH-hT);\n" +
+"    var lbl = escapeHtml(it.label);\n" +
+"    return '<g><rect x=\"'+gx+'\" y=\"'+yP+'\" width=\"'+barW+'\" height=\"'+hP+'\" rx=\"2\" fill=\"var(--c-parcial)\"><title>'+lbl+' — parcial: '+it.parcial.toFixed(1)+'%</title></rect>'+\n" +
+"      '<rect x=\"'+(gx+barW+pairGap)+'\" y=\"'+yT+'\" width=\"'+barW+'\" height=\"'+hT+'\" rx=\"2\" fill=\"var(--c-total)\"><title>'+lbl+' — total: '+it.total.toFixed(1)+'%</title></rect>'+\n" +
+"      '<text x=\"'+(gx+groupW/2)+'\" y=\"'+(h-padBottom+13)+'\" font-size=\"9\" text-anchor=\"middle\" fill=\"#7a8a8a\">'+lbl+'</text></g>';\n" +
+"  }).join('');\n" +
+"  return '<svg viewBox=\"0 0 '+w+' '+h+'\" width=\"'+w+'\" height=\"'+h+'\">'+\n" +
+"    '<line x1=\"0\" y1=\"'+(padTop+plotH)+'\" x2=\"'+w+'\" y2=\"'+(padTop+plotH)+'\" stroke=\"#dbe6e6\"/>'+groups+\n" +
+"    '<g><rect x=\"0\" y=\"0\" width=\"9\" height=\"9\" fill=\"var(--c-parcial)\"/><text x=\"13\" y=\"9\" font-size=\"9\" fill=\"#5c6b6e\">parcial</text>'+\n" +
+"    '<rect x=\"58\" y=\"0\" width=\"9\" height=\"9\" fill=\"var(--c-total)\"/><text x=\"71\" y=\"9\" font-size=\"9\" fill=\"#5c6b6e\">total</text></g>'+\n" +
+"    '</svg>';\n" +
+"}\n" +
+"function renderDashboardScreen(){\n" +
+"  var data = computeDashboardData(state.dashboardSessions||[]);\n" +
+"  document.getElementById('dash-empty').style.display = data.totalCirurgias===0 ? 'block' : 'none';\n" +
+"  document.getElementById('dash-content').style.display = data.totalCirurgias===0 ? 'none' : 'block';\n" +
+"  if (data.totalCirurgias===0) return;\n" +
+"  document.getElementById('dash-summary').innerHTML =\n" +
+"    '<div class=\"summary-item\"><div class=\"val\">'+data.totalCirurgias+'</div><div class=\"lbl\">Cirurgias finalizadas</div></div>'+\n" +
+"    '<div class=\"summary-item\"><div class=\"val\">'+fmtBig(data.foliculosExtraidosGeral)+'</div><div class=\"lbl\">Folículos extraídos (total)</div></div>'+\n" +
+"    '<div class=\"summary-item\"><div class=\"val\">'+fmtBig(data.fiosGeral)+'</div><div class=\"lbl\">Fios transplantados (total)</div></div>'+\n" +
+"    '<div class=\"summary-item\"><div class=\"val\">'+data.indiceMedio.toFixed(2)+'</div><div class=\"lbl\">Índice médio</div></div>'+\n" +
+"    '<div class=\"summary-item\"><div class=\"val\">'+data.preincMedia.toFixed(0)+'</div><div class=\"lbl\">Pré-incisões média/cirurgia</div></div>'+\n" +
+"    '<div class=\"summary-item\"><div class=\"val\">'+data.preincTotal+'</div><div class=\"lbl\">Pré-incisões total</div></div>';\n" +
+"  var idxItems = data.withData.map(function(r){ return {label:shortDate(r.createdAt), value:r.indice}; });\n" +
+"  document.getElementById('dash-index-chart').innerHTML = buildBarChartSvg(idxItems, 'var(--c-primary)', function(v){ return v.toFixed(2); });\n" +
+"  var mode = state.dashboardMode||'completo';\n" +
+"  document.getElementById('dash-mode-completo').className = 'btn'+(mode==='completo'?'':' secondary');\n" +
+"  document.getElementById('dash-mode-reduzido').className = 'btn'+(mode==='reduzido'?'':' secondary');\n" +
+"  document.getElementById('dash-mode-todos').className = 'btn'+(mode==='todos'?'':' secondary');\n" +
+"  var isTodos = mode==='todos';\n" +
+"  var modeRows = isTodos ? data.withData : data.byMode[mode];\n" +
+"  document.getElementById('dash-rate-todos-hint').style.display = (isTodos && modeRows.length) ? 'block' : 'none';\n" +
+"  document.getElementById('dash-rate-empty').style.display = modeRows.length ? 'none' : 'block';\n" +
+"  document.getElementById('dash-rate-summary').style.display = modeRows.length ? 'grid' : 'none';\n" +
+"  document.getElementById('dash-rate-chart').style.display = modeRows.length ? 'block' : 'none';\n" +
+"  if (modeRows.length){\n" +
+"    if (isTodos){\n" +
+"      document.getElementById('dash-rate-summary').innerHTML =\n" +
+"        '<div class=\"summary-item\"><div class=\"val\">'+modeRows.length+'</div><div class=\"lbl\">Cirurgias (todos os modos)</div></div>'+\n" +
+"        '<div class=\"summary-item\"><div class=\"val\">'+data.byMode.completo.length+'</div><div class=\"lbl\">— em modo completo</div></div>'+\n" +
+"        '<div class=\"summary-item\"><div class=\"val\">'+data.byMode.reduzido.length+'</div><div class=\"lbl\">— em modo reduzido</div></div>';\n" +
+"    } else {\n" +
+"      document.getElementById('dash-rate-summary').innerHTML =\n" +
+"        '<div class=\"summary-item\"><div class=\"val\">'+modeRows.length+'</div><div class=\"lbl\">Cirurgias ('+(mode==='completo'?'completo':'reduzido')+')</div></div>'+\n" +
+"        '<div class=\"summary-item\"><div class=\"val\">'+data.taxaParcialMedia[mode].toFixed(1)+'%</div><div class=\"lbl\">Taxa parcial média</div></div>'+\n" +
+"        '<div class=\"summary-item\"><div class=\"val\">'+data.taxaTotalMedia[mode].toFixed(1)+'%</div><div class=\"lbl\">Taxa total média</div></div>';\n" +
+"    }\n" +
+"    var rateItems = modeRows.map(function(r){ return {label:shortDate(r.createdAt)+(isTodos?(r.mode==='reduzido'?' (R)':' (C)'):''), parcial:r.taxaParcial, total:r.taxaTotal}; });\n" +
+"    document.getElementById('dash-rate-chart').innerHTML = buildRateChartSvg(rateItems);\n" +
+"  }\n" +
+"  var tableRows = data.rows.map(function(r){\n" +
+"    return '<tr><td>'+escapeHtml(r.codigo)+'</td><td>'+shortDate(r.createdAt)+'</td><td>'+(r.mode==='reduzido'?'Reduzido':'Completo')+'</td>'+\n" +
+"      '<td>'+r.extraidos+'</td><td>'+r.indice.toFixed(2)+'</td><td>'+r.taxaParcial.toFixed(1)+'%</td><td>'+r.taxaTotal.toFixed(1)+'%</td><td>'+r.preincTotalVal+'</td></tr>';\n" +
+"  }).join('');\n" +
+"  document.getElementById('dash-table').innerHTML = '<div class=\"dash-table-wrap\"><table class=\"dash-table\">'+\n" +
+"    '<tr><th>Cirurgia</th><th>Data</th><th>Modo</th><th>Extraídos</th><th>Índice</th><th>Tx. parcial</th><th>Tx. total</th><th>Pré-inc.</th></tr>'+\n" +
+"    tableRows+'</table></div>';\n" +
+"}\n" +
 "App.addIncrementField = function(){ state.increments.push(1); renderSettingsScreen(); };\n" +
 "App.updateIncrementField = function(inputEl){\n" +
 "  var idx = parseInt(inputEl.getAttribute('data-idx'),10);\n" +
@@ -912,7 +1134,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    var el = document.getElementById('surgery-list');\n" +
 "    if (!list.length){ el.innerHTML = '<div class=\"empty-state\">Você ainda não criou nenhuma cirurgia.</div>'; return; }\n" +
 "    el.innerHTML = list.map(function(s){\n" +
-"      var sum = computeSummary(combinedExtractionCounts(s));\n" +
+"      var sum = computeSummary(combinedExtractionCounts(s), s.mode||'completo');\n" +
 "      var badgeClass = s.status==='finalizada'?'finalizada':'andamento';\n" +
 "      return '<div class=\"surgery-card\"><div><b>'+escapeHtml(s.codigo)+'</b><div class=\"hint\">'+sum.foliculosExtraidos+' folículos · índice '+sum.indice.toFixed(2)+'</div></div>'+\n" +
 "        '<div style=\"text-align:right;\"><span class=\"badge '+badgeClass+'\">'+(s.status==='finalizada'?'Finalizada':'Em andamento')+'</span><br>'+\n" +
@@ -920,10 +1142,16 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    }).join('');\n" +
 "  }).catch(function(){ toast('Não consegui falar com o servidor.'); });\n" +
 "}\n" +
+"App.setNewMode = function(mode){\n" +
+"  state.newSessionMode = mode;\n" +
+"  document.getElementById('new-mode-completo').className = 'btn' + (mode==='completo' ? '' : ' secondary');\n" +
+"  document.getElementById('new-mode-reduzido').className = 'btn' + (mode==='reduzido' ? '' : ' secondary');\n" +
+"};\n" +
 "App.createSession = function(){\n" +
 "  var codigo = document.getElementById('new-codigo').value.trim();\n" +
 "  if (!codigo){ toast('Informe um código ou iniciais do paciente.'); return; }\n" +
-"  api('/api/session','POST',{codigo:codigo}).then(function(s){ document.getElementById('new-codigo').value=''; App.openSession(s.id); }).catch(function(err){ toast('Erro: '+err.message); });\n" +
+"  var mode = state.newSessionMode||'completo';\n" +
+"  api('/api/session','POST',{codigo:codigo,mode:mode}).then(function(s){ document.getElementById('new-codigo').value=''; App.setNewMode('completo'); App.openSession(s.id); }).catch(function(err){ toast('Erro: '+err.message); });\n" +
 "};\n" +
 "App.openSession = function(id){ state.currentId=id; state.activeQuadrant=QUADRANTS[0].id; history.pushState({},'','/s/'+id); loadAudioPrefs(id); showScreen('counting'); App.switchTab('extracao'); fetchAndRender().then(function(){ startPolling(); }); };\n" +
 "function fetchAndRender(){ return api('/api/session/'+state.currentId).then(function(s){ state.session=s; render(); }).catch(function(){ toast('Cirurgia não encontrada neste servidor.'); }); }\n" +
@@ -946,13 +1174,14 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var badge = document.getElementById('cnt-status');\n" +
 "  badge.textContent = s.status==='finalizada'?'Finalizada':'Em andamento';\n" +
 "  badge.className = 'badge ' + (s.status==='finalizada'?'finalizada':'andamento');\n" +
+"  document.getElementById('cnt-mode').textContent = (s.mode==='reduzido') ? 'Modo reduzido' : 'Modo completo';\n" +
 "  document.getElementById('btn-finalizar').style.display = s.status==='finalizada'?'none':'inline-block';\n" +
 "  document.getElementById('btn-reabrir').style.display = s.status==='finalizada'?'inline-block':'none';\n" +
 "  document.getElementById('share-url').textContent = shareUrlFor(s.id);\n" +
 "  var readonly = s.status==='finalizada';\n" +
 "\n" +
 "  var combined = combinedExtractionCounts(s);\n" +
-"  var sum = computeSummary(combined);\n" +
+"  var sum = computeSummary(combined, s.mode||'completo');\n" +
 "  document.getElementById('geral-extraidos').textContent = sum.foliculosExtraidos;\n" +
 "  document.getElementById('geral-fios').textContent = sum.totalFios;\n" +
 "  document.getElementById('geral-indice').textContent = sum.indice.toFixed(2);\n" +
@@ -976,7 +1205,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  }).join('');\n" +
 "  var quad = s.quadrants[state.activeQuadrant];\n" +
 "  document.getElementById('quad-title').textContent = quadrantById(state.activeQuadrant).label;\n" +
-"  var qsum = computeSummary(quad.counts);\n" +
+"  var qsum = computeSummary(quad.counts, s.mode||'completo');\n" +
 "  document.getElementById('quad-extraidos').textContent = qsum.foliculosExtraidos;\n" +
 "  document.getElementById('quad-fios').textContent = qsum.totalFios;\n" +
 "  document.getElementById('quad-indice').textContent = qsum.indice.toFixed(2);\n" +
@@ -1000,11 +1229,15 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    } else { quadBox.style.display='none'; }\n" +
 "  }\n" +
 "\n" +
+"  var modeAtiva = s.mode||'completo';\n" +
+"  var parcialGroupReal = modeAtiva==='reduzido' ? 'parcial_reduzida' : 'parcial';\n" +
+"  document.getElementById('parcial-reduzido-hint').style.display = modeAtiva==='reduzido' ? 'block' : 'none';\n" +
 "  ['integro','parcial','total'].forEach(function(group){\n" +
 "    var container = document.getElementById('group-'+group);\n" +
-"    container.innerHTML = CATS.filter(function(c){return c.group===group;}).map(function(c){\n" +
+"    var filterGroup = group==='parcial' ? parcialGroupReal : group;\n" +
+"    container.innerHTML = CATS.filter(function(c){return c.group===filterGroup;}).map(function(c){\n" +
 "      var n = quad.counts[c.id]||0;\n" +
-"      var hairsNote = c.hairs>0 ? (c.hairs+(c.hairs===1?' fio':' fios')+' por folículo') : '0 fios (perdido)';\n" +
+"      var hairsNote = c.hairs>0 ? (c.hairs+(c.hairs===1?' fio':' fios')+' por folículo') : (c.group==='parcial_reduzida' ? 'apenas contagem informativa' : '0 fios (perdido)');\n" +
 "      var btns = readonly ? '' : incBtns(c.id);\n" +
 "      return '<div class=\"cat-row group-'+group+'\"><div class=\"cat-label\">'+escapeHtml(c.label)+'<span class=\"cat-hairs\">'+hairsNote+'</span></div>'+\n" +
 "        '<div class=\"cat-count\">'+n+'</div><div class=\"cat-btns\">'+btns+'</div></div>';\n" +
@@ -1054,13 +1287,23 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "function renderPreinc(s){\n" +
 "  var readonly = s.status==='finalizada';\n" +
 "  var container = document.getElementById('group-preincisoes');\n" +
+"  var dist = s.preincDist || {};\n" +
 "  container.innerHTML = PREINC_AREAS.map(function(a){\n" +
 "    var n = s.preincCounts[a.id]||0;\n" +
 "    var cls = readonly ? 'cat-count' : 'cat-count clickable';\n" +
 "    var click = readonly ? '' : ' onclick=\"App.editPreinc(\\''+a.id+'\\')\"';\n" +
-"    return '<div class=\"cat-row group-preinc\"><div class=\"cat-label\">'+escapeHtml(a.label)+'</div>'+\n" +
-"      '<div class=\"'+cls+'\"'+click+'>'+n+'</div></div>';\n" +
+"    var row = dist[a.id] || {};\n" +
+"    var subCells = DIST_FIOS.map(function(f){\n" +
+"      var dn = row[f.id]||0;\n" +
+"      var dcls = readonly ? 'dist-cell' : 'dist-cell clickable';\n" +
+"      var dclick = readonly ? '' : ' onclick=\"App.editPreincDist(\\''+a.id+'\\',\\''+f.id+'\\')\"';\n" +
+"      return '<div class=\"dist-sub\"><span class=\"dist-sub-lbl\">'+escapeHtml(f.label)+'</span><span class=\"'+dcls+'\"'+dclick+'>'+dn+'</span></div>';\n" +
+"    }).join('');\n" +
+"    return '<div class=\"preinc-item\"><div class=\"cat-label\">'+escapeHtml(a.label)+'</div>'+\n" +
+"      '<div class=\"'+cls+'\"'+click+'>'+n+'</div>'+\n" +
+"      '<div class=\"dist-subrow\">'+subCells+'</div></div>';\n" +
 "  }).join('');\n" +
+"  renderPreincDistTotals(s);\n" +
 "}\n" +
 "App.editPreinc = function(areaId){\n" +
 "  var s = state.session; if (!s || s.status==='finalizada') return;\n" +
@@ -1071,6 +1314,32 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var v = parseInt(input,10);\n" +
 "  if (isNaN(v) || v<0){ toast('Valor inválido.'); return; }\n" +
 "  api('/api/session/'+state.currentId+'/preinc','POST',{area:areaId, value:v}).then(function(s2){ state.session=s2; render(); }).catch(function(err){ toast('Erro: '+err.message); });\n" +
+"};\n" +
+"function renderPreincDistTotals(s){\n" +
+"  var dist = s.preincDist || {};\n" +
+"  var totalsByFio = {}; DIST_FIOS.forEach(function(f){ totalsByFio[f.id]=0; });\n" +
+"  var grandTotal = 0;\n" +
+"  PREINC_AREAS.forEach(function(a){\n" +
+"    var row = dist[a.id] || {};\n" +
+"    DIST_FIOS.forEach(function(f){ var n=row[f.id]||0; totalsByFio[f.id]+=n; grandTotal+=n; });\n" +
+"  });\n" +
+"  var items = DIST_FIOS.map(function(f){\n" +
+"    return '<div class=\"summary-item\"><div class=\"val\">'+totalsByFio[f.id]+'</div><div class=\"lbl\">Total '+escapeHtml(f.label)+'</div></div>';\n" +
+"  }).join('');\n" +
+"  items += '<div class=\"summary-item\"><div class=\"val\">'+grandTotal+'</div><div class=\"lbl\">Total geral (UFs)</div></div>';\n" +
+"  document.getElementById('preinc-dist-totals').innerHTML = items;\n" +
+"}\n" +
+"App.editPreincDist = function(areaId, fioId){\n" +
+"  var s = state.session; if (!s || s.status==='finalizada') return;\n" +
+"  var area = PREINC_AREAS.filter(function(a){ return a.id===areaId; })[0];\n" +
+"  var fio = DIST_FIOS.filter(function(f){ return f.id===fioId; })[0];\n" +
+"  var current = (s.preincDist && s.preincDist[areaId]) ? (s.preincDist[areaId][fioId]||0) : 0;\n" +
+"  var label = (area?area.label:areaId)+' — '+(fio?fio.label:fioId);\n" +
+"  var input = window.prompt('Definir quantidade de \"'+label+'\":', current);\n" +
+"  if (input===null) return;\n" +
+"  var v = parseInt(input,10);\n" +
+"  if (isNaN(v) || v<0){ toast('Valor inválido.'); return; }\n" +
+"  api('/api/session/'+state.currentId+'/preinc-dist','POST',{area:areaId, fio:fioId, value:v}).then(function(s2){ state.session=s2; render(); }).catch(function(err){ toast('Erro: '+err.message); });\n" +
 "};\n" +
 "function renderPhotos(s){\n" +
 "  ['marcacao','posop'].forEach(function(cat){\n" +
@@ -1156,7 +1425,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "App.printReport = function(){\n" +
 "  var s = state.session; if (!s) return;\n" +
 "  var combined = combinedExtractionCounts(s);\n" +
-"  var sum = computeSummary(combined);\n" +
+"  var sum = computeSummary(combined, s.mode||'completo');\n" +
 "  var msPrint = elapsedMs(s.timer);\n" +
 "  var ritmoPrint = (msPrint>0 && sum.foliculosExtraidos>0) ? (sum.foliculosExtraidos/(msPrint/3600000)) : null;\n" +
 "  var finalMamba = mambaFinalCumulativo(s);\n" +
@@ -1164,7 +1433,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "\n" +
 "  var quadrantsHtml = QUADRANTS.map(function(q){\n" +
 "    var qc = s.quadrants[q.id].counts;\n" +
-"    var qsum = computeSummary(qc);\n" +
+"    var qsum = computeSummary(qc, s.mode||'completo');\n" +
 "    var rows = function(group){\n" +
 "      return CATS.filter(function(c){return c.group===group;}).map(function(c){\n" +
 "        var n = qc[c.id]||0;\n" +
@@ -1193,7 +1462,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        '<div>Transecção total<br><b>'+qsum.taxaTotal.toFixed(1)+'%</b></div>' +\n" +
 "      '</div>' +\n" +
 "      mcHtml +\n" +
-"      '<table><tr><th>Categoria</th><th>Fios/folículo</th><th>Qtde</th><th>Fios totais</th></tr>'+rows('integro')+rows('parcial')+rows('total')+'</table>';\n" +
+"      '<table><tr><th>Categoria</th><th>Fios/folículo</th><th>Qtde</th><th>Fios totais</th></tr>'+rows('integro')+rows((s.mode==='reduzido')?'parcial_reduzida':'parcial')+rows('total')+'</table>';\n" +
 "  }).join('');\n" +
 "\n" +
 "  var pTotal = preincTotal(s.preincCounts);\n" +
@@ -1210,6 +1479,20 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    '</div>' +\n" +
 "    '<table><tr><th>Área</th><th>Pré-incisões</th></tr>'+preincRows+'</table>';\n" +
 "\n" +
+"  var distDataP = s.preincDist || {};\n" +
+"  var distTotalsP = {}; DIST_FIOS.forEach(function(f){ distTotalsP[f.id]=0; });\n" +
+"  var distGrandTotalP = 0;\n" +
+"  var distRowsP = PREINC_AREAS.map(function(a){\n" +
+"    var row = distDataP[a.id] || {};\n" +
+"    var rowTotal = 0;\n" +
+"    var cells = DIST_FIOS.map(function(f){ var n=row[f.id]||0; rowTotal+=n; distTotalsP[f.id]+=n; return '<td>'+n+'</td>'; }).join('');\n" +
+"    distGrandTotalP += rowTotal;\n" +
+"    return '<tr><td>'+escapeHtml(a.label)+'</td>'+cells+'<td>'+rowTotal+'</td></tr>';\n" +
+"  }).join('');\n" +
+"  var distHeaderP = '<tr><th>Área</th>'+DIST_FIOS.map(function(f){ return '<th>'+escapeHtml(f.label)+'</th>'; }).join('')+'<th>Total</th></tr>';\n" +
+"  var distFooterP = '<tr><td>Total geral</td>'+DIST_FIOS.map(function(f){ return '<td>'+distTotalsP[f.id]+'</td>'; }).join('')+'<td>'+distGrandTotalP+'</td></tr>';\n" +
+"  var distHtml = '<h2>Distribuição de unidades por área</h2><table>'+distHeaderP+distRowsP+distFooterP+'</table>';\n" +
+"\n" +
 "  var photoBlock = function(cat, label){\n" +
 "    var list = s.photos[cat]||[];\n" +
 "    if (!list.length) return '';\n" +
@@ -1221,7 +1504,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "\n" +
 "  var html = '' +\n" +
 "    '<h1>Relatório de Extração Folicular</h1>' +\n" +
-"    '<div>Paciente (código): <b>'+escapeHtml(s.codigo)+'</b> &nbsp;|&nbsp; Status: <b>'+(s.status==='finalizada'?'Finalizada':'Em andamento')+'</b></div>' +\n" +
+"    '<div>Paciente (código): <b>'+escapeHtml(s.codigo)+'</b> &nbsp;|&nbsp; Status: <b>'+(s.status==='finalizada'?'Finalizada':'Em andamento')+'</b> &nbsp;|&nbsp; Modo: <b>'+((s.mode==='reduzido')?'Reduzido':'Completo')+'</b></div>' +\n" +
 "    '<h2>Resumo geral (todos os quadrantes)</h2>' +\n" +
 "    '<div class=\"print-summary\">' +\n" +
 "      '<div>Folículos extraídos<br><b>'+sum.foliculosExtraidos+'</b></div>' +\n" +
@@ -1235,6 +1518,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    (mdiffGeral ? '<div class=\"print-summary\"><div>Mamba (leitura final)<br><b>'+mdiffGeral.mamba+'</b></div><div>Folículos manipulados<br><b>'+mdiffGeral.manipulados+'</b></div><div>Diferença<br><b>'+(mdiffGeral.diff>0?'+':'')+mdiffGeral.diff+' ('+(mdiffGeral.diffPct>0?'+':'')+mdiffGeral.diffPct.toFixed(1)+'%)</b></div></div>' : '') +\n" +
 "    quadrantsHtml +\n" +
 "    preincHtml +\n" +
+"    distHtml +\n" +
 "    (hasPhotos ? '<div class=\"photo-report-page\">'+photoBlock('marcacao','Fotos — Marcação cirúrgica')+photoBlock('posop','Fotos — Pós-operatório imediato')+'</div>' : '') +\n" +
 "    '<p style=\"margin-top:16px;font-size:11px;color:#666;\">Gerado em '+new Date().toLocaleString('pt-BR')+'</p>';\n" +
 "  document.getElementById('print-report').innerHTML = html;\n" +
@@ -1432,11 +1716,15 @@ var server = http.createServer(function (req, res) {
     readBody(req).then(function (body) {
       var codigo = String(body.codigo || "").trim().slice(0, 60);
       if (!codigo) { send(res, 400, { error: "Código do paciente é obrigatório." }); return; }
+      var mode = String(body.mode || "completo");
+      if (!SESSION_MODES.has(mode)) { mode = "completo"; }
       var id = newSessionId();
       db.sessions[id] = {
         id: id, codigo: codigo, ownerId: creator.id, status: "andamento",
+        mode: mode,
         quadrants: emptyQuadrants(),
         preincCounts: emptyPreinc(),
+        preincDist: emptyPreincDist(),
         photos: { marcacao: [], posop: [] },
         timer: emptyTimer(),
         preincTimer: emptyTimer(),
@@ -1524,6 +1812,25 @@ var server = http.createServer(function (req, res) {
       sP.updatedAt = Date.now();
       saveData();
       send(res, 200, sP);
+    }).catch(function () { send(res, 400, { error: "Corpo inválido." }); });
+    return;
+  }
+
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/preinc-dist$/);
+  if (m && req.method === "POST") {
+    var sPD = db.sessions[m[1]];
+    if (!sPD) { send(res, 404, { error: "Cirurgia não encontrada." }); return; }
+    if (sPD.status === "finalizada") { send(res, 409, { error: "Cirurgia já finalizada." }); return; }
+    readBody(req).then(function (body) {
+      var area = body.area;
+      var fio = body.fio;
+      var value = Number(body.value);
+      if (!PREINC_IDS.has(area) || !DIST_FIO_IDS.has(fio) || !Number.isFinite(value) || value < 0) { send(res, 400, { error: "Parâmetros inválidos." }); return; }
+      if (!sPD.preincDist) sPD.preincDist = emptyPreincDist();
+      sPD.preincDist[area][fio] = Math.floor(value);
+      sPD.updatedAt = Date.now();
+      saveData();
+      send(res, 200, sPD);
     }).catch(function () { send(res, 400, { error: "Corpo inválido." }); });
     return;
   }
