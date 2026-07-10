@@ -506,10 +506,10 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  <header class=\"topbar\">\n" +
 "    <div><h1><span class=\"conn-dot\" id=\"conn-dot\"></span>Contagem ao Vivo</h1><div class=\"sub\">rede local · sem nuvem</div></div>\n" +
 "    <div class=\"row\" style=\"gap:8px;align-items:center;\">\n" +
-"      <span id=\"user-bar\"></span>\n" +
+"      <button class=\"icon-btn\" onclick=\"App.goHome()\">Início</button>\n" +
 "      <button class=\"icon-btn\" id=\"dashboard-btn\" style=\"display:none;\" onclick=\"App.showDashboard()\">Dashboard</button>\n" +
 "      <button class=\"icon-btn\" onclick=\"App.showSettings()\">Config</button>\n" +
-"      <button class=\"icon-btn\" onclick=\"App.goHome()\">Início</button>\n" +
+"      <span id=\"user-bar\"></span>\n" +
 "    </div>\n" +
 "  </header>\n" +
 "  <div class=\"conn-banner\" id=\"conn-banner\">Sem conexão com o servidor — verifique se está na mesma rede wifi.</div>\n" +
@@ -594,6 +594,9 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      <div id=\"dash-empty\" class=\"empty-state\" style=\"display:none;\">Você ainda não tem nenhuma cirurgia finalizada. As estatísticas aparecem aqui assim que a primeira for finalizada.</div>\n" +
 "      <div id=\"dash-content\" style=\"display:none;\">\n" +
 "        <div class=\"summary-bar static\" id=\"dash-summary\"></div>\n" +
+"        <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-integro)\"></span>Folículos extraídos por cirurgia</h3>\n" +
+"        <p class=\"hint\" style=\"margin-top:-4px;\">Cada barra é uma cirurgia finalizada, em ordem cronológica — dá pra ver se o volume por cirurgia está subindo ou caindo ao longo do tempo.</p>\n" +
+"        <div id=\"dash-extraidos-chart\" class=\"chart-box\"></div>\n" +
 "        <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-primary)\"></span>Índice fios/folículo por cirurgia</h3>\n" +
 "        <p class=\"hint\" style=\"margin-top:-4px;\">Cada barra é uma cirurgia finalizada, em ordem cronológica.</p>\n" +
 "        <div id=\"dash-index-chart\" class=\"chart-box\"></div>\n" +
@@ -1073,6 +1076,8 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    '<div class=\"summary-item\"><div class=\"val\">'+data.indiceMedio.toFixed(2)+'</div><div class=\"lbl\">Índice médio</div></div>'+\n" +
 "    '<div class=\"summary-item\"><div class=\"val\">'+data.preincMedia.toFixed(0)+'</div><div class=\"lbl\">Pré-incisões média/cirurgia</div></div>'+\n" +
 "    '<div class=\"summary-item\"><div class=\"val\">'+data.preincTotal+'</div><div class=\"lbl\">Pré-incisões total</div></div>';\n" +
+"  var extItems = data.withData.map(function(r){ return {label:shortDate(r.createdAt), value:r.extraidos}; });\n" +
+"  document.getElementById('dash-extraidos-chart').innerHTML = buildBarChartSvg(extItems, 'var(--c-integro)', function(v){ return fmtBig(v); });\n" +
 "  var idxItems = data.withData.map(function(r){ return {label:shortDate(r.createdAt), value:r.indice}; });\n" +
 "  document.getElementById('dash-index-chart').innerHTML = buildBarChartSvg(idxItems, 'var(--c-primary)', function(v){ return v.toFixed(2); });\n" +
 "  var mode = state.dashboardMode||'completo';\n" +
@@ -1131,6 +1136,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "};\n" +
 "function loadSurgeryList(){\n" +
 "  api('/api/sessions').then(function(list){\n" +
+"    state.surgeryList = list;\n" +
 "    var el = document.getElementById('surgery-list');\n" +
 "    if (!list.length){ el.innerHTML = '<div class=\"empty-state\">Você ainda não criou nenhuma cirurgia.</div>'; return; }\n" +
 "    el.innerHTML = list.map(function(s){\n" +
@@ -1138,10 +1144,20 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      var badgeClass = s.status==='finalizada'?'finalizada':'andamento';\n" +
 "      return '<div class=\"surgery-card\"><div><b>'+escapeHtml(s.codigo)+'</b><div class=\"hint\">'+sum.foliculosExtraidos+' folículos · índice '+sum.indice.toFixed(2)+'</div></div>'+\n" +
 "        '<div style=\"text-align:right;\"><span class=\"badge '+badgeClass+'\">'+(s.status==='finalizada'?'Finalizada':'Em andamento')+'</span><br>'+\n" +
-"        '<button class=\"btn secondary\" style=\"margin-top:8px;\" onclick=\"App.openSession(\\''+s.id+'\\')\">Abrir</button></div></div>';\n" +
+"        '<div class=\"row\" style=\"gap:6px;margin-top:8px;justify-content:flex-end;\">'+\n" +
+"        '<button class=\"btn secondary\" onclick=\"App.openSession(\\''+s.id+'\\')\">Abrir</button>'+\n" +
+"        '<button class=\"btn danger\" onclick=\"App.deleteSession(\\''+s.id+'\\')\">Apagar</button>'+\n" +
+"        '</div></div></div>';\n" +
 "    }).join('');\n" +
 "  }).catch(function(){ toast('Não consegui falar com o servidor.'); });\n" +
 "}\n" +
+"App.deleteSession = function(id){\n" +
+"  var found = (state.surgeryList||[]).filter(function(s){ return s.id===id; })[0];\n" +
+"  var codigo = found ? found.codigo : id;\n" +
+"  var confirmText = 'Apagar a cirurgia \"'+codigo+'\" definitivamente? Isso remove todas as contagens, pré-incisões e fotos dela. Essa ação não pode ser desfeita.';\n" +
+"  if (!window.confirm(confirmText)) return;\n" +
+"  api('/api/session/'+id, 'DELETE').then(function(){ toast('Cirurgia apagada.'); loadSurgeryList(); }).catch(function(err){ toast('Erro: '+err.message); });\n" +
+"};\n" +
 "App.setNewMode = function(mode){\n" +
 "  state.newSessionMode = mode;\n" +
 "  document.getElementById('new-mode-completo').className = 'btn' + (mode==='completo' ? '' : ' secondary');\n" +
@@ -1608,7 +1624,7 @@ var server = http.createServer(function (req, res) {
   var p = u.pathname;
 
   if (req.method === "OPTIONS") {
-    res.writeHead(204, { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET,POST", "Access-Control-Allow-Headers": "Content-Type" });
+    res.writeHead(204, { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET,POST,DELETE", "Access-Control-Allow-Headers": "Content-Type" });
     res.end();
     return;
   }
@@ -1934,6 +1950,26 @@ var server = http.createServer(function (req, res) {
     s5.updatedAt = Date.now();
     saveData();
     send(res, 200, s5);
+    return;
+  }
+
+  // Apagar cirurgia — diferente dos endpoints acima, esta ação exige login E ser o
+  // dono da cirurgia (não é acessível por quem só tem o link, de propósito: apagar
+  // é destrutivo e permanente, deve ficar restrito a quem criou a lista).
+  m = p.match(/^\/api\/session\/([a-f0-9]+)$/);
+  if (m && req.method === "DELETE") {
+    var deleter = getAuthedUser(req);
+    if (!deleter) { send(res, 401, { error: "Faça login pra apagar uma cirurgia." }); return; }
+    var sDel = db.sessions[m[1]];
+    if (!sDel) { send(res, 404, { error: "Cirurgia não encontrada." }); return; }
+    if (sDel.ownerId !== deleter.id) { send(res, 403, { error: "Essa cirurgia não é sua." }); return; }
+    delete db.sessions[m[1]];
+    saveData();
+    var delDir = path.join(UPLOADS_DIR, m[1]);
+    if (fs.existsSync(delDir)) {
+      try { fs.rmSync(delDir, { recursive: true, force: true }); } catch (e) { console.error("Não consegui apagar fotos da cirurgia " + m[1] + ":", e.message); }
+    }
+    send(res, 200, { ok: true });
     return;
   }
 
