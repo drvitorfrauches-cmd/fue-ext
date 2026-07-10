@@ -63,12 +63,12 @@ if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 // Mesmas 13 categorias do app v1 (íntegros / transecção parcial / transecção total).
 const CATS = [
-  { id: "f1",     label: "1 fio",       hairs: 1, group: "integro" },
-  { id: "f1fino", label: "1 fio fino",  hairs: 1, group: "integro" },
-  { id: "f2",     label: "2 fios",      hairs: 2, group: "integro" },
-  { id: "f2fino", label: "2 fios fino", hairs: 2, group: "integro" },
-  { id: "f3",     label: "3 fios",      hairs: 3, group: "integro" },
-  { id: "f4",     label: "4 fios",      hairs: 4, group: "integro" },
+  { id: "f1",     label: "1 fio",           hairs: 1, group: "integro" },
+  { id: "f2",     label: "2 fios",          hairs: 2, group: "integro" },
+  { id: "f3",     label: "3 fios",          hairs: 3, group: "integro" },
+  { id: "f4",     label: "4 fios",          hairs: 4, group: "integro" },
+  { id: "f1fino", label: "1 fio especial",  hairs: 1, group: "integro" },
+  { id: "f2fino", label: "2 fios especial", hairs: 2, group: "integro" },
   { id: "t2_1", label: "2 → 1 fio",  hairs: 1, group: "parcial" },
   { id: "t3_2", label: "3 → 2 fios", hairs: 2, group: "parcial" },
   { id: "t3_1", label: "3 → 1 fio",  hairs: 1, group: "parcial" },
@@ -76,7 +76,8 @@ const CATS = [
   { id: "t4_2", label: "4 → 2 fios", hairs: 2, group: "parcial" },
   { id: "t4_1", label: "4 → 1 fio",  hairs: 1, group: "parcial" },
   { id: "parcial_geral", label: "Transecção parcial", hairs: 0, group: "parcial_reduzida" },
-  { id: "ttotal", label: "Transecção total (folículo perdido)", hairs: 0, group: "total" }
+  { id: "ttotal", label: "Transecção total (folículo perdido)", hairs: 0, group: "total" },
+  { id: "mini", label: "Mini (miniaturizado)", hairs: 0, group: "mini" }
 ];
 const CAT_IDS = new Set(CATS.map(function (c) { return c.id; }));
 const SESSION_MODES = new Set(["completo", "reduzido"]);
@@ -440,7 +441,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1\">\n" +
 "<title>Contagem ao Vivo — Extração Folicular</title>\n" +
 "<style>\n" +
-"  :root{--c-bg:#f4f6f7;--c-card:#fff;--c-text:#1c2b2e;--c-muted:#5c6b6e;--c-border:#dde3e4;--c-primary:#0e7c86;--c-primary-dark:#0a5c64;--c-integro:#1a8f5e;--c-parcial:#c2760a;--c-total:#c62828;--c-preinc:#5b5fc7;--radius:10px;--shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);}\n" +
+"  :root{--c-bg:#f4f6f7;--c-card:#fff;--c-text:#1c2b2e;--c-muted:#5c6b6e;--c-border:#dde3e4;--c-primary:#0e7c86;--c-primary-dark:#0a5c64;--c-integro:#1a8f5e;--c-parcial:#c2760a;--c-total:#c62828;--c-mini:#6b7280;--c-preinc:#5b5fc7;--radius:10px;--shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);}\n" +
 "  *{box-sizing:border-box;} html,body{margin:0;padding:0;}\n" +
 "  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--c-bg);color:var(--c-text);-webkit-tap-highlight-color:transparent;}\n" +
 "  .app{max-width:960px;margin:0 auto;padding:12px 12px 80px;}\n" +
@@ -473,8 +474,8 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  .cat-btns{display:flex;gap:6px;flex-wrap:wrap;}\n" +
 "  .cat-btn{border:none;border-radius:7px;min-width:38px;padding:8px 8px;font-size:13px;font-weight:700;cursor:pointer;color:#fff;background:var(--c-primary);}\n" +
 "  .cat-btn.minus{background:#8a97992e;color:var(--c-text);border:1px solid var(--c-border);}\n" +
-"  .group-integro .cat-btn{background:var(--c-integro);} .group-parcial .cat-btn{background:var(--c-parcial);} .group-total .cat-btn{background:var(--c-total);}\n" +
-"  .group-integro{border-left:4px solid var(--c-integro);} .group-parcial{border-left:4px solid var(--c-parcial);} .group-total{border-left:4px solid var(--c-total);}\n" +
+"  .group-integro .cat-btn{background:var(--c-integro);} .group-parcial .cat-btn{background:var(--c-parcial);} .group-total .cat-btn{background:var(--c-total);} .group-mini .cat-btn{background:var(--c-mini);}\n" +
+"  .group-integro{border-left:4px solid var(--c-integro);} .group-parcial{border-left:4px solid var(--c-parcial);} .group-total{border-left:4px solid var(--c-total);} .group-mini{border-left:4px solid var(--c-mini);}\n" +
 "  .group-preinc{border-left:4px solid var(--c-preinc);}\n" +
 "  #group-preincisoes{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;}\n" +
 "  .preinc-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 8px;border:1px solid var(--c-border);border-left:4px solid var(--c-preinc);border-radius:8px;background:#fff;text-align:center;}\n" +
@@ -712,6 +713,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "          <div class=\"summary-item\"><div class=\"val\" id=\"geral-indice\">0.00</div><div class=\"lbl\">Índice fios/folículo</div></div>\n" +
 "          <div class=\"summary-item\"><div class=\"val\" id=\"geral-transec-parcial\">0%</div><div class=\"lbl\">Transecção parcial</div></div>\n" +
 "          <div class=\"summary-item\"><div class=\"val\" id=\"geral-transec-total\">0%</div><div class=\"lbl\">Transecção total</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"geral-mini\">0</div><div class=\"lbl\">Mini (fora do total)</div></div>\n" +
 "        </div>\n" +
 "        <div class=\"summary-bar static\" id=\"geral-mamba-summary\" style=\"display:none;margin-top:10px;\">\n" +
 "          <div class=\"summary-item\"><div class=\"val\" id=\"geral-mamba-val\">0</div><div class=\"lbl\">Mamba (leitura final)</div></div>\n" +
@@ -744,6 +746,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        <div class=\"summary-item\"><div class=\"val\" id=\"quad-indice\">0.00</div><div class=\"lbl\">Índice fios/folículo</div></div>\n" +
 "        <div class=\"summary-item\"><div class=\"val\" id=\"quad-transec-parcial\">0%</div><div class=\"lbl\">Transecção parcial</div></div>\n" +
 "        <div class=\"summary-item\"><div class=\"val\" id=\"quad-transec-total\">0%</div><div class=\"lbl\">Transecção total</div></div>\n" +
+"        <div class=\"summary-item\"><div class=\"val\" id=\"quad-mini\">0</div><div class=\"lbl\">Mini (fora do total)</div></div>\n" +
 "      </div>\n" +
 "\n" +
 "      <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-integro)\"></span>Folículos íntegros</h3><div id=\"group-integro\"></div>\n" +
@@ -751,6 +754,9 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      <p class=\"hint\" id=\"parcial-reduzido-hint\" style=\"display:none;margin-top:-4px;margin-bottom:10px;\">Modo reduzido: registre os fios desse folículo normalmente em \"Folículos íntegros\" e toque aqui só pra contar a transecção parcial (não soma de novo no total).</p>\n" +
 "      <div id=\"group-parcial\"></div>\n" +
 "      <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-total)\"></span>Transecção total (folículo perdido)</h3><div id=\"group-total\"></div>\n" +
+"      <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-mini)\"></span>Mini</h3>\n" +
+"      <p class=\"hint\" style=\"margin-top:-4px;margin-bottom:10px;\">Folículos miniaturizados — não entram na contagem geral de folículos extraídos, fios ou taxas, mas ficam registrados aqui pra não se perderem.</p>\n" +
+"      <div id=\"group-mini\"></div>\n" +
 "    </div>\n" +
 "\n" +
 "    <div id=\"panel-preincisoes\" style=\"display:none;\">\n" +
@@ -799,11 +805,11 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "'use strict';\n" +
 "var CATS = [\n" +
 "  {id:'f1',label:'1 fio',hairs:1,group:'integro'},\n" +
-"  {id:'f1fino',label:'1 fio fino',hairs:1,group:'integro'},\n" +
 "  {id:'f2',label:'2 fios',hairs:2,group:'integro'},\n" +
-"  {id:'f2fino',label:'2 fios fino',hairs:2,group:'integro'},\n" +
 "  {id:'f3',label:'3 fios',hairs:3,group:'integro'},\n" +
 "  {id:'f4',label:'4 fios',hairs:4,group:'integro'},\n" +
+"  {id:'f1fino',label:'1 fio especial',hairs:1,group:'integro'},\n" +
+"  {id:'f2fino',label:'2 fios especial',hairs:2,group:'integro'},\n" +
 "  {id:'t2_1',label:'2 → 1 fio',hairs:1,group:'parcial'},\n" +
 "  {id:'t3_2',label:'3 → 2 fios',hairs:2,group:'parcial'},\n" +
 "  {id:'t3_1',label:'3 → 1 fio',hairs:1,group:'parcial'},\n" +
@@ -811,7 +817,8 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  {id:'t4_2',label:'4 → 2 fios',hairs:2,group:'parcial'},\n" +
 "  {id:'t4_1',label:'4 → 1 fio',hairs:1,group:'parcial'},\n" +
 "  {id:'parcial_geral',label:'Transecção parcial',hairs:0,group:'parcial_reduzida'},\n" +
-"  {id:'ttotal',label:'Transecção total (folículo perdido)',hairs:0,group:'total'}\n" +
+"  {id:'ttotal',label:'Transecção total (folículo perdido)',hairs:0,group:'total'},\n" +
+"  {id:'mini',label:'Mini (miniaturizado)',hairs:0,group:'mini'}\n" +
 "];\n" +
 "var SESSION_MODES = ['completo','reduzido'];\n" +
 "var QUADRANTS = [\n" +
@@ -832,12 +839,13 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "var DEFAULT_INCREMENTS = [10,50,100];\n" +
 "function quadrantById(id){ for (var i=0;i<QUADRANTS.length;i++){ if (QUADRANTS[i].id===id) return QUADRANTS[i]; } return null; }\n" +
 "function computeSummary(counts, mode){\n" +
-"  var integros=0, parciais=0, totalPerdidos=0, totalFios=0, parcialGeral=counts['parcial_geral']||0;\n" +
+"  var integros=0, parciais=0, totalPerdidos=0, totalFios=0, miniTotal=0, parcialGeral=counts['parcial_geral']||0;\n" +
 "  CATS.forEach(function(c){\n" +
 "    var n = counts[c.id]||0;\n" +
 "    if (c.group==='integro'){ integros+=n; totalFios+=n*c.hairs; }\n" +
 "    else if (c.group==='parcial'){ parciais+=n; totalFios+=n*c.hairs; }\n" +
 "    else if (c.group==='total'){ totalPerdidos+=n; }\n" +
+"    else if (c.group==='mini'){ miniTotal+=n; }\n" +
 "  });\n" +
 "  var reduzido = mode==='reduzido';\n" +
 "  var parcialParaTaxa = reduzido ? parcialGeral : parciais;\n" +
@@ -847,7 +855,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var taxaParcialDenom = reduzido ? integros : foliculosManipulados;\n" +
 "  var taxaParcial = taxaParcialDenom>0 ? parcialParaTaxa/taxaParcialDenom*100 : 0;\n" +
 "  var taxaTotal = foliculosManipulados>0 ? totalPerdidos/foliculosManipulados*100 : 0;\n" +
-"  return {integros:integros,parciais:parciais,parcialGeral:parcialGeral,totalPerdidos:totalPerdidos,foliculosExtraidos:foliculosExtraidos,foliculosManipulados:foliculosManipulados,totalFios:totalFios,indice:indice,taxaParcial:taxaParcial,taxaTotal:taxaTotal};\n" +
+"  return {integros:integros,parciais:parciais,parcialGeral:parcialGeral,totalPerdidos:totalPerdidos,miniTotal:miniTotal,foliculosExtraidos:foliculosExtraidos,foliculosManipulados:foliculosManipulados,totalFios:totalFios,indice:indice,taxaParcial:taxaParcial,taxaTotal:taxaTotal};\n" +
 "}\n" +
 "function combinedExtractionCounts(s){\n" +
 "  var combined = {}; CATS.forEach(function(c){ combined[c.id]=0; });\n" +
@@ -1252,6 +1260,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  document.getElementById('geral-indice').textContent = sum.indice.toFixed(2);\n" +
 "  document.getElementById('geral-transec-parcial').textContent = sum.taxaParcial.toFixed(1)+'%';\n" +
 "  document.getElementById('geral-transec-total').textContent = sum.taxaTotal.toFixed(1)+'%';\n" +
+"  document.getElementById('geral-mini').textContent = sum.miniTotal;\n" +
 "  var finalMamba = mambaFinalCumulativo(s);\n" +
 "  var mdiffGeral = computeMambaDiff(finalMamba, sum.foliculosManipulados);\n" +
 "  var geralBox = document.getElementById('geral-mamba-summary');\n" +
@@ -1276,6 +1285,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  document.getElementById('quad-indice').textContent = qsum.indice.toFixed(2);\n" +
 "  document.getElementById('quad-transec-parcial').textContent = qsum.taxaParcial.toFixed(1)+'%';\n" +
 "  document.getElementById('quad-transec-total').textContent = qsum.taxaTotal.toFixed(1)+'%';\n" +
+"  document.getElementById('quad-mini').textContent = qsum.miniTotal;\n" +
 "  var quadInput = document.getElementById('quad-mamba-input');\n" +
 "  if (document.activeElement !== quadInput) quadInput.value = (quad.mambaCumulativo===null||quad.mambaCumulativo===undefined) ? '' : quad.mambaCumulativo;\n" +
 "  var quadBox = document.getElementById('quad-mamba-summary');\n" +
@@ -1297,12 +1307,12 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var modeAtiva = s.mode||'completo';\n" +
 "  var parcialGroupReal = modeAtiva==='reduzido' ? 'parcial_reduzida' : 'parcial';\n" +
 "  document.getElementById('parcial-reduzido-hint').style.display = modeAtiva==='reduzido' ? 'block' : 'none';\n" +
-"  ['integro','parcial','total'].forEach(function(group){\n" +
+"  ['integro','parcial','total','mini'].forEach(function(group){\n" +
 "    var container = document.getElementById('group-'+group);\n" +
 "    var filterGroup = group==='parcial' ? parcialGroupReal : group;\n" +
 "    container.innerHTML = CATS.filter(function(c){return c.group===filterGroup;}).map(function(c){\n" +
 "      var n = quad.counts[c.id]||0;\n" +
-"      var hairsNote = c.hairs>0 ? (c.hairs+(c.hairs===1?' fio':' fios')+' por folículo') : (c.group==='parcial_reduzida' ? 'apenas contagem informativa' : '0 fios (perdido)');\n" +
+"      var hairsNote = c.group==='mini' ? 'não entra na contagem geral' : (c.hairs>0 ? (c.hairs+(c.hairs===1?' fio':' fios')+' por folículo') : (c.group==='parcial_reduzida' ? 'apenas contagem informativa' : '0 fios (perdido)'));\n" +
 "      var btns = readonly ? '' : incBtns(c.id);\n" +
 "      var countCls = readonly ? 'cat-count' : 'cat-count clickable';\n" +
 "      var countClick = readonly ? '' : ' onclick=\"App.editCount(\\''+c.id+'\\')\"';\n" +
@@ -1540,9 +1550,10 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        '<div>Índice<br><b>'+qsum.indice.toFixed(2)+'</b></div>' +\n" +
 "        '<div>Transecção parcial<br><b>'+qsum.taxaParcial.toFixed(1)+'%</b></div>' +\n" +
 "        '<div>Transecção total<br><b>'+qsum.taxaTotal.toFixed(1)+'%</b></div>' +\n" +
+"        '<div>Mini (fora do total)<br><b>'+qsum.miniTotal+'</b></div>' +\n" +
 "      '</div>' +\n" +
 "      mcHtml +\n" +
-"      '<table><tr><th>Categoria</th><th>Fios/folículo</th><th>Qtde</th><th>Fios totais</th></tr>'+rows('integro')+rows((s.mode==='reduzido')?'parcial_reduzida':'parcial')+rows('total')+'</table>';\n" +
+"      '<table><tr><th>Categoria</th><th>Fios/folículo</th><th>Qtde</th><th>Fios totais</th></tr>'+rows('integro')+rows((s.mode==='reduzido')?'parcial_reduzida':'parcial')+rows('total')+rows('mini')+'</table>';\n" +
 "  }).join('');\n" +
 "\n" +
 "  var pTotal = preincTotal(s.preincCounts);\n" +
@@ -1592,6 +1603,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      '<div>Índice<br><b>'+sum.indice.toFixed(2)+'</b></div>' +\n" +
 "      '<div>Transecção parcial<br><b>'+sum.taxaParcial.toFixed(1)+'%</b></div>' +\n" +
 "      '<div>Transecção total<br><b>'+sum.taxaTotal.toFixed(1)+'%</b></div>' +\n" +
+"      '<div>Mini (fora do total)<br><b>'+sum.miniTotal+'</b></div>' +\n" +
 "      '<div>Tempo de cirurgia<br><b>'+fmtHMS(msPrint)+'</b></div>' +\n" +
 "      (ritmoPrint ? '<div>Ritmo médio<br><b>'+ritmoPrint.toFixed(0)+' fol./h</b></div>' : '') +\n" +
 "    '</div>' +\n" +
