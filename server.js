@@ -159,6 +159,7 @@ function loadData() {
 function saveData() {
   fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2));
 }
+var dataFileExistedAtStartup = fs.existsSync(DATA_FILE);
 var db = loadData();
 if (!db.sessions) db.sessions = {};
 if (!db.users) db.users = {};
@@ -203,6 +204,34 @@ Object.keys(db.sessions).forEach(function (id) {
   if (!s.preincTimer) s.preincTimer = emptyTimer();
 });
 saveData();
+
+// ---------- diagnóstico de persistência ----------
+// Mostra no log, toda vez que o servidor inicia, de onde os dados foram carregados —
+// pra você conseguir confirmar (olhando o log do deploy) se o volume persistente está
+// realmente sendo usado, em vez de descobrir só depois de perder um cadastro.
+console.log("");
+console.log("---- Diagnóstico de armazenamento ----");
+console.log(" DATA_DIR: " + DATA_DIR);
+console.log(" Arquivo de dados: " + DATA_FILE);
+console.log(" Arquivo já existia ao iniciar: " + (dataFileExistedAtStartup ? "sim" : "não — começando do zero"));
+console.log(" Médicos cadastrados carregados: " + Object.keys(db.users).length);
+console.log(" Cirurgias carregadas: " + Object.keys(db.sessions).length);
+if (!process.env.DATA_DIR) {
+  console.log(" ATENÇÃO: a variável de ambiente DATA_DIR não está definida. Os dados estão sendo");
+  console.log(" salvos do lado do server.js (" + __dirname + "). Se este servidor está rodando");
+  console.log(" na nuvem (Railway ou parecido), ISSO SIGNIFICA QUE OS DADOS SOMEM A CADA NOVO");
+  console.log(" DEPLOY — o disco do container é recriado do zero a cada publicação, só o que");
+  console.log(" está num volume persistente sobrevive. Defina DATA_DIR apontando pro caminho");
+  console.log(" do volume (ex: DATA_DIR=/data) nas variáveis de ambiente do serviço. Veja a");
+  console.log(" seção \"Nuvem (Railway)\" do LEIA-ME.md, passos 6 e 7.");
+} else if (!dataFileExistedAtStartup) {
+  console.log(" ATENÇÃO: DATA_DIR está definida (" + DATA_DIR + "), mas não havia nenhum");
+  console.log(" data.json ali — ou é a primeira vez que este servidor roda, ou o volume não");
+  console.log(" está de fato montado nesse caminho (confira no painel do serviço se o volume");
+  console.log(" existe e está montado exatamente em \"" + DATA_DIR + "\").");
+}
+console.log("---------------------------------------");
+console.log("");
 
 function newId(bytes) {
   return crypto.randomBytes(bytes || 4).toString("hex");
