@@ -612,6 +612,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      <footer class=\"actions\">\n" +
 "        <button class=\"btn\" onclick=\"App.saveSettings()\">Salvar</button>\n" +
 "        <button class=\"btn secondary\" onclick=\"App.resetSettings()\">Restaurar padrão (10 / 50 / 100)</button>\n" +
+"        <button class=\"btn secondary\" id=\"settings-back-btn\" style=\"display:none;\" onclick=\"App.backToSurgery()\">Voltar pra cirurgia</button>\n" +
 "      </footer>\n" +
 "    </div>\n" +
 "  </section>\n" +
@@ -931,7 +932,17 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  }).join('');\n" +
 "}\n" +
 "var App = {};\n" +
-"App.goHome = function(){ stopPolling(); state.currentId=null; history.pushState({},'','/'); App.checkAuthAndShowHome(); };\n" +
+"App.goHome = function(){\n" +
+"  if (!state.currentUser && state.currentId){\n" +
+"    // Auxiliar sem login, só com o link de uma cirurgia — não existe uma lista pra\n" +
+"    // mostrar pra ela, então \"Início\" (e o botão \"Voltar\" da tela de Config) volta\n" +
+"    // pra própria cirurgia em vez de forçar login.\n" +
+"    history.pushState({},'','/s/'+state.currentId);\n" +
+"    showScreen('counting');\n" +
+"    return;\n" +
+"  }\n" +
+"  stopPolling(); state.currentId=null; history.pushState({},'','/'); App.checkAuthAndShowHome();\n" +
+"};\n" +
 "function renderUserBar(){\n" +
 "  var el = document.getElementById('user-bar');\n" +
 "  if (state.currentUser){\n" +
@@ -1007,7 +1018,16 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    App.checkAuthAndShowHome();\n" +
 "  }).catch(function(err){ toast('Erro: '+err.message); });\n" +
 "};\n" +
-"App.showSettings = function(){ renderSettingsScreen(); showScreen('settings'); };\n" +
+"App.showSettings = function(){\n" +
+"  renderSettingsScreen();\n" +
+"  document.getElementById('settings-back-btn').style.display = state.currentId ? 'inline-block' : 'none';\n" +
+"  showScreen('settings');\n" +
+"};\n" +
+"App.backToSurgery = function(){\n" +
+"  if (!state.currentId){ App.goHome(); return; }\n" +
+"  history.pushState({},'','/s/'+state.currentId);\n" +
+"  showScreen('counting');\n" +
+"};\n" +
 "App.showDashboard = function(){\n" +
 "  if (!state.currentUser){ toast('Faça login pra ver o dashboard.'); return; }\n" +
 "  showScreen('dashboard');\n" +
@@ -1284,8 +1304,10 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      var n = quad.counts[c.id]||0;\n" +
 "      var hairsNote = c.hairs>0 ? (c.hairs+(c.hairs===1?' fio':' fios')+' por folículo') : (c.group==='parcial_reduzida' ? 'apenas contagem informativa' : '0 fios (perdido)');\n" +
 "      var btns = readonly ? '' : incBtns(c.id);\n" +
+"      var countCls = readonly ? 'cat-count' : 'cat-count clickable';\n" +
+"      var countClick = readonly ? '' : ' onclick=\"App.editCount(\\''+c.id+'\\')\"';\n" +
 "      return '<div class=\"cat-row group-'+group+'\"><div class=\"cat-label\">'+escapeHtml(c.label)+'<span class=\"cat-hairs\">'+hairsNote+'</span></div>'+\n" +
-"        '<div class=\"cat-count\">'+n+'</div><div class=\"cat-btns\">'+btns+'</div></div>';\n" +
+"        '<div class=\"'+countCls+'\"'+countClick+'>'+n+'</div><div class=\"cat-btns\">'+btns+'</div></div>';\n" +
 "    }).join('');\n" +
 "  });\n" +
 "\n" +
@@ -1323,6 +1345,19 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    render();\n" +
 "  }\n" +
 "  api('/api/session/'+state.currentId+'/adjust','POST',{quadrant:quad, category:catId, delta:delta}).then(function(s){ state.session=s; render(); }).catch(function(err){ toast('Não sincronizou: '+err.message); fetchAndRender(); });\n" +
+"};\n" +
+"App.editCount = function(catId){\n" +
+"  var s = state.session; if (!s || s.status==='finalizada') return;\n" +
+"  var quad = state.activeQuadrant;\n" +
+"  var current = s.quadrants[quad].counts[catId]||0;\n" +
+"  var cat = CATS.filter(function(c){ return c.id===catId; })[0];\n" +
+"  var input = window.prompt('Definir valor para \"'+(cat?cat.label:catId)+'\":', current);\n" +
+"  if (input===null) return;\n" +
+"  var v = parseInt(input,10);\n" +
+"  if (isNaN(v) || v<0){ toast('Valor inválido.'); return; }\n" +
+"  var delta = v - current;\n" +
+"  if (delta===0) return;\n" +
+"  App.adjust(catId, delta);\n" +
 "};\n" +
 "App.setQuadMamba = function(value){\n" +
 "  var quad = state.activeQuadrant;\n" +
