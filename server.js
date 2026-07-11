@@ -522,11 +522,13 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    #print-report{display:block;position:absolute;top:0;left:0;width:100%;padding:20px;}\n" +
 "    #print-report table{width:100%;border-collapse:collapse;margin-top:10px;}\n" +
 "    #print-report th,#print-report td{border:1px solid #999;padding:6px 8px;font-size:12px;text-align:left;}\n" +
-"    #print-report h1{font-size:18px;margin-bottom:2px;} #print-report h2{font-size:14px;margin-top:18px;}\n" +
+"    #print-report h1{font-size:18px;margin-bottom:2px;} #print-report h2{font-size:14px;margin-top:18px;page-break-after:avoid;break-after:avoid;}\n" +
 "    #print-report .print-summary{display:flex;gap:16px;margin:10px 0;flex-wrap:wrap;}\n" +
-"    #print-report .print-summary div{border:1px solid #999;padding:8px 12px;border-radius:6px;}\n" +
+"    #print-report .print-summary div{border:1px solid #999;padding:8px 12px;border-radius:6px;page-break-inside:avoid;break-inside:avoid;}\n" +
 "    #print-report .photo-print-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0;}\n" +
-"    #print-report .photo-print-grid img{width:100%;height:190px;object-fit:cover;border:1px solid #999;border-radius:4px;}\n" +
+"    #print-report .photo-print-grid img{width:100%;height:190px;object-fit:cover;border:1px solid #999;border-radius:4px;display:block;page-break-inside:avoid;break-inside:avoid;}\n" +
+"    #print-report table{page-break-inside:auto;}\n" +
+"    #print-report tr{page-break-inside:avoid;break-inside:avoid;}\n" +
 "    #print-report .photo-report-page{page-break-before:always;}\n" +
 "  }\n" +
 "</style>\n" +
@@ -534,7 +536,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "<body>\n" +
 "<div class=\"app\">\n" +
 "  <header class=\"topbar\">\n" +
-"    <div><h1><span class=\"conn-dot\" id=\"conn-dot\"></span>Contagem ao Vivo</h1><div class=\"sub\">rede local · sem nuvem</div></div>\n" +
+"    <div><h1><span class=\"conn-dot\" id=\"conn-dot\"></span>Contagem ao Vivo</h1><div class=\"sub\">__APP_SUBTITLE__</div></div>\n" +
 "    <div class=\"row\" style=\"gap:8px;align-items:center;\">\n" +
 "      <button class=\"icon-btn\" onclick=\"App.goHome()\">Início</button>\n" +
 "      <button class=\"icon-btn\" id=\"dashboard-btn\" style=\"display:none;\" onclick=\"App.showDashboard()\">Dashboard</button>\n" +
@@ -1693,6 +1695,19 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "</body>\n" +
 "</html>\n";
 
+// Detecta se está rodando na nuvem (Railway injeta essas variáveis automaticamente
+// no ambiente do serviço) pra trocar o subtítulo do topo — evita o app dizer
+// "rede local · sem nuvem" quando na verdade está publicado no Railway.
+var IS_CLOUD_ENV = !!(
+  process.env.RAILWAY_ENVIRONMENT_NAME ||
+  process.env.RAILWAY_PROJECT_ID ||
+  process.env.RAILWAY_SERVICE_ID ||
+  process.env.RAILWAY_STATIC_URL ||
+  process.env.RAILWAY_PUBLIC_DOMAIN
+);
+var APP_SUBTITLE = IS_CLOUD_ENV ? "nuvem (Railway)" : "rede local · sem nuvem";
+var INDEX_HTML_RENDERED = INDEX_HTML.replace("__APP_SUBTITLE__", APP_SUBTITLE);
+
 // ==================== SERVIDOR ====================
 var server = http.createServer(function (req, res) {
   var u;
@@ -2068,7 +2083,7 @@ var server = http.createServer(function (req, res) {
   // e continue mostrando um bug já corrigido depois que o servidor for atualizado.
   if (req.method === "GET") {
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
-    res.end(INDEX_HTML);
+    res.end(INDEX_HTML_RENDERED);
     return;
   }
 
