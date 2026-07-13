@@ -91,13 +91,18 @@ const CATS = [
 const CAT_IDS = new Set(CATS.map(function (c) { return c.id; }));
 const SESSION_MODES = new Set(["completo", "reduzido"]);
 
-// Mesmos 4 quadrantes de extração do app v1. A ORDEM importa: é usada para calcular
-// o Mamba "deste quadrante" a partir de leituras acumuladas consecutivas.
+// Mesmos 4 quadrantes de extração do app v1, na ordem real em que o Dr. Vitor
+// extrai (occipital dir → occipital esq → temporal esq → temporal dir) — é a
+// ordem dos botões/abas de quadrante e a ordem no relatório impresso. NÃO
+// determina mais o cálculo do Mamba: desde a correção de julho/2026, o delta de
+// cada quadrante usa o horário real de preenchimento (mambaMarkedAtMs), então
+// funciona em qualquer ordem que a extração aconteça de verdade. Esta lista só
+// entra como último recurso pra cirurgias muito antigas, sem esse horário salvo.
 const QUADRANTS = [
-  { id: "temporal_dir",  label: "Temporal direito" },
-  { id: "temporal_esq",  label: "Temporal esquerdo" },
   { id: "occipital_dir", label: "Occipital direito" },
-  { id: "occipital_esq", label: "Occipital esquerdo" }
+  { id: "occipital_esq", label: "Occipital esquerdo" },
+  { id: "temporal_esq",  label: "Temporal esquerdo" },
+  { id: "temporal_dir",  label: "Temporal direito" }
 ];
 const QUAD_IDS = new Set(QUADRANTS.map(function (q) { return q.id; }));
 
@@ -336,12 +341,32 @@ const STRINGS = {
     "cnt.tab_extracao": "Extração",
     "cnt.tab_preinc": "Pré-incisões",
     "cnt.tab_fotos": "Fotos",
+    "cnt.tab_paciente": "Paciente",
     "cnt.tab_resumo": "Resumo Final",
     "cnt.final_summary_title": "Resumo final da cirurgia",
     "cnt.final_times_title": "Tempos",
     "cnt.final_categories_title": "Folículos por categoria",
     "cnt.final_preinc_title": "Resumo de pré-incisões",
     "cnt.final_preinc_diff": "Diferença (folículos extraídos − pré-incisões)",
+    "patient.section_title": "Dados do paciente",
+    "patient.section_hint": "Opcional — preencha agora, depois, ou nunca. Não trava nada da cirurgia.",
+    "patient.age_label": "Idade",
+    "patient.age_placeholder": "Ex: 45",
+    "patient.height_label": "Altura (cm)",
+    "patient.height_placeholder": "Ex: 175",
+    "patient.weight_label": "Peso (kg)",
+    "patient.weight_placeholder": "Ex: 80",
+    "patient.hair_thickness_label": "Espessura do cabelo",
+    "patient.hair_thin": "Fino",
+    "patient.hair_thick": "Grosso",
+    "patient.hair_texture_label": "Textura do cabelo",
+    "patient.hair_straight": "Liso",
+    "patient.hair_wavy": "Ondulado",
+    "patient.hair_curly": "Crespo",
+    "patient.surgery_type_label": "Tipo de cirurgia",
+    "patient.with_shaving": "Com raspagem",
+    "patient.without_shaving": "Sem raspagem",
+    "home.patient_info_toggle": "Dados do paciente (opcional)",
     "cnt.extraction_time_title": "Tempo de extração",
     "cnt.rate_hint": "Ritmo médio: {rate} folículos/hora",
     "cnt.summary_general_title": "Resumo geral (todos os quadrantes)",
@@ -661,12 +686,32 @@ const STRINGS = {
     "cnt.tab_extracao": "Extraction",
     "cnt.tab_preinc": "Pre-incisions",
     "cnt.tab_fotos": "Photos",
+    "cnt.tab_paciente": "Patient",
     "cnt.tab_resumo": "Final Summary",
     "cnt.final_summary_title": "Final surgery summary",
     "cnt.final_times_title": "Times",
     "cnt.final_categories_title": "Follicles by category",
     "cnt.final_preinc_title": "Pre-incision summary",
     "cnt.final_preinc_diff": "Difference (follicles extracted − pre-incisions)",
+    "patient.section_title": "Patient info",
+    "patient.section_hint": "Optional — fill it out now, later, or never. Doesn't block anything about the surgery.",
+    "patient.age_label": "Age",
+    "patient.age_placeholder": "e.g. 45",
+    "patient.height_label": "Height (cm)",
+    "patient.height_placeholder": "e.g. 175",
+    "patient.weight_label": "Weight (kg)",
+    "patient.weight_placeholder": "e.g. 80",
+    "patient.hair_thickness_label": "Hair thickness",
+    "patient.hair_thin": "Thin",
+    "patient.hair_thick": "Thick",
+    "patient.hair_texture_label": "Hair texture",
+    "patient.hair_straight": "Straight",
+    "patient.hair_wavy": "Wavy",
+    "patient.hair_curly": "Curly",
+    "patient.surgery_type_label": "Surgery type",
+    "patient.with_shaving": "With shaving",
+    "patient.without_shaving": "Without shaving",
+    "home.patient_info_toggle": "Patient info (optional)",
     "cnt.extraction_time_title": "Extraction time",
     "cnt.rate_hint": "Average rate: {rate} follicles/hour",
     "cnt.summary_general_title": "Overall summary (all quadrants)",
@@ -986,12 +1031,32 @@ const STRINGS = {
     "cnt.tab_extracao": "Extracción",
     "cnt.tab_preinc": "Pre-incisiones",
     "cnt.tab_fotos": "Fotos",
+    "cnt.tab_paciente": "Paciente",
     "cnt.tab_resumo": "Resumen Final",
     "cnt.final_summary_title": "Resumen final de la cirugía",
     "cnt.final_times_title": "Tiempos",
     "cnt.final_categories_title": "Folículos por categoría",
     "cnt.final_preinc_title": "Resumen de preincisiones",
     "cnt.final_preinc_diff": "Diferencia (folículos extraídos − preincisiones)",
+    "patient.section_title": "Datos del paciente",
+    "patient.section_hint": "Opcional — complételo ahora, después o nunca. No bloquea nada de la cirugía.",
+    "patient.age_label": "Edad",
+    "patient.age_placeholder": "Ej: 45",
+    "patient.height_label": "Altura (cm)",
+    "patient.height_placeholder": "Ej: 175",
+    "patient.weight_label": "Peso (kg)",
+    "patient.weight_placeholder": "Ej: 80",
+    "patient.hair_thickness_label": "Espesor del cabello",
+    "patient.hair_thin": "Fino",
+    "patient.hair_thick": "Grueso",
+    "patient.hair_texture_label": "Textura del cabello",
+    "patient.hair_straight": "Liso",
+    "patient.hair_wavy": "Ondulado",
+    "patient.hair_curly": "Crespo",
+    "patient.surgery_type_label": "Tipo de cirugía",
+    "patient.with_shaving": "Con rasurado",
+    "patient.without_shaving": "Sin rasurado",
+    "home.patient_info_toggle": "Datos del paciente (opcional)",
     "cnt.extraction_time_title": "Tiempo de extracción",
     "cnt.rate_hint": "Ritmo promedio: {rate} folículos/hora",
     "cnt.summary_general_title": "Resumen general (todos los cuadrantes)",
@@ -1136,7 +1201,48 @@ function emptyCounts() {
   return c;
 }
 function emptyQuadrant() {
-  return { counts: emptyCounts(), mambaCumulativo: null, mambaMarkTimeMs: null };
+  // mambaMarkTimeMs = tempo decorrido do cronômetro de extração no momento da marcação
+  //   (usado só pra calcular duração/ritmo do quadrante — pausas do cronômetro não contam).
+  // mambaMarkedAtMs = relógio real (Date.now()) no momento da marcação (usado só pra
+  //   descobrir a ORDEM real de preenchimento entre quadrantes — imune a pausas do
+  //   cronômetro, ao contrário do mambaMarkTimeMs).
+  return { counts: emptyCounts(), mambaCumulativo: null, mambaMarkTimeMs: null, mambaMarkedAtMs: null };
+}
+// Dados demográficos do paciente — sempre opcionais, nunca bloqueiam nada da
+// cirurgia. Ficam presos ao código da cirurgia (não ao nome real do paciente,
+// que este app nunca guarda). Servem só pra permitir comparar depois cirurgias
+// parecidas entre si (ex: raspada com raspada).
+var PATIENT_HAIR_THICKNESS = new Set(["fino", "grosso"]);
+var PATIENT_HAIR_TEXTURE = new Set(["liso", "ondulado", "crespo"]);
+var PATIENT_SHAVING = new Set(["sim", "nao"]);
+function emptyPatientInfo() {
+  return { idade: null, alturaCm: null, pesoKg: null, cabeloEspessura: null, cabeloTextura: null, raspagem: null };
+}
+// Valida um objeto "flat" com qualquer subconjunto dos campos de patientInfo (vindo
+// tanto do cadastro inicial quanto da aba Paciente depois) e devolve só as chaves
+// válidas prontas pra aplicar com Object.assign. Campo ausente no body = não mexe
+// nele. Campo vazio/null = limpa (paciente pode ter mudado de ideia). Campo com
+// valor fora do esperado = ignorado silenciosamente (não derruba o resto do
+// formulário por causa de um campo só).
+function sanitizePatientInfoFields(body) {
+  var out = {};
+  function numOrNull(v, min, max) {
+    if (v === null || v === undefined || v === "") return null;
+    var n = Number(v);
+    if (!Number.isFinite(n) || n < min || n > max) return undefined;
+    return n;
+  }
+  function enumOrNull(v, allowedSet) {
+    if (v === null || v === undefined || v === "") return null;
+    return allowedSet.has(v) ? v : undefined;
+  }
+  if (body.idade !== undefined) { var v1 = numOrNull(body.idade, 0, 130); if (v1 !== undefined) out.idade = (v1 === null ? null : Math.round(v1)); }
+  if (body.alturaCm !== undefined) { var v2 = numOrNull(body.alturaCm, 0, 260); if (v2 !== undefined) out.alturaCm = v2; }
+  if (body.pesoKg !== undefined) { var v3 = numOrNull(body.pesoKg, 0, 400); if (v3 !== undefined) out.pesoKg = v3; }
+  if (body.cabeloEspessura !== undefined) { var v4 = enumOrNull(body.cabeloEspessura, PATIENT_HAIR_THICKNESS); if (v4 !== undefined) out.cabeloEspessura = v4; }
+  if (body.cabeloTextura !== undefined) { var v5 = enumOrNull(body.cabeloTextura, PATIENT_HAIR_TEXTURE); if (v5 !== undefined) out.cabeloTextura = v5; }
+  if (body.raspagem !== undefined) { var v6 = enumOrNull(body.raspagem, PATIENT_SHAVING); if (v6 !== undefined) out.raspagem = v6; }
+  return out;
 }
 // Mesma fórmula do elapsedMs() do lado do cliente, pra calcular no servidor o tempo
 // decorrido de cirurgia no exato instante em que o Mamba de um quadrante é preenchido
@@ -1216,7 +1322,16 @@ Object.keys(db.sessions).forEach(function (id) {
       CATS.forEach(function (c) { if (s.quadrants[q.id].counts[c.id] === undefined) s.quadrants[q.id].counts[c.id] = 0; });
       if (s.quadrants[q.id].mambaCumulativo === undefined) s.quadrants[q.id].mambaCumulativo = null;
       if (s.quadrants[q.id].mambaMarkTimeMs === undefined) s.quadrants[q.id].mambaMarkTimeMs = null;
+      // Dado de cirurgias antigas (antes desta correção) não tem relógio real —
+      // fica null e cai no último recurso de ordem fixa, igual já acontecia antes.
+      if (s.quadrants[q.id].mambaMarkedAtMs === undefined) s.quadrants[q.id].mambaMarkedAtMs = null;
     });
+  }
+  if (!s.patientInfo) {
+    s.patientInfo = emptyPatientInfo();
+  } else {
+    var epi = emptyPatientInfo();
+    Object.keys(epi).forEach(function (k) { if (s.patientInfo[k] === undefined) s.patientInfo[k] = epi[k]; });
   }
   if (!s.preincCounts) s.preincCounts = emptyPreinc();
   if (!s.preincDist) {
@@ -1573,7 +1688,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "<head>\n" +
 "<meta charset=\"UTF-8\">\n" +
 "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1\">\n" +
-"<title>Graftis — Extração Folicular</title>\n" +
+"<title>Graftis — Hair Transplant Workflow</title>\n" +
 "<style>\n" +
 "  :root{--c-bg:#f4f6f7;--c-card:#fff;--c-text:#1c2b2e;--c-muted:#5c6b6e;--c-border:#dde3e4;--c-primary:#0e7c86;--c-primary-dark:#0a5c64;--c-integro:#1a8f5e;--c-parcial:#c2760a;--c-total:#c62828;--c-mini:#6b7280;--c-preinc:#5b5fc7;--c-tint:#fafcfc;--c-tint-active:#e8f4f5;--c-surface2:#e8edee;--c-toast-bg:#1c2b2e;--c-toast-text:#fff;--radius:10px;--shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);}\n" +
 "  *{box-sizing:border-box;} html,body{margin:0;padding:0;}\n" +
@@ -1749,6 +1864,45 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        </div>\n" +
 "        <p class=\"hint\" style=\"margin-top:6px;\" data-i18n=\"home.mode_explanation\">Completo: cada transecção parcial é registrada no tipo exato (2→1, 3→2 etc). Reduzido: os fios da transecção parcial entram junto com os folículos íntegros, e só um contador único de transecção parcial é usado pra calcular a taxa — sem detalhar o tipo. Não dá pra trocar depois de criada.</p>\n" +
 "      </div>\n" +
+"      <details class=\"field\">\n" +
+"        <summary style=\"cursor:pointer;\" data-i18n=\"home.patient_info_toggle\">Dados do paciente (opcional)</summary>\n" +
+"        <div style=\"margin-top:10px;\">\n" +
+"          <div class=\"field\">\n" +
+"            <label data-i18n=\"patient.age_label\">Idade</label>\n" +
+"            <input type=\"number\" id=\"new-patient-idade\" min=\"0\" max=\"130\" placeholder=\"Ex: 45\" data-i18n-placeholder=\"patient.age_placeholder\" onchange=\"App.setNewPatientField('idade', this.value)\">\n" +
+"          </div>\n" +
+"          <div class=\"field\">\n" +
+"            <label data-i18n=\"patient.height_label\">Altura (cm)</label>\n" +
+"            <input type=\"number\" id=\"new-patient-altura\" min=\"0\" max=\"260\" placeholder=\"Ex: 175\" data-i18n-placeholder=\"patient.height_placeholder\" onchange=\"App.setNewPatientField('alturaCm', this.value)\">\n" +
+"          </div>\n" +
+"          <div class=\"field\">\n" +
+"            <label data-i18n=\"patient.weight_label\">Peso (kg)</label>\n" +
+"            <input type=\"number\" id=\"new-patient-peso\" min=\"0\" max=\"400\" step=\"0.1\" placeholder=\"Ex: 80\" data-i18n-placeholder=\"patient.weight_placeholder\" onchange=\"App.setNewPatientField('pesoKg', this.value)\">\n" +
+"          </div>\n" +
+"          <div class=\"field\">\n" +
+"            <label data-i18n=\"patient.hair_thickness_label\">Espessura do cabelo</label>\n" +
+"            <div class=\"row\" style=\"gap:8px;\">\n" +
+"              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-espessura-fino\" data-i18n=\"patient.hair_thin\" onclick=\"App.setNewPatientField('cabeloEspessura','fino')\">Fino</button>\n" +
+"              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-espessura-grosso\" data-i18n=\"patient.hair_thick\" onclick=\"App.setNewPatientField('cabeloEspessura','grosso')\">Grosso</button>\n" +
+"            </div>\n" +
+"          </div>\n" +
+"          <div class=\"field\">\n" +
+"            <label data-i18n=\"patient.hair_texture_label\">Textura do cabelo</label>\n" +
+"            <div class=\"row\" style=\"gap:8px;\">\n" +
+"              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-textura-liso\" data-i18n=\"patient.hair_straight\" onclick=\"App.setNewPatientField('cabeloTextura','liso')\">Liso</button>\n" +
+"              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-textura-ondulado\" data-i18n=\"patient.hair_wavy\" onclick=\"App.setNewPatientField('cabeloTextura','ondulado')\">Ondulado</button>\n" +
+"              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-textura-crespo\" data-i18n=\"patient.hair_curly\" onclick=\"App.setNewPatientField('cabeloTextura','crespo')\">Crespo</button>\n" +
+"            </div>\n" +
+"          </div>\n" +
+"          <div class=\"field\" style=\"margin-bottom:0;\">\n" +
+"            <label data-i18n=\"patient.surgery_type_label\">Tipo de cirurgia</label>\n" +
+"            <div class=\"row\" style=\"gap:8px;\">\n" +
+"              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-raspagem-sim\" data-i18n=\"patient.with_shaving\" onclick=\"App.setNewPatientField('raspagem','sim')\">Com raspagem</button>\n" +
+"              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-raspagem-nao\" data-i18n=\"patient.without_shaving\" onclick=\"App.setNewPatientField('raspagem','nao')\">Sem raspagem</button>\n" +
+"            </div>\n" +
+"          </div>\n" +
+"        </div>\n" +
+"      </details>\n" +
 "      <button class=\"btn block lg\" data-i18n=\"home.create_button\" onclick=\"App.createSession()\">+ Nova cirurgia (criar sessão)</button>\n" +
 "    </div>\n" +
 "    <div id=\"surgery-list\"></div>\n" +
@@ -1892,6 +2046,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      <button class=\"btn\" id=\"tab-extracao-btn\" data-i18n=\"cnt.tab_extracao\" onclick=\"App.switchTab('extracao')\">Extração</button>\n" +
 "      <button class=\"btn secondary\" id=\"tab-preinc-btn\" data-i18n=\"cnt.tab_preinc\" onclick=\"App.switchTab('preincisoes')\">Pré-incisões</button>\n" +
 "      <button class=\"btn secondary\" id=\"tab-fotos-btn\" data-i18n=\"cnt.tab_fotos\" onclick=\"App.switchTab('fotos')\">Fotos</button>\n" +
+"      <button class=\"btn secondary\" id=\"tab-paciente-btn\" data-i18n=\"cnt.tab_paciente\" onclick=\"App.switchTab('paciente')\">Paciente</button>\n" +
 "      <button class=\"btn secondary\" id=\"tab-resumo-btn\" data-i18n=\"cnt.tab_resumo\" onclick=\"App.switchTab('resumofinal')\">Resumo Final</button>\n" +
 "    </div>\n" +
 "\n" +
@@ -1992,6 +2147,47 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        <h2 style=\"font-size:15px;margin:0 0 4px;\" data-i18n=\"photos.posop_title\">Pós-operatório imediato</h2>\n" +
 "        <input type=\"file\" accept=\"image/*\" multiple capture=\"environment\" onchange=\"App.uploadPhotos('posop', this)\">\n" +
 "        <div class=\"photo-grid\" id=\"photos-grid-posop\"></div>\n" +
+"      </div>\n" +
+"    </div>\n" +
+"\n" +
+"    <div id=\"panel-paciente\" style=\"display:none;\">\n" +
+"      <div class=\"card\">\n" +
+"        <h2 style=\"font-size:15px;margin:0 0 4px;\" data-i18n=\"patient.section_title\">Dados do paciente</h2>\n" +
+"        <p class=\"hint\" style=\"margin-bottom:10px;\" data-i18n=\"patient.section_hint\">Opcional — preencha agora, depois, ou nunca. Não trava nada da cirurgia.</p>\n" +
+"        <div class=\"field\">\n" +
+"          <label data-i18n=\"patient.age_label\">Idade</label>\n" +
+"          <input type=\"number\" id=\"patient-idade\" min=\"0\" max=\"130\" placeholder=\"Ex: 45\" data-i18n-placeholder=\"patient.age_placeholder\" onchange=\"App.setPatientField('idade', this.value)\">\n" +
+"        </div>\n" +
+"        <div class=\"field\">\n" +
+"          <label data-i18n=\"patient.height_label\">Altura (cm)</label>\n" +
+"          <input type=\"number\" id=\"patient-altura\" min=\"0\" max=\"260\" placeholder=\"Ex: 175\" data-i18n-placeholder=\"patient.height_placeholder\" onchange=\"App.setPatientField('alturaCm', this.value)\">\n" +
+"        </div>\n" +
+"        <div class=\"field\">\n" +
+"          <label data-i18n=\"patient.weight_label\">Peso (kg)</label>\n" +
+"          <input type=\"number\" id=\"patient-peso\" min=\"0\" max=\"400\" step=\"0.1\" placeholder=\"Ex: 80\" data-i18n-placeholder=\"patient.weight_placeholder\" onchange=\"App.setPatientField('pesoKg', this.value)\">\n" +
+"        </div>\n" +
+"        <div class=\"field\">\n" +
+"          <label data-i18n=\"patient.hair_thickness_label\">Espessura do cabelo</label>\n" +
+"          <div class=\"row\" style=\"gap:8px;\">\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"patient-espessura-fino\" data-i18n=\"patient.hair_thin\" onclick=\"App.setPatientField('cabeloEspessura','fino')\">Fino</button>\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"patient-espessura-grosso\" data-i18n=\"patient.hair_thick\" onclick=\"App.setPatientField('cabeloEspessura','grosso')\">Grosso</button>\n" +
+"          </div>\n" +
+"        </div>\n" +
+"        <div class=\"field\">\n" +
+"          <label data-i18n=\"patient.hair_texture_label\">Textura do cabelo</label>\n" +
+"          <div class=\"row\" style=\"gap:8px;\">\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"patient-textura-liso\" data-i18n=\"patient.hair_straight\" onclick=\"App.setPatientField('cabeloTextura','liso')\">Liso</button>\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"patient-textura-ondulado\" data-i18n=\"patient.hair_wavy\" onclick=\"App.setPatientField('cabeloTextura','ondulado')\">Ondulado</button>\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"patient-textura-crespo\" data-i18n=\"patient.hair_curly\" onclick=\"App.setPatientField('cabeloTextura','crespo')\">Crespo</button>\n" +
+"          </div>\n" +
+"        </div>\n" +
+"        <div class=\"field\" style=\"margin-bottom:0;\">\n" +
+"          <label data-i18n=\"patient.surgery_type_label\">Tipo de cirurgia</label>\n" +
+"          <div class=\"row\" style=\"gap:8px;\">\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"patient-raspagem-sim\" data-i18n=\"patient.with_shaving\" onclick=\"App.setPatientField('raspagem','sim')\">Com raspagem</button>\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"patient-raspagem-nao\" data-i18n=\"patient.without_shaving\" onclick=\"App.setPatientField('raspagem','nao')\">Sem raspagem</button>\n" +
+"          </div>\n" +
+"        </div>\n" +
 "      </div>\n" +
 "    </div>\n" +
 "\n" +
@@ -2120,10 +2316,10 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "];\n" +
 "var SESSION_MODES = ['completo','reduzido'];\n" +
 "var QUADRANTS = [\n" +
-"  {id:'temporal_dir',get label(){return t('quad.temporal_dir');}},\n" +
-"  {id:'temporal_esq',get label(){return t('quad.temporal_esq');}},\n" +
 "  {id:'occipital_dir',get label(){return t('quad.occipital_dir');}},\n" +
-"  {id:'occipital_esq',get label(){return t('quad.occipital_esq');}}\n" +
+"  {id:'occipital_esq',get label(){return t('quad.occipital_esq');}},\n" +
+"  {id:'temporal_esq',get label(){return t('quad.temporal_esq');}},\n" +
+"  {id:'temporal_dir',get label(){return t('quad.temporal_dir');}}\n" +
 "];\n" +
 "var PREINC_AREAS = [\n" +
 "  {id:'recesso_dir',get label(){return t('preinc.recesso_dir');}},{id:'recesso_esq',get label(){return t('preinc.recesso_esq');}},\n" +
@@ -2164,30 +2360,35 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  return combined;\n" +
 "}\n" +
 "// Encontra o quadrante marcado (Mamba preenchido) mais recente ANTES do quadrante\n" +
-"// atual, usando o horário real em que cada um foi marcado (mambaMarkTimeMs) — não a\n" +
-"// ordem fixa da lista de quadrantes. Isso é o que permite que cada médico/equipe\n" +
-"// preencha os quadrantes na ordem que quiser (direita, esquerda, temporal, occipital\n" +
-"// — tanto faz), em vez de assumir sempre temporal dir → temporal esq → occipital\n" +
-"// dir → occipital esq. Retorna null se não houver candidato confiável (aí quem\n" +
-"// chamou cai num último recurso baseado na ordem da lista, só pra dado antigo de\n" +
-"// antes desta correção, que não tem timestamp).\n" +
+"// atual, usando o RELÓGIO REAL de quando cada um foi marcado (mambaMarkedAtMs) — não\n" +
+"// a ordem fixa da lista de quadrantes, e não o tempo decorrido do cronômetro de\n" +
+"// extração (mambaMarkTimeMs), que fica PARADO sempre que o cronômetro é pausado e\n" +
+"// por isso pode empatar entre dois quadrantes marcados durante a mesma pausa —\n" +
+"// empate esse que, com comparação estrita, fazia o sistema pular o quadrante\n" +
+"// verdadeiramente anterior e cair, por engano, num quadrante bem mais antigo\n" +
+"// (o primeiro já marcado). Isso é o que permite que cada médico/equipe preencha os\n" +
+"// quadrantes na ordem que quiser (direita, esquerda, temporal, occipital — tanto\n" +
+"// faz), em vez de assumir sempre temporal dir → temporal esq → occipital dir →\n" +
+"// occipital esq. Retorna null se não houver candidato confiável (aí quem chamou cai\n" +
+"// num último recurso baseado na ordem da lista, só pra dado antigo de antes desta\n" +
+"// correção, que não tem relógio real registrado).\n" +
 "function findPrevMarkedQuadrant(s, quadId){\n" +
 "  var current = s.quadrants[quadId];\n" +
-"  if (current.mambaMarkTimeMs===null || current.mambaMarkTimeMs===undefined) return null;\n" +
+"  if (current.mambaMarkedAtMs===null || current.mambaMarkedAtMs===undefined) return null;\n" +
 "  var best = null;\n" +
 "  QUADRANTS.forEach(function(q){\n" +
 "    if (q.id===quadId) return;\n" +
 "    var qd = s.quadrants[q.id];\n" +
-"    if (qd.mambaMarkTimeMs===null || qd.mambaMarkTimeMs===undefined) return;\n" +
-"    if (qd.mambaMarkTimeMs < current.mambaMarkTimeMs){\n" +
-"      if (!best || qd.mambaMarkTimeMs > best.mambaMarkTimeMs) best = qd;\n" +
+"    if (qd.mambaMarkedAtMs===null || qd.mambaMarkedAtMs===undefined) return;\n" +
+"    if (qd.mambaMarkedAtMs < current.mambaMarkedAtMs){\n" +
+"      if (!best || qd.mambaMarkedAtMs > best.mambaMarkedAtMs) best = qd;\n" +
 "    }\n" +
 "  });\n" +
 "  return best;\n" +
 "}\n" +
 "function mambaPrevCumulativo(s, quadId){\n" +
 "  var current = s.quadrants[quadId];\n" +
-"  if (current.mambaMarkTimeMs===null || current.mambaMarkTimeMs===undefined){\n" +
+"  if (current.mambaMarkedAtMs===null || current.mambaMarkedAtMs===undefined){\n" +
 "    // Este quadrante em si não tem timestamp (dado antigo, marcado antes desta\n" +
 "    // correção existir) — não tem como saber a ordem real de preenchimento; cai no\n" +
 "    // último recurso: ordem fixa da lista, igual ao comportamento de antes.\n" +
@@ -2210,14 +2411,14 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "function mambaFinalCumulativo(s){\n" +
 "  var withTime = QUADRANTS.map(function(q){ return s.quadrants[q.id]; }).filter(function(qd){\n" +
 "    return qd.mambaCumulativo!==null && qd.mambaCumulativo!==undefined && qd.mambaCumulativo!=='' &&\n" +
-"      qd.mambaMarkTimeMs!==null && qd.mambaMarkTimeMs!==undefined;\n" +
+"      qd.mambaMarkedAtMs!==null && qd.mambaMarkedAtMs!==undefined;\n" +
 "  });\n" +
 "  if (withTime.length){\n" +
-"    withTime.sort(function(a,b){ return b.mambaMarkTimeMs - a.mambaMarkTimeMs; });\n" +
+"    withTime.sort(function(a,b){ return b.mambaMarkedAtMs - a.mambaMarkedAtMs; });\n" +
 "    return Number(withTime[0].mambaCumulativo);\n" +
 "  }\n" +
-"  // Nenhum quadrante tem timestamp (cirurgia antiga, nunca tocada depois desta\n" +
-"  // correção) — último recurso: ordem fixa da lista, como antes.\n" +
+"  // Nenhum quadrante tem relógio real registrado (cirurgia antiga, nunca tocada\n" +
+"  // depois desta correção) — último recurso: ordem fixa da lista, como antes.\n" +
 "  for (var i=QUADRANTS.length-1;i>=0;i--){\n" +
 "    var v = s.quadrants[QUADRANTS[i].id].mambaCumulativo;\n" +
 "    if (v!==null && v!==undefined && v!=='') return Number(v);\n" +
@@ -2241,8 +2442,12 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "// forem marcados fora de ordem (ou vier de dado antigo sem timestamp confiável), a\n" +
 "// duração pode dar zero ou negativa — nesse caso tratamos como 'sem dado confiável' (null).\n" +
 "function quadrantDurationMs(s, quadId){\n" +
-"  var v = s.quadrants[quadId].mambaMarkTimeMs;\n" +
+"  var qd = s.quadrants[quadId];\n" +
+"  var v = qd.mambaMarkTimeMs;\n" +
 "  if (v===null || v===undefined) return null;\n" +
+"  // Sem relógio real registrado não dá pra confiar em qual quadrante veio antes —\n" +
+"  // sem isso, evita calcular uma duração enganosa contra o quadrante errado.\n" +
+"  if (qd.mambaMarkedAtMs===null || qd.mambaMarkedAtMs===undefined) return null;\n" +
 "  var dur = Number(v) - mambaPrevMarkTimeMs(s, quadId);\n" +
 "  return dur>0 ? dur : null;\n" +
 "}\n" +
@@ -2271,7 +2476,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var end = s.globalTimerEndedAt || Date.now();\n" +
 "  return end - s.globalTimerStartedAt;\n" +
 "}\n" +
-"var state = {currentId:null, session:null, pollHandle:null, connOk:true, increments:DEFAULT_INCREMENTS.slice(), activeTab:'extracao', activeQuadrant:QUADRANTS[0].id, audioEnabled:false, audioInterval:100, lastAnnounced:0, baseUrl:null, alertParcialEnabled:false, alertParcialThreshold:null, alertParcialFired:false, alertTotalEnabled:false, alertTotalThreshold:null, alertTotalFired:false, currentUser:null, resetToken:null, newSessionMode:'completo', lang:'pt'};\n" +
+"var state = {currentId:null, session:null, pollHandle:null, connOk:true, increments:DEFAULT_INCREMENTS.slice(), activeTab:'extracao', activeQuadrant:QUADRANTS[0].id, audioEnabled:false, audioInterval:100, lastAnnounced:0, baseUrl:null, alertParcialEnabled:false, alertParcialThreshold:null, alertParcialFired:false, alertTotalEnabled:false, alertTotalThreshold:null, alertTotalFired:false, currentUser:null, resetToken:null, newSessionMode:'completo', newPatientInfo:{}, lang:'pt'};\n" +
 "function shareUrlFor(id){ return (state.baseUrl||window.location.origin) + '/s/' + id; }\n" +
 "function resolveBaseUrl(){\n" +
 "  var host = window.location.hostname;\n" +
@@ -2742,7 +2947,16 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var codigo = document.getElementById('new-codigo').value.trim();\n" +
 "  if (!codigo){ toast(t('toast.enter_patient_code')); return; }\n" +
 "  var mode = state.newSessionMode||'completo';\n" +
-"  api('/api/session','POST',{codigo:codigo,mode:mode}).then(function(s){ document.getElementById('new-codigo').value=''; App.setNewMode('completo'); App.openSession(s.id); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  var payload = {codigo:codigo, mode:mode};\n" +
+"  if (Object.keys(state.newPatientInfo||{}).length) payload.patientInfo = state.newPatientInfo;\n" +
+"  api('/api/session','POST',payload).then(function(s){\n" +
+"    document.getElementById('new-codigo').value='';\n" +
+"    App.setNewMode('completo');\n" +
+"    state.newPatientInfo = {};\n" +
+"    ['new-patient-idade','new-patient-altura','new-patient-peso'].forEach(function(id){ var el=document.getElementById(id); if (el) el.value=''; });\n" +
+"    App.refreshNewPatientButtons();\n" +
+"    App.openSession(s.id);\n" +
+"  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
 "};\n" +
 "App.openSession = function(id){ state.currentId=id; state.activeQuadrant=QUADRANTS[0].id; history.pushState({},'','/s/'+id); loadAudioPrefs(id); showScreen('counting'); App.switchTab('extracao'); fetchAndRender().then(function(){ startPolling(); }); };\n" +
 "function fetchAndRender(){ return api('/api/session/'+state.currentId).then(function(s){ state.session=s; render(); }).catch(function(){ toast(t('errors.surgery_not_found_server')); }); }\n" +
@@ -2750,8 +2964,8 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "function stopPolling(){ if (state.pollHandle){ clearInterval(state.pollHandle); state.pollHandle=null; } }\n" +
 "App.switchTab = function(tab){\n" +
 "  state.activeTab = tab;\n" +
-"  var panels = {extracao:'panel-extracao', preincisoes:'panel-preincisoes', fotos:'panel-fotos', resumofinal:'panel-resumofinal'};\n" +
-"  var btns = {extracao:'tab-extracao-btn', preincisoes:'tab-preinc-btn', fotos:'tab-fotos-btn', resumofinal:'tab-resumo-btn'};\n" +
+"  var panels = {extracao:'panel-extracao', preincisoes:'panel-preincisoes', fotos:'panel-fotos', paciente:'panel-paciente', resumofinal:'panel-resumofinal'};\n" +
+"  var btns = {extracao:'tab-extracao-btn', preincisoes:'tab-preinc-btn', fotos:'tab-fotos-btn', paciente:'tab-paciente-btn', resumofinal:'tab-resumo-btn'};\n" +
 "  Object.keys(panels).forEach(function(key){\n" +
 "    document.getElementById(panels[key]).style.display = (key===tab) ? '' : 'none';\n" +
 "    document.getElementById(btns[key]).className = (key===tab) ? 'btn' : 'btn secondary';\n" +
@@ -2930,6 +3144,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  checkTransectionAlerts(sum.taxaParcial, sum.taxaTotal);\n" +
 "  renderPreinc(s);\n" +
 "  renderPhotos(s);\n" +
+"  renderPatientInfo(s);\n" +
 "}\n" +
 "function incBtns(catId){\n" +
 "  var html = '<button class=\"cat-btn minus\" onclick=\"App.adjust(\\''+catId+'\\',-1)\">-1</button>';\n" +
@@ -3032,6 +3247,44 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    }).join('');\n" +
 "  });\n" +
 "}\n" +
+"function renderPatientInfo(s){\n" +
+"  var pi = s.patientInfo || {};\n" +
+"  var idadeEl = document.getElementById('patient-idade');\n" +
+"  if (document.activeElement !== idadeEl) idadeEl.value = (pi.idade===null||pi.idade===undefined) ? '' : pi.idade;\n" +
+"  var alturaEl = document.getElementById('patient-altura');\n" +
+"  if (document.activeElement !== alturaEl) alturaEl.value = (pi.alturaCm===null||pi.alturaCm===undefined) ? '' : pi.alturaCm;\n" +
+"  var pesoEl = document.getElementById('patient-peso');\n" +
+"  if (document.activeElement !== pesoEl) pesoEl.value = (pi.pesoKg===null||pi.pesoKg===undefined) ? '' : pi.pesoKg;\n" +
+"  var patientChoicePairs = [\n" +
+"    ['patient-espessura-fino','cabeloEspessura','fino'], ['patient-espessura-grosso','cabeloEspessura','grosso'],\n" +
+"    ['patient-textura-liso','cabeloTextura','liso'], ['patient-textura-ondulado','cabeloTextura','ondulado'], ['patient-textura-crespo','cabeloTextura','crespo'],\n" +
+"    ['patient-raspagem-sim','raspagem','sim'], ['patient-raspagem-nao','raspagem','nao']\n" +
+"  ];\n" +
+"  patientChoicePairs.forEach(function(pair){\n" +
+"    var el = document.getElementById(pair[0]);\n" +
+"    if (el) el.className = 'btn' + (pi[pair[1]]===pair[2] ? '' : ' secondary');\n" +
+"  });\n" +
+"}\n" +
+"App.setPatientField = function(field, value){\n" +
+"  var payload = {}; payload[field] = value;\n" +
+"  api('/api/session/'+state.currentId+'/patient-info','POST',payload).then(function(s){ state.session=s; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.refreshNewPatientButtons = function(){\n" +
+"  var p = state.newPatientInfo || {};\n" +
+"  var pairs = [\n" +
+"    ['new-patient-espessura-fino','cabeloEspessura','fino'], ['new-patient-espessura-grosso','cabeloEspessura','grosso'],\n" +
+"    ['new-patient-textura-liso','cabeloTextura','liso'], ['new-patient-textura-ondulado','cabeloTextura','ondulado'], ['new-patient-textura-crespo','cabeloTextura','crespo'],\n" +
+"    ['new-patient-raspagem-sim','raspagem','sim'], ['new-patient-raspagem-nao','raspagem','nao']\n" +
+"  ];\n" +
+"  pairs.forEach(function(pair){\n" +
+"    var el = document.getElementById(pair[0]);\n" +
+"    if (el) el.className = 'btn' + (p[pair[1]]===pair[2] ? '' : ' secondary');\n" +
+"  });\n" +
+"};\n" +
+"App.setNewPatientField = function(field, value){\n" +
+"  state.newPatientInfo[field] = value;\n" +
+"  App.refreshNewPatientButtons();\n" +
+"};\n" +
 "App.uploadPhotos = function(category, inputEl){\n" +
 "  var files = Array.prototype.slice.call((inputEl && inputEl.files) || []);\n" +
 "  if (!files.length) return;\n" +
@@ -3167,6 +3420,19 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var finalMamba = mambaFinalCumulativo(s);\n" +
 "  var mdiffGeral = computeMambaDiff(finalMamba, sum.foliculosManipulados);\n" +
 "\n" +
+"  var pi = s.patientInfo || {};\n" +
+"  var piParts = [];\n" +
+"  if (pi.idade!==null && pi.idade!==undefined) piParts.push('<div>'+escapeHtml(t('patient.age_label'))+'<br><b>'+pi.idade+'</b></div>');\n" +
+"  if (pi.alturaCm!==null && pi.alturaCm!==undefined) piParts.push('<div>'+escapeHtml(t('patient.height_label'))+'<br><b>'+pi.alturaCm+'</b></div>');\n" +
+"  if (pi.pesoKg!==null && pi.pesoKg!==undefined) piParts.push('<div>'+escapeHtml(t('patient.weight_label'))+'<br><b>'+pi.pesoKg+'</b></div>');\n" +
+"  if (pi.cabeloEspessura) piParts.push('<div>'+escapeHtml(t('patient.hair_thickness_label'))+'<br><b>'+escapeHtml(t(pi.cabeloEspessura==='fino'?'patient.hair_thin':'patient.hair_thick'))+'</b></div>');\n" +
+"  if (pi.cabeloTextura) {\n" +
+"    var texturaKey = pi.cabeloTextura==='liso' ? 'patient.hair_straight' : (pi.cabeloTextura==='ondulado' ? 'patient.hair_wavy' : 'patient.hair_curly');\n" +
+"    piParts.push('<div>'+escapeHtml(t('patient.hair_texture_label'))+'<br><b>'+escapeHtml(t(texturaKey))+'</b></div>');\n" +
+"  }\n" +
+"  if (pi.raspagem) piParts.push('<div>'+escapeHtml(t('patient.surgery_type_label'))+'<br><b>'+escapeHtml(t(pi.raspagem==='sim'?'patient.with_shaving':'patient.without_shaving'))+'</b></div>');\n" +
+"  var patientInfoHtml = piParts.length ? ('<h2>'+escapeHtml(t('patient.section_title'))+'</h2><div class=\"print-summary\">'+piParts.join('')+'</div>') : '';\n" +
+"\n" +
 "  var quadrantsHtml = QUADRANTS.map(function(q){\n" +
 "    var qc = s.quadrants[q.id].counts;\n" +
 "    var qsum = computeSummary(qc, s.mode||'completo');\n" +
@@ -3249,6 +3515,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    logoHtml +\n" +
 "    '<h1>'+escapeHtml(t('print.title'))+'</h1>' +\n" +
 "    '<div>'+escapeHtml(t('print.patient_label'))+': <b>'+escapeHtml(s.codigo)+'</b> &nbsp;|&nbsp; '+escapeHtml(t('print.status_label'))+': <b>'+(s.status==='finalizada'?t('common.status_finalized'):t('common.status_in_progress'))+'</b> &nbsp;|&nbsp; '+escapeHtml(t('print.mode_label'))+': <b>'+((s.mode==='reduzido')?t('common.mode_reduced'):t('common.mode_complete'))+'</b></div>' +\n" +
+"    patientInfoHtml +\n" +
 "    '<h2>'+escapeHtml(t('cnt.summary_general_title'))+'</h2>' +\n" +
 "    '<div class=\"print-summary\">' +\n" +
 "      '<div>'+escapeHtml(t('cnt.summary_extracted'))+'<br><b>'+sum.foliculosExtraidos+'</b></div>' +\n" +
@@ -3589,10 +3856,18 @@ var server = http.createServer(function (req, res) {
       var mode = String(body.mode || "completo");
       if (!SESSION_MODES.has(mode)) { mode = "completo"; }
       var id = newSessionId();
+      var newPatientInfo = emptyPatientInfo();
+      // Dados demográficos são opcionais mesmo aqui na criação — quem estiver com
+      // pressa no dia da cirurgia simplesmente não manda "patientInfo" e preenche
+      // depois na aba Paciente, sem nada travar.
+      if (body.patientInfo && typeof body.patientInfo === "object") {
+        Object.assign(newPatientInfo, sanitizePatientInfoFields(body.patientInfo));
+      }
       db.sessions[id] = {
         id: id, codigo: codigo, ownerId: creator.id, status: "andamento",
         mode: mode,
         quadrants: emptyQuadrants(),
+        patientInfo: newPatientInfo,
         preincCounts: emptyPreinc(),
         preincDist: emptyPreincDist(),
         photos: { marcacao: [], posop: [] },
@@ -3605,6 +3880,24 @@ var server = http.createServer(function (req, res) {
       saveData();
       send(res, 200, db.sessions[id]);
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", createLang) }); });
+    return;
+  }
+
+  // Dados demográficos do paciente (idade, altura, peso, cabelo, raspagem) — sempre
+  // opcionais, preenchíveis a qualquer momento, tanto na criação quanto depois na aba
+  // Paciente. Aceita atualização parcial (só os campos enviados são alterados).
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/patient-info$/);
+  if (m && req.method === "POST") {
+    var sPat = db.sessions[m[1]];
+    var sPatLang = requestLang(req);
+    if (!sPat) { send(res, 404, { error: t("errors.surgery_not_found", sPatLang) }); return; }
+    readBody(req).then(function (body) {
+      if (!sPat.patientInfo) sPat.patientInfo = emptyPatientInfo();
+      Object.assign(sPat.patientInfo, sanitizePatientInfoFields(body));
+      sPat.updatedAt = Date.now();
+      saveData();
+      send(res, 200, withOwnerBranding(sPat));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sPatLang) }); });
     return;
   }
 
@@ -3704,14 +3997,23 @@ var server = http.createServer(function (req, res) {
       if (body.value === null || body.value === undefined || body.value === "") {
         sM.quadrants[quadId].mambaCumulativo = null;
         sM.quadrants[quadId].mambaMarkTimeMs = null;
+        sM.quadrants[quadId].mambaMarkedAtMs = null;
       } else {
         var v = Number(body.value);
         if (!Number.isFinite(v) || v < 0) { send(res, 400, { error: t("errors.invalid_value", sMLang) }); return; }
         sM.quadrants[quadId].mambaCumulativo = v;
         // Marca, no exato momento em que o Mamba é preenchido, quanto tempo de cirurgia
         // já tinha decorrido — é isso que permite calcular o ritmo de extração por
-        // quadrante baseado no Mamba (em vez da contagem manual de bancada).
+        // quadrante baseado no Mamba (em vez da contagem manual de bancada). Esse valor
+        // FICA PARADO enquanto o cronômetro estiver pausado (de propósito — não conta
+        // tempo de pausa como tempo de extração do quadrante).
         sM.quadrants[quadId].mambaMarkTimeMs = serverElapsedMs(sM.timer);
+        // Marca também o relógio real (nunca pausa, nunca empata entre quadrantes
+        // diferentes) — é isso que garante a ORDEM verdadeira de preenchimento entre
+        // quadrantes, mesmo que dois deles sejam marcados com o cronômetro de extração
+        // pausado (o que fazia o cálculo acima empatar e o sistema cair, por engano,
+        // no quadrante mais antigo em vez do mais recente).
+        sM.quadrants[quadId].mambaMarkedAtMs = Date.now();
       }
       sM.updatedAt = Date.now();
       saveData();
