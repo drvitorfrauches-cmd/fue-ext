@@ -3825,6 +3825,13 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  if (m){\n" +
 "    // Acesso direto a uma cirurgia via link — não exige login (fluxo das auxiliares).\n" +
 "    state.currentId=m[1]; loadAudioPrefs(m[1]); showScreen('counting'); App.switchTab('extracao'); fetchAndRender().then(function(){ startPolling(); });\n" +
+"    // Mas se o navegador já tiver uma sessão de médico logado (ex: o próprio médico\n" +
+"    // abrindo um atalho/link direto pra cirurgia, em vez de entrar pela Home), detecta\n" +
+"    // isso em paralelo — sem isso, state.currentUser ficava null a sessão toda, e o\n" +
+"    // botão \"Início\" (App.goHome) achava que era uma auxiliar sem login e voltava pra\n" +
+"    // própria cirurgia em vez de ir pra listagem. Se não tiver sessão válida (é mesmo\n" +
+"    // uma auxiliar sem login), o catch não faz nada — segue o fluxo normal.\n" +
+"    api('/api/me').then(function(r){ state.currentUser = r.user; renderUserBar(); }).catch(function(){});\n" +
 "  } else if (mReset){\n" +
 "    state.resetToken = mReset[1]; showScreen('reset');\n" +
 "  } else {\n" +
