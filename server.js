@@ -216,6 +216,9 @@ const STRINGS = {
     "errors.surgery_finalized_reopen_timer": "Cirurgia finalizada — reabra pra mexer no cronômetro.",
     "errors.login_required_delete_surgery": "Faça login pra apagar uma cirurgia.",
     "errors.surgery_not_yours": "Essa cirurgia não é sua.",
+    "errors.quadrant_locked": "Este quadrante está travado. Reabra pra editar.",
+    "errors.value_below_carry": "O valor não pode ser menor que o total já trazido do quadrante anterior ({carry}).",
+    "errors.invalid_carry_link": "Não é possível ligar esse quadrante (criaria um ciclo).",
     "toast.login_required_dashboard": "Faça login pra ver o dashboard.",
     "toast.server_unreachable": "Não consegui falar com o servidor.",
     "toast.add_at_least_one_value": "Adicione ao menos um valor.",
@@ -232,6 +235,8 @@ const STRINGS = {
     "toast.logo_removed": "Logomarca removida.",
     "toast.surgery_finalized": "Cirurgia finalizada.",
     "toast.surgery_reopened": "Cirurgia reaberta.",
+    "toast.quadrant_finished": "Quadrante finalizado.",
+    "toast.quadrant_reopened": "Quadrante reaberto.",
     "toast.address_copied": "Endereço copiado.",
     "toast.copy_failed_manual": "Não deu pra copiar — selecione o texto manualmente.",
     "toast.copy_manually": "Copie o endereço manualmente: {url}",
@@ -243,6 +248,8 @@ const STRINGS = {
     "confirm.reset_extraction_timer": "Zerar o cronômetro desta cirurgia (afeta todos os aparelhos conectados)?",
     "confirm.reset_preinc_timer": "Zerar o cronômetro de pré-incisões (afeta todos os aparelhos conectados)?",
     "confirm.finalize_surgery": "Finalizar esta cirurgia? Trava as contagens em todos os aparelhos conectados.",
+    "confirm.finish_quadrant": "Finalizar a contagem deste quadrante? Ele fica travado até você reabrir.",
+    "confirm.reopen_quadrant": "Reabrir este quadrante pra editar de novo?",
     "prompt.set_value_for": "Definir valor para \"{label}\":",
     "prompt.set_quantity_for": "Definir quantidade de \"{label}\":",
     "errors.file_read_error": "Não li o arquivo.",
@@ -295,6 +302,8 @@ const STRINGS = {
     "config.audio_announce_hint": "Anuncia em voz alta o total de folículos extraídos (somando os 4 quadrantes) a cada N.",
     "config.audio_announce_every": "Anunciar a cada",
     "config.audio_test_btn": "Testar voz",
+    "config.preinc_audio_section_title": "Áudio de pré-incisões",
+    "config.preinc_audio_announce_hint": "Anuncia em voz alta o novo total de pré-incisões (somando todas as áreas) toda vez que você preencher o valor de uma área.",
     "config.alarm_section_title": "Alarme de transecção",
     "config.alarm_subtitle": "Avisa por voz assim que a taxa (somando os 4 quadrantes) ultrapassar o limite que você definir.",
     "config.alert_partial_label": "Avisar se transecção parcial passar de (%)",
@@ -377,7 +386,6 @@ const STRINGS = {
     "cnt.summary_total_transec": "Transecção total",
     "cnt.summary_mini": "Mini (fora do total)",
     "cnt.mamba_reading": "Mamba (leitura final)",
-    "cnt.mamba_manipulated": "Folículos manipulados",
     "cnt.mamba_diff": "Diferença",
     "cnt.mamba_diffpct": "Diferença (% do Mamba)",
     "cnt.mamba_diff_extraidos": "Diferença (Mamba − Extraídos)",
@@ -388,6 +396,13 @@ const STRINGS = {
     "cnt.mamba_input_placeholder": "Ex: 1000",
     "cnt.mamba_quad_val": "Mamba deste quadrante",
     "cnt.mamba_quad_duration": "Tempo deste quadrante",
+    "cnt.chain_title": "Contagem em cadeia",
+    "cnt.chain_hint_none": "Este quadrante começa do zero.",
+    "cnt.chain_hint_from": "Contando a partir de: {label} ({total})",
+    "cnt.carry_from_label": "Carregar contagem de",
+    "cnt.carry_from_none_option": "Nenhum (começar do zero)",
+    "cnt.quadrant_finish_btn": "Contagem finalizada",
+    "cnt.quadrant_reopen_btn": "Reabrir quadrante",
     "cnt.group_integro_title": "Folículos íntegros",
     "cnt.group_parcial_title": "Transecção parcial (folículo aproveitado)",
     "cnt.parcial_reduzido_hint": "Modo reduzido: registre os fios desse folículo normalmente em \"Folículos íntegros\" e toque aqui só pra contar a transecção parcial (não soma de novo no total).",
@@ -410,6 +425,7 @@ const STRINGS = {
     "share.copy_btn": "Copiar",
     "audio.test_phrase": "Teste de áudio. Cento e vinte e três folículos.",
     "audio.milestone": "{n} folículos.",
+    "audio.preinc_update": "{n} pré-incisões.",
     "cnt.mode_full": "Modo completo",
     "cnt.mode_reduced": "Modo reduzido",
     "cnt.global_not_started": "Tempo total: ainda não iniciado",
@@ -561,6 +577,9 @@ const STRINGS = {
     "errors.surgery_finalized_reopen_timer": "Surgery finalized — reopen it to change the timer.",
     "errors.login_required_delete_surgery": "Log in to delete a surgery.",
     "errors.surgery_not_yours": "This surgery isn't yours.",
+    "errors.quadrant_locked": "This quadrant is locked. Reopen it to edit.",
+    "errors.value_below_carry": "The value can't be lower than the total already carried from the previous quadrant ({carry}).",
+    "errors.invalid_carry_link": "Can't link that quadrant (it would create a cycle).",
     "toast.login_required_dashboard": "Log in to see the dashboard.",
     "toast.server_unreachable": "Couldn't reach the server.",
     "toast.add_at_least_one_value": "Add at least one value.",
@@ -577,6 +596,8 @@ const STRINGS = {
     "toast.logo_removed": "Logo removed.",
     "toast.surgery_finalized": "Surgery finalized.",
     "toast.surgery_reopened": "Surgery reopened.",
+    "toast.quadrant_finished": "Quadrant finished.",
+    "toast.quadrant_reopened": "Quadrant reopened.",
     "toast.address_copied": "Address copied.",
     "toast.copy_failed_manual": "Couldn't copy — select the text manually.",
     "toast.copy_manually": "Copy the address manually: {url}",
@@ -588,6 +609,8 @@ const STRINGS = {
     "confirm.reset_extraction_timer": "Reset this surgery's timer (affects all connected devices)?",
     "confirm.reset_preinc_timer": "Reset the pre-incision timer (affects all connected devices)?",
     "confirm.finalize_surgery": "Finalize this surgery? This locks the counts on all connected devices.",
+    "confirm.finish_quadrant": "Finish counting this quadrant? It will stay locked until you reopen it.",
+    "confirm.reopen_quadrant": "Reopen this quadrant to edit it again?",
     "prompt.set_value_for": "Set value for \"{label}\":",
     "prompt.set_quantity_for": "Set quantity for \"{label}\":",
     "errors.file_read_error": "Couldn't read the file.",
@@ -640,6 +663,8 @@ const STRINGS = {
     "config.audio_announce_hint": "Announces out loud the total follicles extracted (adding up all 4 quadrants) every N.",
     "config.audio_announce_every": "Announce every",
     "config.audio_test_btn": "Test voice",
+    "config.preinc_audio_section_title": "Pre-incision audio",
+    "config.preinc_audio_announce_hint": "Announces out loud the new pre-incision total (adding up all areas) every time you fill in an area's value.",
     "config.alarm_section_title": "Transection alarm",
     "config.alarm_subtitle": "Announces by voice as soon as the rate (adding up all 4 quadrants) goes over the limit you set.",
     "config.alert_partial_label": "Alert if partial transection goes over (%)",
@@ -722,7 +747,6 @@ const STRINGS = {
     "cnt.summary_total_transec": "Total transection",
     "cnt.summary_mini": "Mini (not in total)",
     "cnt.mamba_reading": "Mamba (final reading)",
-    "cnt.mamba_manipulated": "Follicles handled",
     "cnt.mamba_diff": "Difference",
     "cnt.mamba_diffpct": "Difference (% of Mamba)",
     "cnt.mamba_diff_extraidos": "Difference (Mamba − Extracted)",
@@ -733,6 +757,13 @@ const STRINGS = {
     "cnt.mamba_input_placeholder": "e.g. 1000",
     "cnt.mamba_quad_val": "Mamba for this quadrant",
     "cnt.mamba_quad_duration": "Time for this quadrant",
+    "cnt.chain_title": "Chained count",
+    "cnt.chain_hint_none": "This quadrant starts from zero.",
+    "cnt.chain_hint_from": "Counting from: {label} ({total})",
+    "cnt.carry_from_label": "Carry count from",
+    "cnt.carry_from_none_option": "None (start from zero)",
+    "cnt.quadrant_finish_btn": "Count finished",
+    "cnt.quadrant_reopen_btn": "Reopen quadrant",
     "cnt.group_integro_title": "Intact follicles",
     "cnt.group_parcial_title": "Partial transection (follicle used)",
     "cnt.parcial_reduzido_hint": "Reduced mode: log this follicle's hairs normally under \"Intact follicles\" and tap here only to count the partial transection (it isn't added again to the total).",
@@ -755,6 +786,7 @@ const STRINGS = {
     "share.copy_btn": "Copy",
     "audio.test_phrase": "Audio test. One hundred twenty-three follicles.",
     "audio.milestone": "{n} follicles.",
+    "audio.preinc_update": "{n} pre-incisions.",
     "cnt.mode_full": "Complete mode",
     "cnt.mode_reduced": "Reduced mode",
     "cnt.global_not_started": "Total time: not started yet",
@@ -906,6 +938,9 @@ const STRINGS = {
     "errors.surgery_finalized_reopen_timer": "Cirugía finalizada — reábrela para modificar el cronómetro.",
     "errors.login_required_delete_surgery": "Inicia sesión para eliminar una cirugía.",
     "errors.surgery_not_yours": "Esta cirugía no es tuya.",
+    "errors.quadrant_locked": "Este cuadrante está bloqueado. Reábrelo para editar.",
+    "errors.value_below_carry": "El valor no puede ser menor que el total ya traído del cuadrante anterior ({carry}).",
+    "errors.invalid_carry_link": "No se puede vincular ese cuadrante (crearía un ciclo).",
     "toast.login_required_dashboard": "Inicia sesión para ver el dashboard.",
     "toast.server_unreachable": "No pude comunicarme con el servidor.",
     "toast.add_at_least_one_value": "Agrega al menos un valor.",
@@ -922,6 +957,8 @@ const STRINGS = {
     "toast.logo_removed": "Logotipo eliminado.",
     "toast.surgery_finalized": "Cirugía finalizada.",
     "toast.surgery_reopened": "Cirugía reabierta.",
+    "toast.quadrant_finished": "Cuadrante finalizado.",
+    "toast.quadrant_reopened": "Cuadrante reabierto.",
     "toast.address_copied": "Dirección copiada.",
     "toast.copy_failed_manual": "No se pudo copiar — selecciona el texto manualmente.",
     "toast.copy_manually": "Copia la dirección manualmente: {url}",
@@ -933,6 +970,8 @@ const STRINGS = {
     "confirm.reset_extraction_timer": "¿Reiniciar el cronómetro de esta cirugía (afecta a todos los dispositivos conectados)?",
     "confirm.reset_preinc_timer": "¿Reiniciar el cronómetro de pre-incisiones (afecta a todos los dispositivos conectados)?",
     "confirm.finalize_surgery": "¿Finalizar esta cirugía? Esto bloquea los conteos en todos los dispositivos conectados.",
+    "confirm.finish_quadrant": "¿Finalizar el conteo de este cuadrante? Quedará bloqueado hasta que lo reabras.",
+    "confirm.reopen_quadrant": "¿Reabrir este cuadrante para editar de nuevo?",
     "prompt.set_value_for": "Definir valor para \"{label}\":",
     "prompt.set_quantity_for": "Definir cantidad de \"{label}\":",
     "errors.file_read_error": "No pude leer el archivo.",
@@ -985,6 +1024,8 @@ const STRINGS = {
     "config.audio_announce_hint": "Anuncia en voz alta el total de folículos extraídos (sumando los 4 cuadrantes) cada N.",
     "config.audio_announce_every": "Anunciar cada",
     "config.audio_test_btn": "Probar voz",
+    "config.preinc_audio_section_title": "Audio de pre-incisiones",
+    "config.preinc_audio_announce_hint": "Anuncia en voz alta el nuevo total de pre-incisiones (sumando todas las áreas) cada vez que completes el valor de un área.",
     "config.alarm_section_title": "Alarma de transección",
     "config.alarm_subtitle": "Avisa por voz apenas la tasa (sumando los 4 cuadrantes) supere el límite que definas.",
     "config.alert_partial_label": "Avisar si la transección parcial supera (%)",
@@ -1067,7 +1108,6 @@ const STRINGS = {
     "cnt.summary_total_transec": "Transección total",
     "cnt.summary_mini": "Mini (fuera del total)",
     "cnt.mamba_reading": "Mamba (lectura final)",
-    "cnt.mamba_manipulated": "Folículos manipulados",
     "cnt.mamba_diff": "Diferencia",
     "cnt.mamba_diffpct": "Diferencia (% del Mamba)",
     "cnt.mamba_diff_extraidos": "Diferencia (Mamba − Extraídos)",
@@ -1078,6 +1118,13 @@ const STRINGS = {
     "cnt.mamba_input_placeholder": "Ej: 1000",
     "cnt.mamba_quad_val": "Mamba de este cuadrante",
     "cnt.mamba_quad_duration": "Tiempo de este cuadrante",
+    "cnt.chain_title": "Conteo en cadena",
+    "cnt.chain_hint_none": "Este cuadrante empieza desde cero.",
+    "cnt.chain_hint_from": "Contando a partir de: {label} ({total})",
+    "cnt.carry_from_label": "Cargar conteo de",
+    "cnt.carry_from_none_option": "Ninguno (empezar desde cero)",
+    "cnt.quadrant_finish_btn": "Conteo finalizado",
+    "cnt.quadrant_reopen_btn": "Reabrir cuadrante",
     "cnt.group_integro_title": "Folículos íntegros",
     "cnt.group_parcial_title": "Transección parcial (folículo aprovechado)",
     "cnt.parcial_reduzido_hint": "Modo reducido: registra los pelos de ese folículo normalmente en \"Folículos íntegros\" y toca aquí solo para contar la transección parcial (no se suma de nuevo al total).",
@@ -1100,6 +1147,7 @@ const STRINGS = {
     "share.copy_btn": "Copiar",
     "audio.test_phrase": "Prueba de audio. Ciento veintitrés folículos.",
     "audio.milestone": "{n} folículos.",
+    "audio.preinc_update": "{n} pre-incisiones.",
     "cnt.mode_full": "Modo completo",
     "cnt.mode_reduced": "Modo reducido",
     "cnt.global_not_started": "Tiempo total: aún no iniciado",
@@ -1206,7 +1254,13 @@ function emptyQuadrant() {
   // mambaMarkedAtMs = relógio real (Date.now()) no momento da marcação (usado só pra
   //   descobrir a ORDEM real de preenchimento entre quadrantes — imune a pausas do
   //   cronômetro, ao contrário do mambaMarkTimeMs).
-  return { counts: emptyCounts(), mambaCumulativo: null, mambaMarkTimeMs: null, mambaMarkedAtMs: null };
+  // carryFromId = id de outro quadrante cuja contagem "entra" na exibição deste (contagem
+  //   em cadeia) — link EXPLÍCITO, criado só quando alguém aperta "Contagem finalizada" ou
+  //   escolhe manualmente no seletor. Nunca inferido por ordem/tempo, de propósito: foi
+  //   exatamente a inferência por horário que causou o bug do Mamba corrigido antes.
+  // locked = true depois de "Contagem finalizada" — bloqueia os botões +1/+5 deste
+  //   quadrante até alguém reabrir explicitamente.
+  return { counts: emptyCounts(), mambaCumulativo: null, mambaMarkTimeMs: null, mambaMarkedAtMs: null, carryFromId: null, locked: false };
 }
 // Dados demográficos do paciente — sempre opcionais, nunca bloqueiam nada da
 // cirurgia. Ficam presos ao código da cirurgia (não ao nome real do paciente,
@@ -1243,6 +1297,25 @@ function sanitizePatientInfoFields(body) {
   if (body.cabeloTextura !== undefined) { var v5 = enumOrNull(body.cabeloTextura, PATIENT_HAIR_TEXTURE); if (v5 !== undefined) out.cabeloTextura = v5; }
   if (body.raspagem !== undefined) { var v6 = enumOrNull(body.raspagem, PATIENT_SHAVING); if (v6 !== undefined) out.raspagem = v6; }
   return out;
+}
+// Confere se ligar quadId.carryFromId = candidateId criaria um ciclo (ex: A vem de B,
+// que vem de A) — percorre a cadeia a partir do candidato e vê se volta pro próprio
+// quadId. Com só 4 quadrantes um ciclo nunca deveria acontecer na prática, mas o
+// seletor manual permite qualquer combinação, então a proteção é obrigatória.
+function wouldCreateCarryCycle(s, quadId, candidateId) {
+  if (candidateId === quadId) return true;
+  var seen = {};
+  seen[quadId] = true;
+  var cur = candidateId;
+  var hops = 0;
+  while (cur && hops < QUADRANTS.length + 1) {
+    if (seen[cur]) return true;
+    seen[cur] = true;
+    var qd = s.quadrants[cur];
+    cur = qd ? qd.carryFromId : null;
+    hops++;
+  }
+  return false;
 }
 // Mesma fórmula do elapsedMs() do lado do cliente, pra calcular no servidor o tempo
 // decorrido de cirurgia no exato instante em que o Mamba de um quadrante é preenchido
@@ -1325,6 +1398,8 @@ Object.keys(db.sessions).forEach(function (id) {
       // Dado de cirurgias antigas (antes desta correção) não tem relógio real —
       // fica null e cai no último recurso de ordem fixa, igual já acontecia antes.
       if (s.quadrants[q.id].mambaMarkedAtMs === undefined) s.quadrants[q.id].mambaMarkedAtMs = null;
+      if (s.quadrants[q.id].carryFromId === undefined) s.quadrants[q.id].carryFromId = null;
+      if (s.quadrants[q.id].locked === undefined) s.quadrants[q.id].locked = false;
     });
   }
   if (!s.patientInfo) {
@@ -1977,6 +2052,12 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        <div class=\"field\" style=\"margin:0;max-width:160px;\"><label data-i18n=\"config.audio_announce_every\">Anunciar a cada</label><input type=\"number\" id=\"audio-interval\" value=\"100\" min=\"10\" step=\"10\" onchange=\"App.saveAudioInterval(this.value)\"></div>\n" +
 "        <button class=\"btn secondary\" data-i18n=\"config.audio_test_btn\" onclick=\"App.testAudio()\">Testar voz</button>\n" +
 "      </div>\n" +
+"      <h3 class=\"section-title\" style=\"margin:22px 0 8px;\" data-i18n=\"config.preinc_audio_section_title\">Áudio de pré-incisões</h3>\n" +
+"      <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"config.preinc_audio_announce_hint\">Anuncia em voz alta o novo total de pré-incisões (somando todas as áreas) toda vez que você preencher o valor de uma área.</p>\n" +
+"      <div class=\"row\" style=\"align-items:center;gap:16px;margin-top:8px;\">\n" +
+"        <label class=\"switch\"><input type=\"checkbox\" id=\"preinc-audio-toggle\" onchange=\"App.togglePreincAudio(this.checked)\"><span class=\"slider\"></span></label>\n" +
+"        <button class=\"btn secondary\" data-i18n=\"config.audio_test_btn\" onclick=\"App.testAudio()\">Testar voz</button>\n" +
+"      </div>\n" +
 "      <h3 class=\"section-title\" style=\"margin:22px 0 8px;\" data-i18n=\"config.alarm_section_title\">Alarme de transecção</h3>\n" +
 "      <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"config.alarm_subtitle\">Avisa por voz assim que a taxa (somando os 4 quadrantes) ultrapassar o limite que você definir.</p>\n" +
 "      <div class=\"row\" style=\"align-items:center;gap:16px;margin-top:10px;flex-wrap:wrap;\">\n" +
@@ -2072,7 +2153,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        </div>\n" +
 "        <div class=\"summary-bar static\" id=\"geral-mamba-summary\" style=\"display:none;margin-top:10px;\">\n" +
 "          <div class=\"summary-item\"><div class=\"val\" id=\"geral-mamba-val\">0</div><div class=\"lbl\" data-i18n=\"cnt.mamba_reading\">Mamba (leitura final)</div></div>\n" +
-"          <div class=\"summary-item\"><div class=\"val\" id=\"geral-mamba-manip\">0</div><div class=\"lbl\" data-i18n=\"cnt.mamba_manipulated\">Folículos manipulados</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"geral-mamba-manip\">0</div><div class=\"lbl\" data-i18n=\"cnt.summary_extracted\">Folículos extraídos</div></div>\n" +
 "          <div class=\"summary-item\"><div class=\"val\" id=\"geral-mamba-diff\">0</div><div class=\"lbl\" data-i18n=\"cnt.mamba_diff\">Diferença</div></div>\n" +
 "          <div class=\"summary-item\"><div class=\"val\" id=\"geral-mamba-diffpct\">0%</div><div class=\"lbl\" data-i18n=\"cnt.mamba_diffpct\">Diferença (% do Mamba)</div></div>\n" +
 "          <div class=\"summary-item\"><div class=\"val\" id=\"geral-mamba-rate\">—</div><div class=\"lbl\" data-i18n=\"cnt.mamba_rate\">Ritmo pelo Mamba (fol./h)</div></div>\n" +
@@ -2080,6 +2161,19 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      </div>\n" +
 "\n" +
 "      <div class=\"row\" id=\"quadrant-tabs\" style=\"gap:8px;margin-top:14px;flex-wrap:wrap;\"></div>\n" +
+"\n" +
+"      <div class=\"card\">\n" +
+"        <h2 style=\"font-size:15px;margin:0 0 4px;\" data-i18n=\"cnt.chain_title\">Contagem em cadeia</h2>\n" +
+"        <p class=\"hint\" id=\"quad-chain-hint\" style=\"margin-bottom:10px;\">—</p>\n" +
+"        <div class=\"field\" style=\"max-width:280px;margin-bottom:10px;\">\n" +
+"          <label data-i18n=\"cnt.carry_from_label\">Carregar contagem de</label>\n" +
+"          <select id=\"quad-carry-select\" onchange=\"App.setQuadrantCarryFrom(this.value)\"></select>\n" +
+"        </div>\n" +
+"        <div class=\"row\" style=\"gap:8px;\">\n" +
+"          <button class=\"btn secondary\" id=\"quad-finish-btn\" data-i18n=\"cnt.quadrant_finish_btn\" onclick=\"App.finishQuadrant()\">Contagem finalizada</button>\n" +
+"          <button class=\"btn secondary\" id=\"quad-reopen-btn\" style=\"display:none;\" data-i18n=\"cnt.quadrant_reopen_btn\" onclick=\"App.reopenQuadrant()\">Reabrir quadrante</button>\n" +
+"        </div>\n" +
+"      </div>\n" +
 "\n" +
 "      <div class=\"card\">\n" +
 "        <h2 style=\"font-size:15px;margin:0 0 4px;\" id=\"quad-title\">—</h2>\n" +
@@ -2090,7 +2184,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        </div>\n" +
 "        <div class=\"summary-bar static\" id=\"quad-mamba-summary\" style=\"display:none;margin-top:14px;\">\n" +
 "          <div class=\"summary-item\"><div class=\"val\" id=\"quad-mamba-val\">0</div><div class=\"lbl\" data-i18n=\"cnt.mamba_quad_val\">Mamba deste quadrante</div></div>\n" +
-"          <div class=\"summary-item\"><div class=\"val\" id=\"quad-mamba-manip\">0</div><div class=\"lbl\" data-i18n=\"cnt.mamba_manipulated\">Folículos manipulados</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"quad-mamba-manip\">0</div><div class=\"lbl\" data-i18n=\"cnt.summary_extracted\">Folículos extraídos</div></div>\n" +
 "          <div class=\"summary-item\"><div class=\"val\" id=\"quad-mamba-diff\">0</div><div class=\"lbl\" data-i18n=\"cnt.mamba_diff\">Diferença</div></div>\n" +
 "          <div class=\"summary-item\"><div class=\"val\" id=\"quad-mamba-diffpct\">0%</div><div class=\"lbl\" data-i18n=\"cnt.mamba_diffpct\">Diferença (% do Mamba)</div></div>\n" +
 "          <div class=\"summary-item\"><div class=\"val\" id=\"quad-mamba-duracao\">—</div><div class=\"lbl\" data-i18n=\"cnt.mamba_quad_duration\">Tempo deste quadrante</div></div>\n" +
@@ -2425,12 +2519,18 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  }\n" +
 "  return null;\n" +
 "}\n" +
-"function computeMambaDiff(mambaCount, manipulados){\n" +
+"// base = número contra o qual o Mamba é comparado. Em todo o app isso é sempre\n" +
+"// folículos EXTRAÍDOS (íntegros + parciais) — não folículos manipulados (que\n" +
+"// somaria também a transecção total). Ficou assim porque as duas bases quase\n" +
+"// sempre coincidem (só divergem quando há transecção total na cirurgia) e\n" +
+"// comparar contra extraídos é mais direto de entender: 'o Mamba bateu com o que\n" +
+"// eu realmente extraí?'.\n" +
+"function computeMambaDiff(mambaCount, base){\n" +
 "  if (mambaCount===null||mambaCount===undefined||mambaCount==='') return null;\n" +
 "  var mamba = Number(mambaCount);\n" +
-"  var diff = mamba - manipulados;\n" +
+"  var diff = mamba - base;\n" +
 "  var diffPct = mamba>0 ? diff/mamba*100 : 0;\n" +
-"  return {mamba:mamba, manipulados:manipulados, diff:diff, diffPct:diffPct};\n" +
+"  return {mamba:mamba, base:base, diff:diff, diffPct:diffPct};\n" +
 "}\n" +
 "function mambaPrevMarkTimeMs(s, quadId){\n" +
 "  var prev = findPrevMarkedQuadrant(s, quadId);\n" +
@@ -2458,6 +2558,51 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  if (durationMs===null || durationMs===undefined || durationMs<=0) return null;\n" +
 "  return mambaDelta/(durationMs/3600000);\n" +
 "}\n" +
+"// Contagem em cadeia: soma a contribuição PRÓPRIA deste quadrante (counts[catId],\n" +
+"// nunca mexido por esta função) com o total acumulado do predecessor (carryFromId),\n" +
+"// recursivamente. O link é sempre um elo EXPLÍCITO (criado por 'Contagem\n" +
+"// finalizada' ou pelo seletor manual), nunca inferido por ordem/tempo — é por\n" +
+"// isso que, ao contrário do Mamba, não existe ambiguidade de 'quem vem antes' aqui.\n" +
+"// Dinâmico de propósito: corrigir a contagem de um quadrante anterior já reflete\n" +
+"// automaticamente em todos os que vêm depois dele na cadeia, sem precisar reabrir\n" +
+"// nada. 'seen' protege contra ciclo (não deveria existir, mas por garantia).\n" +
+"function chainCumulativeCat(s, quadId, catId, seen){\n" +
+"  seen = seen || {};\n" +
+"  if (seen[quadId]) return 0;\n" +
+"  seen[quadId] = true;\n" +
+"  var qd = s.quadrants[quadId];\n" +
+"  if (!qd) return 0;\n" +
+"  var own = qd.counts[catId]||0;\n" +
+"  if (!qd.carryFromId || !s.quadrants[qd.carryFromId]) return own;\n" +
+"  return own + chainCumulativeCat(s, qd.carryFromId, catId, seen);\n" +
+"}\n" +
+"// Soma TODAS as categorias que o predecessor traz pra este quadrante — usado pra\n" +
+"// mostrar '(230)' na dica 'Contando a partir de: Occipital direito (230)' e pra\n" +
+"// recalcular o valor próprio quando alguém edita o número acumulado direto (toque\n" +
+"// no número pra digitar).\n" +
+"function chainPredecessorTotalAllCats(s, quadId){\n" +
+"  var qd = s.quadrants[quadId];\n" +
+"  if (!qd || !qd.carryFromId || !s.quadrants[qd.carryFromId]) return 0;\n" +
+"  var total = 0;\n" +
+"  CATS.forEach(function(c){ total += chainCumulativeCat(s, qd.carryFromId, c.id); });\n" +
+"  return total;\n" +
+"}\n" +
+"// Espelho client-side da mesma checagem que o servidor faz — usado só pra já\n" +
+"// esconder do seletor manual as opções que o servidor recusaria de qualquer\n" +
+"// jeito (evita a pessoa escolher algo e levar um erro na cara).\n" +
+"function wouldCreateCarryCycleClient(s, quadId, candidateId){\n" +
+"  if (candidateId===quadId) return true;\n" +
+"  var seen = {}; seen[quadId] = true;\n" +
+"  var cur = candidateId, hops = 0;\n" +
+"  while (cur && hops < QUADRANTS.length+1) {\n" +
+"    if (seen[cur]) return true;\n" +
+"    seen[cur] = true;\n" +
+"    var qd = s.quadrants[cur];\n" +
+"    cur = qd ? qd.carryFromId : null;\n" +
+"    hops++;\n" +
+"  }\n" +
+"  return false;\n" +
+"}\n" +
 "function preincTotal(counts){ var t=0; PREINC_AREAS.forEach(function(a){ t+=counts[a.id]||0; }); return t; }\n" +
 "function fmtHMS(ms){\n" +
 "  var s=Math.floor(ms/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;\n" +
@@ -2476,7 +2621,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var end = s.globalTimerEndedAt || Date.now();\n" +
 "  return end - s.globalTimerStartedAt;\n" +
 "}\n" +
-"var state = {currentId:null, session:null, pollHandle:null, connOk:true, increments:DEFAULT_INCREMENTS.slice(), activeTab:'extracao', activeQuadrant:QUADRANTS[0].id, audioEnabled:false, audioInterval:100, lastAnnounced:0, baseUrl:null, alertParcialEnabled:false, alertParcialThreshold:null, alertParcialFired:false, alertTotalEnabled:false, alertTotalThreshold:null, alertTotalFired:false, currentUser:null, resetToken:null, newSessionMode:'completo', newPatientInfo:{}, lang:'pt'};\n" +
+"var state = {currentId:null, session:null, pollHandle:null, connOk:true, increments:DEFAULT_INCREMENTS.slice(), activeTab:'extracao', activeQuadrant:QUADRANTS[0].id, audioEnabled:false, audioInterval:100, lastAnnounced:0, preincAudioEnabled:false, preincLastTotal:null, baseUrl:null, alertParcialEnabled:false, alertParcialThreshold:null, alertParcialFired:false, alertTotalEnabled:false, alertTotalThreshold:null, alertTotalFired:false, currentUser:null, resetToken:null, newSessionMode:'completo', newPatientInfo:{}, lang:'pt'};\n" +
 "function shareUrlFor(id){ return (state.baseUrl||window.location.origin) + '/s/' + id; }\n" +
 "function resolveBaseUrl(){\n" +
 "  var host = window.location.hostname;\n" +
@@ -2724,7 +2869,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      if (mc!==null && mc!==undefined && mc!==''){\n" +
 "        var prev = mambaPrevCumulativo(s, q.id);\n" +
 "        var delta = Number(mc) - prev;\n" +
-"        var qmdiff = computeMambaDiff(delta, qsum.foliculosManipulados);\n" +
+"        var qmdiff = computeMambaDiff(delta, qsum.foliculosExtraidos);\n" +
 "        if (qmdiff) quadStats[q.id].mambaDiffs[m].push(qmdiff.diffPct);\n" +
 "      }\n" +
 "    });\n" +
@@ -2999,12 +3144,12 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  document.getElementById('geral-transec-total').textContent = sum.taxaTotal.toFixed(1)+'%';\n" +
 "  document.getElementById('geral-mini').textContent = sum.miniTotal;\n" +
 "  var finalMamba = mambaFinalCumulativo(s);\n" +
-"  var mdiffGeral = computeMambaDiff(finalMamba, sum.foliculosManipulados);\n" +
+"  var mdiffGeral = computeMambaDiff(finalMamba, sum.foliculosExtraidos);\n" +
 "  var geralBox = document.getElementById('geral-mamba-summary');\n" +
 "  if (mdiffGeral){\n" +
 "    geralBox.style.display='grid';\n" +
 "    document.getElementById('geral-mamba-val').textContent = mdiffGeral.mamba;\n" +
-"    document.getElementById('geral-mamba-manip').textContent = mdiffGeral.manipulados;\n" +
+"    document.getElementById('geral-mamba-manip').textContent = mdiffGeral.base;\n" +
 "    document.getElementById('geral-mamba-diff').textContent = (mdiffGeral.diff>0?'+':'')+mdiffGeral.diff;\n" +
 "    document.getElementById('geral-mamba-diffpct').textContent = (mdiffGeral.diffPct>0?'+':'')+mdiffGeral.diffPct.toFixed(1)+'%';\n" +
 "    var geralElapsed = elapsedMs(s.timer);\n" +
@@ -3026,10 +3171,9 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  document.getElementById('final-transec-total').textContent = sum.taxaTotal.toFixed(1)+'%';\n" +
 "  document.getElementById('final-mini').textContent = sum.miniTotal;\n" +
 "  var finalMambaBox = document.getElementById('final-mamba-summary');\n" +
-"  // A aba Resumo Final compara o Mamba direto com os folículos EXTRAÍDOS (não\n" +
-"  // com \"manipulados\", que é a base usada no Resumo geral da aba Extração —\n" +
-"  // manter as duas versões aqui gerava confusão, já que costumam coincidir\n" +
-"  // sempre que não há transecção total na cirurgia.\n" +
+"  // A aba Resumo Final compara o Mamba direto com os folículos EXTRAÍDOS — mesma\n" +
+"  // base usada em todo o app (computeMambaDiff), calculada aqui separadamente\n" +
+"  // só porque esta aba usa seus próprios elementos de HTML.\n" +
 "  if (finalMamba!==null && finalMamba!==undefined && finalMamba!==''){\n" +
 "    finalMambaBox.style.display='grid';\n" +
 "    var diffExtraidos = finalMamba - sum.foliculosExtraidos;\n" +
@@ -3091,11 +3235,11 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  } else {\n" +
 "    var prev = mambaPrevCumulativo(s, state.activeQuadrant);\n" +
 "    var delta = Number(quad.mambaCumulativo) - prev;\n" +
-"    var qmdiff = computeMambaDiff(delta, qsum.foliculosManipulados);\n" +
+"    var qmdiff = computeMambaDiff(delta, qsum.foliculosExtraidos);\n" +
 "    if (qmdiff){\n" +
 "      quadBox.style.display='grid';\n" +
 "      document.getElementById('quad-mamba-val').textContent = qmdiff.mamba;\n" +
-"      document.getElementById('quad-mamba-manip').textContent = qmdiff.manipulados;\n" +
+"      document.getElementById('quad-mamba-manip').textContent = qmdiff.base;\n" +
 "      document.getElementById('quad-mamba-diff').textContent = (qmdiff.diff>0?'+':'')+qmdiff.diff;\n" +
 "      document.getElementById('quad-mamba-diffpct').textContent = (qmdiff.diffPct>0?'+':'')+qmdiff.diffPct.toFixed(1)+'%';\n" +
 "      var quadDur = quadrantDurationMs(s, state.activeQuadrant);\n" +
@@ -3108,19 +3252,41 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var modeAtiva = s.mode||'completo';\n" +
 "  var parcialGroupReal = modeAtiva==='reduzido' ? 'parcial_reduzida' : 'parcial';\n" +
 "  document.getElementById('parcial-reduzido-hint').style.display = modeAtiva==='reduzido' ? 'block' : 'none';\n" +
+"  var quadLocked = !!quad.locked;\n" +
+"  var quadReadonly = readonly || quadLocked;\n" +
 "  ['integro','parcial','total','mini'].forEach(function(group){\n" +
 "    var container = document.getElementById('group-'+group);\n" +
 "    var filterGroup = group==='parcial' ? parcialGroupReal : group;\n" +
 "    container.innerHTML = CATS.filter(function(c){return c.group===filterGroup;}).map(function(c){\n" +
-"      var n = quad.counts[c.id]||0;\n" +
+"      var n = chainCumulativeCat(s, state.activeQuadrant, c.id);\n" +
 "      var hairsNote = c.group==='mini' ? t('cnt.hairs_not_in_total') : (c.hairs>0 ? (c.hairs+' '+(c.hairs===1?t('cnt.hair_singular'):t('cnt.hair_plural'))+t('cnt.per_follicle_suffix')) : (c.group==='parcial_reduzida' ? t('cnt.hairs_informative_only') : t('cnt.hairs_lost')));\n" +
-"      var btns = readonly ? '' : incBtns(c.id);\n" +
-"      var countCls = readonly ? 'cat-count' : 'cat-count clickable';\n" +
-"      var countClick = readonly ? '' : ' onclick=\"App.editCount(\\''+c.id+'\\')\"';\n" +
+"      var btns = quadReadonly ? '' : incBtns(c.id);\n" +
+"      var countCls = quadReadonly ? 'cat-count' : 'cat-count clickable';\n" +
+"      var countClick = quadReadonly ? '' : ' onclick=\"App.editCount(\\''+c.id+'\\')\"';\n" +
 "      return '<div class=\"cat-row group-'+group+'\"><div class=\"cat-label\">'+escapeHtml(c.label)+'<span class=\"cat-hairs\">'+hairsNote+'</span></div>'+\n" +
 "        '<div class=\"'+countCls+'\"'+countClick+'>'+n+'</div><div class=\"cat-btns\">'+btns+'</div></div>';\n" +
 "    }).join('');\n" +
 "  });\n" +
+"\n" +
+"  var chainHintEl = document.getElementById('quad-chain-hint');\n" +
+"  if (quad.carryFromId && s.quadrants[quad.carryFromId]) {\n" +
+"    var carryTotal = chainPredecessorTotalAllCats(s, state.activeQuadrant);\n" +
+"    chainHintEl.textContent = t('cnt.chain_hint_from', {label: quadrantById(quad.carryFromId).label, total: carryTotal});\n" +
+"  } else {\n" +
+"    chainHintEl.textContent = t('cnt.chain_hint_none');\n" +
+"  }\n" +
+"  var carrySelect = document.getElementById('quad-carry-select');\n" +
+"  var candidateQuads = QUADRANTS.filter(function(q){\n" +
+"    return q.id!==state.activeQuadrant && !wouldCreateCarryCycleClient(s, state.activeQuadrant, q.id);\n" +
+"  });\n" +
+"  carrySelect.innerHTML = '<option value=\"\">'+escapeHtml(t('cnt.carry_from_none_option'))+'</option>' +\n" +
+"    candidateQuads.map(function(q){ return '<option value=\"'+q.id+'\">'+escapeHtml(q.label)+'</option>'; }).join('');\n" +
+"  carrySelect.value = quad.carryFromId || '';\n" +
+"  carrySelect.disabled = quadLocked;\n" +
+"  document.getElementById('quad-finish-btn').style.display = quadLocked ? 'none' : 'inline-block';\n" +
+"  document.getElementById('quad-reopen-btn').style.display = quadLocked ? 'inline-block' : 'none';\n" +
+"  document.getElementById('quad-finish-btn').disabled = readonly;\n" +
+"  document.getElementById('quad-reopen-btn').disabled = readonly;\n" +
 "\n" +
 "  var extMs = elapsedMs(s.timer);\n" +
 "  document.getElementById('timer-display').textContent = fmtHMS(extMs);\n" +
@@ -3141,6 +3307,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  document.getElementById('preinc-total').textContent = pTotal;\n" +
 "\n" +
 "  checkAudioMilestone(sum.foliculosExtraidos);\n" +
+"  checkPreincAudioOnChange(pTotal);\n" +
 "  checkTransectionAlerts(sum.taxaParcial, sum.taxaTotal);\n" +
 "  renderPreinc(s);\n" +
 "  renderPhotos(s);\n" +
@@ -3165,15 +3332,47 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "App.editCount = function(catId){\n" +
 "  var s = state.session; if (!s || s.status==='finalizada') return;\n" +
 "  var quad = state.activeQuadrant;\n" +
-"  var current = s.quadrants[quad].counts[catId]||0;\n" +
+"  var qd = s.quadrants[quad];\n" +
+"  if (qd.locked) return;\n" +
+"  var current = qd.counts[catId]||0;\n" +
+"  var predecessorTotal = qd.carryFromId ? chainCumulativeCat(s, qd.carryFromId, catId) : 0;\n" +
+"  var currentChain = predecessorTotal + current;\n" +
 "  var cat = CATS.filter(function(c){ return c.id===catId; })[0];\n" +
-"  var input = window.prompt(t('prompt.set_value_for',{label:(cat?cat.label:catId)}), current);\n" +
+"  var input = window.prompt(t('prompt.set_value_for',{label:(cat?cat.label:catId)}), currentChain);\n" +
 "  if (input===null) return;\n" +
 "  var v = parseInt(input,10);\n" +
 "  if (isNaN(v) || v<0){ toast(t('errors.invalid_value')); return; }\n" +
-"  var delta = v - current;\n" +
+"  if (v < predecessorTotal){ toast(t('errors.value_below_carry',{carry:predecessorTotal})); return; }\n" +
+"  var newLocal = v - predecessorTotal;\n" +
+"  var delta = newLocal - current;\n" +
 "  if (delta===0) return;\n" +
 "  App.adjust(catId, delta);\n" +
+"};\n" +
+"App.finishQuadrant = function(){\n" +
+"  var s = state.session; if (!s || s.status==='finalizada') return;\n" +
+"  var quad = state.activeQuadrant;\n" +
+"  if (s.quadrants[quad].locked) return;\n" +
+"  if (!window.confirm(t('confirm.finish_quadrant'))) return;\n" +
+"  api('/api/session/'+state.currentId+'/quadrant-finish','POST',{quadrant:quad}).then(function(updated){\n" +
+"    state.session=updated;\n" +
+"    var idx = -1;\n" +
+"    for (var i=0;i<QUADRANTS.length;i++){ if (QUADRANTS[i].id===quad){ idx=i; break; } }\n" +
+"    var nextQuad = (idx!==-1 && idx+1<QUADRANTS.length) ? QUADRANTS[idx+1] : null;\n" +
+"    if (nextQuad) { state.activeQuadrant = nextQuad.id; }\n" +
+"    render();\n" +
+"    toast(t('toast.quadrant_finished'));\n" +
+"  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.reopenQuadrant = function(){\n" +
+"  var s = state.session; if (!s || s.status==='finalizada') return;\n" +
+"  var quad = state.activeQuadrant;\n" +
+"  if (!window.confirm(t('confirm.reopen_quadrant'))) return;\n" +
+"  api('/api/session/'+state.currentId+'/quadrant-reopen','POST',{quadrant:quad}).then(function(updated){ state.session=updated; render(); toast(t('toast.quadrant_reopened')); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.setQuadrantCarryFrom = function(carryFromId){\n" +
+"  var s = state.session; if (!s || s.status==='finalizada') return;\n" +
+"  var quad = state.activeQuadrant;\n" +
+"  api('/api/session/'+state.currentId+'/quadrant-link','POST',{quadrant:quad, carryFromId: carryFromId||null}).then(function(updated){ state.session=updated; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); fetchAndRender(); });\n" +
 "};\n" +
 "App.setQuadMamba = function(value){\n" +
 "  var quad = state.activeQuadrant;\n" +
@@ -3418,7 +3617,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var msGlobalPrint = globalElapsedMs(s);\n" +
 "  var ritmoPrint = (msPrint>0 && sum.foliculosExtraidos>0) ? (sum.foliculosExtraidos/(msPrint/3600000)) : null;\n" +
 "  var finalMamba = mambaFinalCumulativo(s);\n" +
-"  var mdiffGeral = computeMambaDiff(finalMamba, sum.foliculosManipulados);\n" +
+"  var mdiffGeral = computeMambaDiff(finalMamba, sum.foliculosExtraidos);\n" +
 "\n" +
 "  var pi = s.patientInfo || {};\n" +
 "  var piParts = [];\n" +
@@ -3447,7 +3646,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    if (mc!==null && mc!==undefined && mc!==''){\n" +
 "      var prev = mambaPrevCumulativo(s, q.id);\n" +
 "      var delta = Number(mc) - prev;\n" +
-"      var qmdiff = computeMambaDiff(delta, qsum.foliculosManipulados);\n" +
+"      var qmdiff = computeMambaDiff(delta, qsum.foliculosExtraidos);\n" +
 "      var qDur = quadrantDurationMs(s, q.id);\n" +
 "      var qRate = mambaRatePerHour(delta, qDur);\n" +
 "      mcHtml = '<div class=\"print-summary\">' +\n" +
@@ -3528,7 +3727,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      (ritmoPrint ? '<div>'+escapeHtml(t('print.rate_avg_label'))+'<br><b>'+ritmoPrint.toFixed(0)+t('print.fol_per_hour_suffix')+'</b></div>' : '') +\n" +
 "      (msGlobalPrint!==null ? '<div>'+escapeHtml(t('print.total_surgery_time_label'))+'<br><b>'+fmtHMS(msGlobalPrint)+'</b></div>' : '') +\n" +
 "    '</div>' +\n" +
-"    (mdiffGeral ? '<div class=\"print-summary\"><div>'+escapeHtml(t('cnt.mamba_reading'))+'<br><b>'+mdiffGeral.mamba+'</b></div><div>'+escapeHtml(t('cnt.mamba_manipulated'))+'<br><b>'+mdiffGeral.manipulados+'</b></div><div>'+escapeHtml(t('cnt.mamba_diff'))+'<br><b>'+(mdiffGeral.diff>0?'+':'')+mdiffGeral.diff+' ('+(mdiffGeral.diffPct>0?'+':'')+mdiffGeral.diffPct.toFixed(1)+'%)</b></div>'+(mambaRatePerHour(mdiffGeral.mamba, msPrint>0?msPrint:null)!==null ? '<div>'+escapeHtml(t('print.mamba_rate_label'))+'<br><b>'+mambaRatePerHour(mdiffGeral.mamba, msPrint).toFixed(0)+t('print.fol_per_hour_suffix')+'</b></div>' : '')+'</div>' : '') +\n" +
+"    (mdiffGeral ? '<div class=\"print-summary\"><div>'+escapeHtml(t('cnt.mamba_reading'))+'<br><b>'+mdiffGeral.mamba+'</b></div><div>'+escapeHtml(t('cnt.summary_extracted'))+'<br><b>'+mdiffGeral.base+'</b></div><div>'+escapeHtml(t('cnt.mamba_diff'))+'<br><b>'+(mdiffGeral.diff>0?'+':'')+mdiffGeral.diff+' ('+(mdiffGeral.diffPct>0?'+':'')+mdiffGeral.diffPct.toFixed(1)+'%)</b></div>'+(mambaRatePerHour(mdiffGeral.mamba, msPrint>0?msPrint:null)!==null ? '<div>'+escapeHtml(t('print.mamba_rate_label'))+'<br><b>'+mambaRatePerHour(mdiffGeral.mamba, msPrint).toFixed(0)+t('print.fol_per_hour_suffix')+'</b></div>' : '')+'</div>' : '') +\n" +
 "    quadrantsHtml +\n" +
 "    preincHtml +\n" +
 "    distHtml +\n" +
@@ -3540,17 +3739,20 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "function audioKey(id){ return 'fue_live_audio_'+id; }\n" +
 "function loadAudioPrefs(id){\n" +
 "  try{ var raw = localStorage.getItem(audioKey(id));\n" +
-"    var p = raw ? JSON.parse(raw) : {enabled:false, interval:100, lastAnnounced:0, alertParcialEnabled:false, alertParcialThreshold:null, alertTotalEnabled:false, alertTotalThreshold:null};\n" +
+"    var p = raw ? JSON.parse(raw) : {enabled:false, interval:100, lastAnnounced:0, preincEnabled:false, preincLastTotal:null, alertParcialEnabled:false, alertParcialThreshold:null, alertTotalEnabled:false, alertTotalThreshold:null};\n" +
 "    state.audioEnabled = !!p.enabled; state.audioInterval = p.interval||100; state.lastAnnounced = p.lastAnnounced||0;\n" +
+"    state.preincAudioEnabled = !!p.preincEnabled; state.preincLastTotal = (p.preincLastTotal===undefined?null:p.preincLastTotal);\n" +
 "    state.alertParcialEnabled = !!p.alertParcialEnabled; state.alertParcialThreshold = (p.alertParcialThreshold===undefined?null:p.alertParcialThreshold);\n" +
 "    state.alertTotalEnabled = !!p.alertTotalEnabled; state.alertTotalThreshold = (p.alertTotalThreshold===undefined?null:p.alertTotalThreshold);\n" +
 "    state.alertParcialFired = false; state.alertTotalFired = false;\n" +
 "  }catch(e){\n" +
 "    state.audioEnabled=false; state.audioInterval=100; state.lastAnnounced=0;\n" +
+"    state.preincAudioEnabled=false; state.preincLastTotal=null;\n" +
 "    state.alertParcialEnabled=false; state.alertParcialThreshold=null; state.alertTotalEnabled=false; state.alertTotalThreshold=null;\n" +
 "  }\n" +
 "  document.getElementById('audio-toggle').checked = state.audioEnabled;\n" +
 "  document.getElementById('audio-interval').value = state.audioInterval;\n" +
+"  document.getElementById('preinc-audio-toggle').checked = state.preincAudioEnabled;\n" +
 "  document.getElementById('alert-parcial-toggle').checked = state.alertParcialEnabled;\n" +
 "  document.getElementById('alert-parcial-threshold').value = (state.alertParcialThreshold===null?'':state.alertParcialThreshold);\n" +
 "  document.getElementById('alert-total-toggle').checked = state.alertTotalEnabled;\n" +
@@ -3560,11 +3762,13 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  if (!state.currentId) return;\n" +
 "  localStorage.setItem(audioKey(state.currentId), JSON.stringify({\n" +
 "    enabled:state.audioEnabled, interval:state.audioInterval, lastAnnounced:state.lastAnnounced,\n" +
+"    preincEnabled:state.preincAudioEnabled, preincLastTotal:state.preincLastTotal,\n" +
 "    alertParcialEnabled:state.alertParcialEnabled, alertParcialThreshold:state.alertParcialThreshold,\n" +
 "    alertTotalEnabled:state.alertTotalEnabled, alertTotalThreshold:state.alertTotalThreshold\n" +
 "  }));\n" +
 "}\n" +
 "App.toggleAudio = function(checked){ state.audioEnabled = checked; saveAudioPrefs(); if (checked) speak('Áudio ativado.'); };\n" +
+"App.togglePreincAudio = function(checked){ state.preincAudioEnabled = checked; saveAudioPrefs(); if (checked) speak('Áudio de pré-incisões ativado.'); };\n" +
 "App.toggleAlertParcial = function(checked){ state.alertParcialEnabled = checked; state.alertParcialFired = false; saveAudioPrefs(); if (checked) speak('Alarme de transecção parcial ativado.'); };\n" +
 "App.saveAlertParcialThreshold = function(value){ var n = parseFloat(value); state.alertParcialThreshold = (isNaN(n)||n<0) ? null : n; state.alertParcialFired = false; saveAudioPrefs(); };\n" +
 "App.toggleAlertTotal = function(checked){ state.alertTotalEnabled = checked; state.alertTotalFired = false; saveAudioPrefs(); if (checked) speak('Alarme de transecção total ativado.'); };\n" +
@@ -3588,6 +3792,27 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  if (!state.audioEnabled || !state.audioInterval) return;\n" +
 "  var milestone = Math.floor(total/state.audioInterval)*state.audioInterval;\n" +
 "  if (milestone>0 && milestone>state.lastAnnounced){ state.lastAnnounced=milestone; saveAudioPrefs(); speak(t('audio.milestone',{n:String(milestone)})); }\n" +
+"}\n" +
+// Cada área de pré-incisão (recesso direito, linha, etc.) é um contador PRÓPRIO e\n" +
+"// ABSOLUTO — não uma leitura acumulada única tipo o Mamba — então o total (soma de\n" +
+"// todas as áreas) não depende da ORDEM em que você preenche cada campo, nem precisa\n" +
+"// de nenhum rastreamento por horário: é sempre só a soma direta do que está em cada\n" +
+"// campo agora. Por isso este anúncio pode ser simplesmente 'o total mudou desde a\n" +
+"// última vez que eu vi' — comparando com o valor mais recente já visto/anunciado\n" +
+"// (state.preincLastTotal), sem precisar de nenhum 'quem veio antes de quem'.\n" +
+"// Roda dentro de render(), então dispara tanto pela edição feita no próprio aparelho\n" +
+"// quanto quando o poll (a cada 1.5s) traz uma mudança feita por OUTRO aparelho —\n" +
+"// igual já acontece com o alarme de transecção. Na primeira renderização depois de\n" +
+"// abrir a cirurgia (preincLastTotal ainda null), só grava a base sem anunciar, pra\n" +
+"// não anunciar um total que já estava lá antes de você abrir o app.\n" +
+"function checkPreincAudioOnChange(total){\n" +
+"  if (!state.preincAudioEnabled){ state.preincLastTotal = total; return; }\n" +
+"  if (state.preincLastTotal===null || state.preincLastTotal===undefined){ state.preincLastTotal = total; saveAudioPrefs(); return; }\n" +
+"  if (total !== state.preincLastTotal){\n" +
+"    state.preincLastTotal = total;\n" +
+"    saveAudioPrefs();\n" +
+"    speak(t('audio.preinc_update',{n:String(total)}));\n" +
+"  }\n" +
 "}\n" +
 "setInterval(function(){ api('/api/ping').catch(function(){}); }, 5000);\n" +
 "document.addEventListener('DOMContentLoaded', function(){\n" +
@@ -3974,6 +4199,7 @@ var server = http.createServer(function (req, res) {
       var catId = body.category;
       var delta = Number(body.delta);
       if (!QUAD_IDS.has(quadId) || !CAT_IDS.has(catId) || !Number.isFinite(delta)) { send(res, 400, { error: t("errors.invalid_parameters", s2Lang) }); return; }
+      if (s2.quadrants[quadId].locked) { send(res, 409, { error: t("errors.quadrant_locked", s2Lang) }); return; }
       var counts = s2.quadrants[quadId].counts;
       var current = counts[catId] || 0;
       var next = current + delta;
@@ -3983,6 +4209,78 @@ var server = http.createServer(function (req, res) {
       saveData();
       send(res, 200, withOwnerBranding(s2));
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", s2Lang) }); });
+    return;
+  }
+
+  // Contagem em cadeia: "Contagem finalizada" trava o quadrante atual e liga o
+  // PRÓXIMO (ordem padrão da lista QUADRANTS, que já é a ordem real de extração) a
+  // ele, só se esse próximo ainda não tiver um link definido nem estiver travado —
+  // assim o fluxo comum (extrair na ordem padrão) fica em 1 toque, sem sobrescrever
+  // um link que já tenha sido escolhido manualmente.
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/quadrant-finish$/);
+  if (m && req.method === "POST") {
+    var sQF = db.sessions[m[1]];
+    var sQFLang = requestLang(req);
+    if (!sQF) { send(res, 404, { error: t("errors.surgery_not_found", sQFLang) }); return; }
+    if (sQF.status === "finalizada") { send(res, 409, { error: t("errors.surgery_already_finalized", sQFLang) }); return; }
+    readBody(req).then(function (body) {
+      var quadId = body.quadrant;
+      if (!QUAD_IDS.has(quadId)) { send(res, 400, { error: t("errors.invalid_quadrant", sQFLang) }); return; }
+      sQF.quadrants[quadId].locked = true;
+      var idx = -1;
+      for (var i = 0; i < QUADRANTS.length; i++) { if (QUADRANTS[i].id === quadId) { idx = i; break; } }
+      var nextQuad = (idx !== -1 && idx + 1 < QUADRANTS.length) ? QUADRANTS[idx + 1] : null;
+      if (nextQuad && !sQF.quadrants[nextQuad.id].carryFromId && !sQF.quadrants[nextQuad.id].locked) {
+        sQF.quadrants[nextQuad.id].carryFromId = quadId;
+      }
+      sQF.updatedAt = Date.now();
+      saveData();
+      send(res, 200, withOwnerBranding(sQF));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sQFLang) }); });
+    return;
+  }
+
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/quadrant-reopen$/);
+  if (m && req.method === "POST") {
+    var sQR = db.sessions[m[1]];
+    var sQRLang = requestLang(req);
+    if (!sQR) { send(res, 404, { error: t("errors.surgery_not_found", sQRLang) }); return; }
+    if (sQR.status === "finalizada") { send(res, 409, { error: t("errors.surgery_already_finalized", sQRLang) }); return; }
+    readBody(req).then(function (body) {
+      var quadId = body.quadrant;
+      if (!QUAD_IDS.has(quadId)) { send(res, 400, { error: t("errors.invalid_quadrant", sQRLang) }); return; }
+      sQR.quadrants[quadId].locked = false;
+      sQR.updatedAt = Date.now();
+      saveData();
+      send(res, 200, withOwnerBranding(sQR));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sQRLang) }); });
+    return;
+  }
+
+  // Liga (ou desliga, com carryFromId null/vazio) manualmente um quadrante a outro
+  // como predecessor da cadeia — usado quando a ordem real de extração foge do padrão.
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/quadrant-link$/);
+  if (m && req.method === "POST") {
+    var sQL = db.sessions[m[1]];
+    var sQLLang = requestLang(req);
+    if (!sQL) { send(res, 404, { error: t("errors.surgery_not_found", sQLLang) }); return; }
+    if (sQL.status === "finalizada") { send(res, 409, { error: t("errors.surgery_already_finalized", sQLLang) }); return; }
+    readBody(req).then(function (body) {
+      var quadId = body.quadrant;
+      var carryFromId = body.carryFromId;
+      if (!QUAD_IDS.has(quadId)) { send(res, 400, { error: t("errors.invalid_quadrant", sQLLang) }); return; }
+      if (sQL.quadrants[quadId].locked) { send(res, 409, { error: t("errors.quadrant_locked", sQLLang) }); return; }
+      if (carryFromId === null || carryFromId === undefined || carryFromId === "") {
+        sQL.quadrants[quadId].carryFromId = null;
+      } else {
+        if (!QUAD_IDS.has(carryFromId)) { send(res, 400, { error: t("errors.invalid_quadrant", sQLLang) }); return; }
+        if (wouldCreateCarryCycle(sQL, quadId, carryFromId)) { send(res, 400, { error: t("errors.invalid_carry_link", sQLLang) }); return; }
+        sQL.quadrants[quadId].carryFromId = carryFromId;
+      }
+      sQL.updatedAt = Date.now();
+      saveData();
+      send(res, 200, withOwnerBranding(sQL));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sQLLang) }); });
     return;
   }
 
