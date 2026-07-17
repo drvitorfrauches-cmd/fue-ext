@@ -304,6 +304,8 @@ const STRINGS = {
     "config.audio_test_btn": "Testar voz",
     "config.preinc_audio_section_title": "Áudio de pré-incisões",
     "config.preinc_audio_announce_hint": "Anuncia em voz alta o novo total de pré-incisões (somando todas as áreas) toda vez que você preencher o valor de uma área.",
+    "config.quadfinish_audio_section_title": "Áudio ao finalizar quadrante",
+    "config.quadfinish_audio_announce_hint": "Anuncia o Mamba, os folículos extraídos e a diferença sempre que você tocar em \"Contagem finalizada\" num quadrante (só disponível quando a contagem em cadeia está em uso).",
     "config.alarm_section_title": "Alarme de transecção",
     "config.alarm_subtitle": "Avisa por voz assim que a taxa (somando os 4 quadrantes) ultrapassar o limite que você definir.",
     "config.alert_partial_label": "Avisar se transecção parcial passar de (%)",
@@ -426,6 +428,8 @@ const STRINGS = {
     "audio.test_phrase": "Teste de áudio. Cento e vinte e três folículos.",
     "audio.milestone": "{n} folículos.",
     "audio.preinc_update": "{n} pré-incisões.",
+    "audio.quadfinish_summary": "Mamba {mamba}. Folículos extraídos {extraidos}. Diferença {diffpct} por cento.",
+    "audio.quadfinish_extraidos_only": "Folículos extraídos {extraidos}.",
     "cnt.mode_full": "Modo completo",
     "cnt.mode_reduced": "Modo reduzido",
     "cnt.global_not_started": "Tempo total: ainda não iniciado",
@@ -665,6 +669,8 @@ const STRINGS = {
     "config.audio_test_btn": "Test voice",
     "config.preinc_audio_section_title": "Pre-incision audio",
     "config.preinc_audio_announce_hint": "Announces out loud the new pre-incision total (adding up all areas) every time you fill in an area's value.",
+    "config.quadfinish_audio_section_title": "Quadrant-finish audio",
+    "config.quadfinish_audio_announce_hint": "Announces the Mamba reading, the extracted follicles, and the difference every time you tap \"Finish count\" on a quadrant (only available when chain counting is in use).",
     "config.alarm_section_title": "Transection alarm",
     "config.alarm_subtitle": "Announces by voice as soon as the rate (adding up all 4 quadrants) goes over the limit you set.",
     "config.alert_partial_label": "Alert if partial transection goes over (%)",
@@ -787,6 +793,8 @@ const STRINGS = {
     "audio.test_phrase": "Audio test. One hundred twenty-three follicles.",
     "audio.milestone": "{n} follicles.",
     "audio.preinc_update": "{n} pre-incisions.",
+    "audio.quadfinish_summary": "Mamba {mamba}. Extracted follicles {extraidos}. Difference {diffpct} percent.",
+    "audio.quadfinish_extraidos_only": "Extracted follicles {extraidos}.",
     "cnt.mode_full": "Complete mode",
     "cnt.mode_reduced": "Reduced mode",
     "cnt.global_not_started": "Total time: not started yet",
@@ -1026,6 +1034,8 @@ const STRINGS = {
     "config.audio_test_btn": "Probar voz",
     "config.preinc_audio_section_title": "Audio de pre-incisiones",
     "config.preinc_audio_announce_hint": "Anuncia en voz alta el nuevo total de pre-incisiones (sumando todas las áreas) cada vez que completes el valor de un área.",
+    "config.quadfinish_audio_section_title": "Audio al finalizar cuadrante",
+    "config.quadfinish_audio_announce_hint": "Anuncia el Mamba, los folículos extraídos y la diferencia cada vez que toques \"Conteo finalizado\" en un cuadrante (solo disponible cuando se usa el conteo en cadena).",
     "config.alarm_section_title": "Alarma de transección",
     "config.alarm_subtitle": "Avisa por voz apenas la tasa (sumando los 4 cuadrantes) supere el límite que definas.",
     "config.alert_partial_label": "Avisar si la transección parcial supera (%)",
@@ -1148,6 +1158,8 @@ const STRINGS = {
     "audio.test_phrase": "Prueba de audio. Ciento veintitrés folículos.",
     "audio.milestone": "{n} folículos.",
     "audio.preinc_update": "{n} pre-incisiones.",
+    "audio.quadfinish_summary": "Mamba {mamba}. Folículos extraídos {extraidos}. Diferencia {diffpct} por ciento.",
+    "audio.quadfinish_extraidos_only": "Folículos extraídos {extraidos}.",
     "cnt.mode_full": "Modo completo",
     "cnt.mode_reduced": "Modo reducido",
     "cnt.global_not_started": "Tiempo total: aún no iniciado",
@@ -2058,6 +2070,12 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        <label class=\"switch\"><input type=\"checkbox\" id=\"preinc-audio-toggle\" onchange=\"App.togglePreincAudio(this.checked)\"><span class=\"slider\"></span></label>\n" +
 "        <button class=\"btn secondary\" data-i18n=\"config.audio_test_btn\" onclick=\"App.testAudio()\">Testar voz</button>\n" +
 "      </div>\n" +
+"      <h3 class=\"section-title\" style=\"margin:22px 0 8px;\" data-i18n=\"config.quadfinish_audio_section_title\">Áudio ao finalizar quadrante</h3>\n" +
+"      <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"config.quadfinish_audio_announce_hint\">Anuncia o Mamba, os folículos extraídos e a diferença sempre que você tocar em \"Contagem finalizada\" num quadrante (só disponível quando a contagem em cadeia está em uso).</p>\n" +
+"      <div class=\"row\" style=\"align-items:center;gap:16px;margin-top:8px;\">\n" +
+"        <label class=\"switch\"><input type=\"checkbox\" id=\"quadfinish-audio-toggle\" onchange=\"App.toggleQuadFinishAudio(this.checked)\"><span class=\"slider\"></span></label>\n" +
+"        <button class=\"btn secondary\" data-i18n=\"config.audio_test_btn\" onclick=\"App.testAudio()\">Testar voz</button>\n" +
+"      </div>\n" +
 "      <h3 class=\"section-title\" style=\"margin:22px 0 8px;\" data-i18n=\"config.alarm_section_title\">Alarme de transecção</h3>\n" +
 "      <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"config.alarm_subtitle\">Avisa por voz assim que a taxa (somando os 4 quadrantes) ultrapassar o limite que você definir.</p>\n" +
 "      <div class=\"row\" style=\"align-items:center;gap:16px;margin-top:10px;flex-wrap:wrap;\">\n" +
@@ -2234,12 +2252,12 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      <div class=\"card\">\n" +
 "        <h2 style=\"font-size:15px;margin:0 0 4px;\" data-i18n=\"photos.marcacao_title\">Marcação cirúrgica</h2>\n" +
 "        <p class=\"hint\" style=\"margin-bottom:10px;\" data-i18n=\"photos.marcacao_hint\">Ficam salvas neste servidor — visíveis em todos os celulares conectados.</p>\n" +
-"        <input type=\"file\" accept=\"image/*\" multiple capture=\"environment\" onchange=\"App.uploadPhotos('marcacao', this)\">\n" +
+"        <input type=\"file\" accept=\"image/*\" multiple onchange=\"App.uploadPhotos('marcacao', this)\">\n" +
 "        <div class=\"photo-grid\" id=\"photos-grid-marcacao\"></div>\n" +
 "      </div>\n" +
 "      <div class=\"card\">\n" +
 "        <h2 style=\"font-size:15px;margin:0 0 4px;\" data-i18n=\"photos.posop_title\">Pós-operatório imediato</h2>\n" +
-"        <input type=\"file\" accept=\"image/*\" multiple capture=\"environment\" onchange=\"App.uploadPhotos('posop', this)\">\n" +
+"        <input type=\"file\" accept=\"image/*\" multiple onchange=\"App.uploadPhotos('posop', this)\">\n" +
 "        <div class=\"photo-grid\" id=\"photos-grid-posop\"></div>\n" +
 "      </div>\n" +
 "    </div>\n" +
@@ -2621,7 +2639,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var end = s.globalTimerEndedAt || Date.now();\n" +
 "  return end - s.globalTimerStartedAt;\n" +
 "}\n" +
-"var state = {currentId:null, session:null, pollHandle:null, connOk:true, increments:DEFAULT_INCREMENTS.slice(), activeTab:'extracao', activeQuadrant:QUADRANTS[0].id, audioEnabled:false, audioInterval:100, lastAnnounced:0, preincAudioEnabled:false, preincLastTotal:null, baseUrl:null, alertParcialEnabled:false, alertParcialThreshold:null, alertParcialFired:false, alertTotalEnabled:false, alertTotalThreshold:null, alertTotalFired:false, currentUser:null, resetToken:null, newSessionMode:'completo', newPatientInfo:{}, lang:'pt'};\n" +
+"var state = {currentId:null, session:null, pollHandle:null, connOk:true, increments:DEFAULT_INCREMENTS.slice(), activeTab:'extracao', activeQuadrant:QUADRANTS[0].id, audioEnabled:false, audioInterval:100, lastAnnounced:0, preincAudioEnabled:false, preincLastTotal:null, quadFinishAudioEnabled:false, baseUrl:null, alertParcialEnabled:false, alertParcialThreshold:null, alertParcialFired:false, alertTotalEnabled:false, alertTotalThreshold:null, alertTotalFired:false, currentUser:null, resetToken:null, newSessionMode:'completo', newPatientInfo:{}, lang:'pt'};\n" +
 "function shareUrlFor(id){ return (state.baseUrl||window.location.origin) + '/s/' + id; }\n" +
 "function resolveBaseUrl(){\n" +
 "  var host = window.location.hostname;\n" +
@@ -3360,6 +3378,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    var nextQuad = (idx!==-1 && idx+1<QUADRANTS.length) ? QUADRANTS[idx+1] : null;\n" +
 "    if (nextQuad) { state.activeQuadrant = nextQuad.id; }\n" +
 "    render();\n" +
+"    announceQuadFinishAudio(updated);\n" +
 "    toast(t('toast.quadrant_finished'));\n" +
 "  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
 "};\n" +
@@ -3739,20 +3758,22 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "function audioKey(id){ return 'fue_live_audio_'+id; }\n" +
 "function loadAudioPrefs(id){\n" +
 "  try{ var raw = localStorage.getItem(audioKey(id));\n" +
-"    var p = raw ? JSON.parse(raw) : {enabled:false, interval:100, lastAnnounced:0, preincEnabled:false, preincLastTotal:null, alertParcialEnabled:false, alertParcialThreshold:null, alertTotalEnabled:false, alertTotalThreshold:null};\n" +
+"    var p = raw ? JSON.parse(raw) : {enabled:false, interval:100, lastAnnounced:0, preincEnabled:false, preincLastTotal:null, quadFinishEnabled:false, alertParcialEnabled:false, alertParcialThreshold:null, alertTotalEnabled:false, alertTotalThreshold:null};\n" +
 "    state.audioEnabled = !!p.enabled; state.audioInterval = p.interval||100; state.lastAnnounced = p.lastAnnounced||0;\n" +
 "    state.preincAudioEnabled = !!p.preincEnabled; state.preincLastTotal = (p.preincLastTotal===undefined?null:p.preincLastTotal);\n" +
+"    state.quadFinishAudioEnabled = !!p.quadFinishEnabled;\n" +
 "    state.alertParcialEnabled = !!p.alertParcialEnabled; state.alertParcialThreshold = (p.alertParcialThreshold===undefined?null:p.alertParcialThreshold);\n" +
 "    state.alertTotalEnabled = !!p.alertTotalEnabled; state.alertTotalThreshold = (p.alertTotalThreshold===undefined?null:p.alertTotalThreshold);\n" +
 "    state.alertParcialFired = false; state.alertTotalFired = false;\n" +
 "  }catch(e){\n" +
 "    state.audioEnabled=false; state.audioInterval=100; state.lastAnnounced=0;\n" +
-"    state.preincAudioEnabled=false; state.preincLastTotal=null;\n" +
+"    state.preincAudioEnabled=false; state.preincLastTotal=null; state.quadFinishAudioEnabled=false;\n" +
 "    state.alertParcialEnabled=false; state.alertParcialThreshold=null; state.alertTotalEnabled=false; state.alertTotalThreshold=null;\n" +
 "  }\n" +
 "  document.getElementById('audio-toggle').checked = state.audioEnabled;\n" +
 "  document.getElementById('audio-interval').value = state.audioInterval;\n" +
 "  document.getElementById('preinc-audio-toggle').checked = state.preincAudioEnabled;\n" +
+"  document.getElementById('quadfinish-audio-toggle').checked = state.quadFinishAudioEnabled;\n" +
 "  document.getElementById('alert-parcial-toggle').checked = state.alertParcialEnabled;\n" +
 "  document.getElementById('alert-parcial-threshold').value = (state.alertParcialThreshold===null?'':state.alertParcialThreshold);\n" +
 "  document.getElementById('alert-total-toggle').checked = state.alertTotalEnabled;\n" +
@@ -3763,12 +3784,14 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  localStorage.setItem(audioKey(state.currentId), JSON.stringify({\n" +
 "    enabled:state.audioEnabled, interval:state.audioInterval, lastAnnounced:state.lastAnnounced,\n" +
 "    preincEnabled:state.preincAudioEnabled, preincLastTotal:state.preincLastTotal,\n" +
+"    quadFinishEnabled:state.quadFinishAudioEnabled,\n" +
 "    alertParcialEnabled:state.alertParcialEnabled, alertParcialThreshold:state.alertParcialThreshold,\n" +
 "    alertTotalEnabled:state.alertTotalEnabled, alertTotalThreshold:state.alertTotalThreshold\n" +
 "  }));\n" +
 "}\n" +
 "App.toggleAudio = function(checked){ state.audioEnabled = checked; saveAudioPrefs(); if (checked) speak('Áudio ativado.'); };\n" +
 "App.togglePreincAudio = function(checked){ state.preincAudioEnabled = checked; saveAudioPrefs(); if (checked) speak('Áudio de pré-incisões ativado.'); };\n" +
+"App.toggleQuadFinishAudio = function(checked){ state.quadFinishAudioEnabled = checked; saveAudioPrefs(); if (checked) speak('Áudio de finalização de quadrante ativado.'); };\n" +
 "App.toggleAlertParcial = function(checked){ state.alertParcialEnabled = checked; state.alertParcialFired = false; saveAudioPrefs(); if (checked) speak('Alarme de transecção parcial ativado.'); };\n" +
 "App.saveAlertParcialThreshold = function(value){ var n = parseFloat(value); state.alertParcialThreshold = (isNaN(n)||n<0) ? null : n; state.alertParcialFired = false; saveAudioPrefs(); };\n" +
 "App.toggleAlertTotal = function(checked){ state.alertTotalEnabled = checked; state.alertTotalFired = false; saveAudioPrefs(); if (checked) speak('Alarme de transecção total ativado.'); };\n" +
@@ -3793,7 +3816,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var milestone = Math.floor(total/state.audioInterval)*state.audioInterval;\n" +
 "  if (milestone>0 && milestone>state.lastAnnounced){ state.lastAnnounced=milestone; saveAudioPrefs(); speak(t('audio.milestone',{n:String(milestone)})); }\n" +
 "}\n" +
-// Cada área de pré-incisão (recesso direito, linha, etc.) é um contador PRÓPRIO e\n" +
+"// Cada área de pré-incisão (recesso direito, linha, etc.) é um contador PRÓPRIO e\n" +
 "// ABSOLUTO — não uma leitura acumulada única tipo o Mamba — então o total (soma de\n" +
 "// todas as áreas) não depende da ORDEM em que você preenche cada campo, nem precisa\n" +
 "// de nenhum rastreamento por horário: é sempre só a soma direta do que está em cada\n" +
@@ -3813,6 +3836,27 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    saveAudioPrefs();\n" +
 "    speak(t('audio.preinc_update',{n:String(total)}));\n" +
 "  }\n" +
+"}\n" +
+"// Disparado uma vez, na hora em que o \"Contagem finalizada\" de um quadrante tem\n" +
+"// sucesso (não fica escutando mudança nenhuma, ao contrário do checkPreincAudioOnChange\n" +
+"// acima) — anuncia o Mamba mais recente, os folículos extraídos somados até aquele\n" +
+"// ponto (todos os quadrantes já preenchidos, cadeia inclusa) e a diferença % do Mamba,\n" +
+"// já atualizados com o que acabou de ser finalizado. Pedido do Dr. Vitor depois de\n" +
+"// sentir falta dessa leitura em voz alta durante uma cirurgia de verdade. Se o Mamba\n" +
+"// daquele quadrante ainda não tiver sido preenchido (equipe finalizou a contagem antes\n" +
+"// de anotar o Mamba), não dá pra calcular a diferença — nesse caso anuncia só os\n" +
+"// folículos extraídos, em vez de travar ou falar um número incompleto/errado.\n" +
+"function announceQuadFinishAudio(s){\n" +
+"  if (!state.quadFinishAudioEnabled) return;\n" +
+"  var combined = combinedExtractionCounts(s);\n" +
+"  var sum = computeSummary(combined, s.mode||'completo');\n" +
+"  var finalMamba = mambaFinalCumulativo(s);\n" +
+"  if (finalMamba===null || finalMamba===undefined || finalMamba===''){\n" +
+"    speak(t('audio.quadfinish_extraidos_only',{extraidos:String(sum.foliculosExtraidos)}));\n" +
+"    return;\n" +
+"  }\n" +
+"  var mdiff = computeMambaDiff(finalMamba, sum.foliculosExtraidos);\n" +
+"  speak(t('audio.quadfinish_summary',{mamba:String(mdiff.mamba), extraidos:String(sum.foliculosExtraidos), diffpct:mdiff.diffPct.toFixed(1)}));\n" +
 "}\n" +
 "setInterval(function(){ api('/api/ping').catch(function(){}); }, 5000);\n" +
 "document.addEventListener('DOMContentLoaded', function(){\n" +
