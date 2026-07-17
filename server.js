@@ -265,6 +265,7 @@ const STRINGS = {
     "common.open": "Abrir",
     "common.delete": "Apagar",
     "common.cancel": "Cancelar",
+    "common.ok": "OK",
     "common.save": "Salvar",
     "common.remove": "Remover",
     "common.back": "Voltar",
@@ -630,6 +631,7 @@ const STRINGS = {
     "common.open": "Open",
     "common.delete": "Delete",
     "common.cancel": "Cancel",
+    "common.ok": "OK",
     "common.save": "Save",
     "common.remove": "Remove",
     "common.back": "Back",
@@ -995,6 +997,7 @@ const STRINGS = {
     "common.open": "Abrir",
     "common.delete": "Eliminar",
     "common.cancel": "Cancelar",
+    "common.ok": "OK",
     "common.save": "Guardar",
     "common.remove": "Quitar",
     "common.back": "Volver",
@@ -1946,8 +1949,8 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      <div class=\"field\">\n" +
 "        <label data-i18n=\"home.count_mode_label\">Modo de contagem</label>\n" +
 "        <div class=\"row\" style=\"gap:8px;\">\n" +
-"          <button type=\"button\" class=\"btn\" id=\"new-mode-completo\" data-i18n=\"common.mode_complete\" onclick=\"App.setNewMode('completo')\">Completo</button>\n" +
-"          <button type=\"button\" class=\"btn secondary\" id=\"new-mode-reduzido\" data-i18n=\"common.mode_reduced\" onclick=\"App.setNewMode('reduzido')\">Reduzido</button>\n" +
+"          <button type=\"button\" class=\"btn\" id=\"new-mode-reduzido\" data-i18n=\"common.mode_reduced\" onclick=\"App.setNewMode('reduzido')\">Reduzido</button>\n" +
+"          <button type=\"button\" class=\"btn secondary\" id=\"new-mode-completo\" data-i18n=\"common.mode_complete\" onclick=\"App.setNewMode('completo')\">Completo</button>\n" +
 "        </div>\n" +
 "        <p class=\"hint\" style=\"margin-top:6px;\" data-i18n=\"home.mode_explanation\">Completo: cada transecção parcial é registrada no tipo exato (2→1, 3→2 etc). Reduzido: os fios da transecção parcial entram junto com os folículos íntegros, e só um contador único de transecção parcial é usado pra calcular a taxa — sem detalhar o tipo. Não dá pra trocar depois de criada.</p>\n" +
 "      </div>\n" +
@@ -2371,6 +2374,31 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    </div>\n" +
 "  </div>\n" +
 "</div>\n" +
+"<!-- Modal próprio de confirmação/entrada de valor, substituindo window.confirm()/\n" +
+"     window.prompt() em todo o app. Motivo: relato do Dr. Vitor de que, numa cirurgia\n" +
+"     real no iPad dele, o botão \"Contagem finalizada\" respondeu no primeiro quadrante\n" +
+"     mas pareceu travado (sem nenhum erro) nos seguintes. Causa: o Safari do iOS\n" +
+"     silenciosamente bloqueia TODOS os diálogos nativos (confirm/prompt/alert) numa\n" +
+"     página depois de mostrar vários deles na mesma sessão — sem avisar o usuário, sem\n" +
+"     erro no console, o confirm() só passa a retornar false direto. Como App.editCount\n" +
+"     (tocar pra editar valor de categoria) usa window.prompt() dezenas de vezes por\n" +
+"     quadrante, era praticamente garantido disparar esse bloqueio antes do médico\n" +
+"     chegar no confirm() de finalizar o segundo/terceiro quadrante. Substituindo por\n" +
+"     um modal HTML próprio (mesmo componente visual do modal de compartilhar\n" +
+"     cirurgia), esse comportamento do navegador deixa de existir — o app nunca mais\n" +
+"     chama window.confirm()/window.prompt() em lugar nenhum. -->\n" +
+"<div class=\"modal-overlay\" id=\"dialog-modal-overlay\" onclick=\"if(event.target===this) App.dialogModalCancel();\">\n" +
+"  <div class=\"modal-box\">\n" +
+"    <p id=\"dialog-modal-message\" style=\"margin:0;white-space:pre-line;\"></p>\n" +
+"    <div class=\"field\" id=\"dialog-modal-input-wrap\" style=\"display:none;margin-top:10px;margin-bottom:0;\">\n" +
+"      <input type=\"number\" id=\"dialog-modal-input\" inputmode=\"numeric\" onkeydown=\"if(event.key==='Enter'){event.preventDefault();App.dialogModalOk();}\">\n" +
+"    </div>\n" +
+"    <div class=\"row\" style=\"justify-content:flex-end;gap:8px;margin-top:16px;\">\n" +
+"      <button class=\"btn secondary\" data-i18n=\"common.cancel\" onclick=\"App.dialogModalCancel()\">Cancelar</button>\n" +
+"      <button class=\"btn\" data-i18n=\"common.ok\" onclick=\"App.dialogModalOk()\">OK</button>\n" +
+"    </div>\n" +
+"  </div>\n" +
+"</div>\n" +
 "<script>\n" +
 "(function(){\n" +
 "'use strict';\n" +
@@ -2639,7 +2667,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var end = s.globalTimerEndedAt || Date.now();\n" +
 "  return end - s.globalTimerStartedAt;\n" +
 "}\n" +
-"var state = {currentId:null, session:null, pollHandle:null, connOk:true, increments:DEFAULT_INCREMENTS.slice(), activeTab:'extracao', activeQuadrant:QUADRANTS[0].id, audioEnabled:false, audioInterval:100, lastAnnounced:0, preincAudioEnabled:false, preincLastTotal:null, quadFinishAudioEnabled:false, baseUrl:null, alertParcialEnabled:false, alertParcialThreshold:null, alertParcialFired:false, alertTotalEnabled:false, alertTotalThreshold:null, alertTotalFired:false, currentUser:null, resetToken:null, newSessionMode:'completo', newPatientInfo:{}, lang:'pt'};\n" +
+"var state = {currentId:null, session:null, pollHandle:null, connOk:true, increments:DEFAULT_INCREMENTS.slice(), activeTab:'extracao', activeQuadrant:QUADRANTS[0].id, audioEnabled:false, audioInterval:100, lastAnnounced:0, preincAudioEnabled:false, preincLastTotal:null, quadFinishAudioEnabled:false, baseUrl:null, alertParcialEnabled:false, alertParcialThreshold:null, alertParcialFired:false, alertTotalEnabled:false, alertTotalThreshold:null, alertTotalFired:false, currentUser:null, resetToken:null, newSessionMode:'reduzido', newPatientInfo:{}, lang:'pt'};\n" +
 "function shareUrlFor(id){ return (state.baseUrl||window.location.origin) + '/s/' + id; }\n" +
 "function resolveBaseUrl(){\n" +
 "  var host = window.location.hostname;\n" +
@@ -2801,11 +2829,13 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  }).catch(function(){});\n" +
 "};\n" +
 "App.logoutAllDevices = function(){\n" +
-"  if (!window.confirm(t('toast.logout_all_confirm'))) return;\n" +
-"  api('/api/logout-all','POST',{}).then(function(){\n" +
-"    state.currentUser = null; applyBranding(null); renderUserBar(); showScreen('auth'); App.switchAuthTab('login');\n" +
-"    toast(t('toast.logged_out_all'));\n" +
-"  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  confirmDialog(t('toast.logout_all_confirm')).then(function(ok){\n" +
+"    if (!ok) return;\n" +
+"    api('/api/logout-all','POST',{}).then(function(){\n" +
+"      state.currentUser = null; applyBranding(null); renderUserBar(); showScreen('auth'); App.switchAuthTab('login');\n" +
+"      toast(t('toast.logged_out_all'));\n" +
+"    }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
 "};\n" +
 "// Baixa o backup manual (cadastro + cirurgias do próprio médico). Navegação\n" +
 "// direta em vez de fetch: o servidor manda Content-Disposition:attachment, que\n" +
@@ -3098,8 +3128,10 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var found = (state.surgeryList||[]).filter(function(s){ return s.id===id; })[0];\n" +
 "  var codigo = found ? found.codigo : id;\n" +
 "  var confirmText = t('confirm.delete_surgery',{code:codigo});\n" +
-"  if (!window.confirm(confirmText)) return;\n" +
-"  api('/api/session/'+id, 'DELETE').then(function(){ toast(t('toast.surgery_deleted')); loadSurgeryList(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  confirmDialog(confirmText).then(function(ok){\n" +
+"    if (!ok) return;\n" +
+"    api('/api/session/'+id, 'DELETE').then(function(){ toast(t('toast.surgery_deleted')); loadSurgeryList(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
 "};\n" +
 "App.setNewMode = function(mode){\n" +
 "  state.newSessionMode = mode;\n" +
@@ -3109,12 +3141,12 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "App.createSession = function(){\n" +
 "  var codigo = document.getElementById('new-codigo').value.trim();\n" +
 "  if (!codigo){ toast(t('toast.enter_patient_code')); return; }\n" +
-"  var mode = state.newSessionMode||'completo';\n" +
+"  var mode = state.newSessionMode||'reduzido';\n" +
 "  var payload = {codigo:codigo, mode:mode};\n" +
 "  if (Object.keys(state.newPatientInfo||{}).length) payload.patientInfo = state.newPatientInfo;\n" +
 "  api('/api/session','POST',payload).then(function(s){\n" +
 "    document.getElementById('new-codigo').value='';\n" +
-"    App.setNewMode('completo');\n" +
+"    App.setNewMode('reduzido');\n" +
 "    state.newPatientInfo = {};\n" +
 "    ['new-patient-idade','new-patient-altura','new-patient-peso'].forEach(function(id){ var el=document.getElementById(id); if (el) el.value=''; });\n" +
 "    App.refreshNewPatientButtons();\n" +
@@ -3356,37 +3388,42 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var predecessorTotal = qd.carryFromId ? chainCumulativeCat(s, qd.carryFromId, catId) : 0;\n" +
 "  var currentChain = predecessorTotal + current;\n" +
 "  var cat = CATS.filter(function(c){ return c.id===catId; })[0];\n" +
-"  var input = window.prompt(t('prompt.set_value_for',{label:(cat?cat.label:catId)}), currentChain);\n" +
-"  if (input===null) return;\n" +
-"  var v = parseInt(input,10);\n" +
-"  if (isNaN(v) || v<0){ toast(t('errors.invalid_value')); return; }\n" +
-"  if (v < predecessorTotal){ toast(t('errors.value_below_carry',{carry:predecessorTotal})); return; }\n" +
-"  var newLocal = v - predecessorTotal;\n" +
-"  var delta = newLocal - current;\n" +
-"  if (delta===0) return;\n" +
-"  App.adjust(catId, delta);\n" +
+"  promptDialog(t('prompt.set_value_for',{label:(cat?cat.label:catId)}), currentChain).then(function(input){\n" +
+"    if (input===null) return;\n" +
+"    var v = parseInt(input,10);\n" +
+"    if (isNaN(v) || v<0){ toast(t('errors.invalid_value')); return; }\n" +
+"    if (v < predecessorTotal){ toast(t('errors.value_below_carry',{carry:predecessorTotal})); return; }\n" +
+"    var newLocal = v - predecessorTotal;\n" +
+"    var delta = newLocal - current;\n" +
+"    if (delta===0) return;\n" +
+"    App.adjust(catId, delta);\n" +
+"  });\n" +
 "};\n" +
 "App.finishQuadrant = function(){\n" +
 "  var s = state.session; if (!s || s.status==='finalizada') return;\n" +
 "  var quad = state.activeQuadrant;\n" +
 "  if (s.quadrants[quad].locked) return;\n" +
-"  if (!window.confirm(t('confirm.finish_quadrant'))) return;\n" +
-"  api('/api/session/'+state.currentId+'/quadrant-finish','POST',{quadrant:quad}).then(function(updated){\n" +
-"    state.session=updated;\n" +
-"    var idx = -1;\n" +
-"    for (var i=0;i<QUADRANTS.length;i++){ if (QUADRANTS[i].id===quad){ idx=i; break; } }\n" +
-"    var nextQuad = (idx!==-1 && idx+1<QUADRANTS.length) ? QUADRANTS[idx+1] : null;\n" +
-"    if (nextQuad) { state.activeQuadrant = nextQuad.id; }\n" +
-"    render();\n" +
-"    announceQuadFinishAudio(updated);\n" +
-"    toast(t('toast.quadrant_finished'));\n" +
-"  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  confirmDialog(t('confirm.finish_quadrant')).then(function(ok){\n" +
+"    if (!ok) return;\n" +
+"    api('/api/session/'+state.currentId+'/quadrant-finish','POST',{quadrant:quad}).then(function(updated){\n" +
+"      state.session=updated;\n" +
+"      var idx = -1;\n" +
+"      for (var i=0;i<QUADRANTS.length;i++){ if (QUADRANTS[i].id===quad){ idx=i; break; } }\n" +
+"      var nextQuad = (idx!==-1 && idx+1<QUADRANTS.length) ? QUADRANTS[idx+1] : null;\n" +
+"      if (nextQuad) { state.activeQuadrant = nextQuad.id; }\n" +
+"      render();\n" +
+"      announceQuadFinishAudio(updated);\n" +
+"      toast(t('toast.quadrant_finished'));\n" +
+"    }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
 "};\n" +
 "App.reopenQuadrant = function(){\n" +
 "  var s = state.session; if (!s || s.status==='finalizada') return;\n" +
 "  var quad = state.activeQuadrant;\n" +
-"  if (!window.confirm(t('confirm.reopen_quadrant'))) return;\n" +
-"  api('/api/session/'+state.currentId+'/quadrant-reopen','POST',{quadrant:quad}).then(function(updated){ state.session=updated; render(); toast(t('toast.quadrant_reopened')); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  confirmDialog(t('confirm.reopen_quadrant')).then(function(ok){\n" +
+"    if (!ok) return;\n" +
+"    api('/api/session/'+state.currentId+'/quadrant-reopen','POST',{quadrant:quad}).then(function(updated){ state.session=updated; render(); toast(t('toast.quadrant_reopened')); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
 "};\n" +
 "App.setQuadrantCarryFrom = function(carryFromId){\n" +
 "  var s = state.session; if (!s || s.status==='finalizada') return;\n" +
@@ -3423,11 +3460,12 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var s = state.session; if (!s || s.status==='finalizada') return;\n" +
 "  var area = PREINC_AREAS.filter(function(a){ return a.id===areaId; })[0];\n" +
 "  var current = s.preincCounts[areaId]||0;\n" +
-"  var input = window.prompt(t('prompt.set_value_for',{label:(area?area.label:areaId)}), current);\n" +
-"  if (input===null) return;\n" +
-"  var v = parseInt(input,10);\n" +
-"  if (isNaN(v) || v<0){ toast(t('errors.invalid_value')); return; }\n" +
-"  api('/api/session/'+state.currentId+'/preinc','POST',{area:areaId, value:v}).then(function(s2){ state.session=s2; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  promptDialog(t('prompt.set_value_for',{label:(area?area.label:areaId)}), current).then(function(input){\n" +
+"    if (input===null) return;\n" +
+"    var v = parseInt(input,10);\n" +
+"    if (isNaN(v) || v<0){ toast(t('errors.invalid_value')); return; }\n" +
+"    api('/api/session/'+state.currentId+'/preinc','POST',{area:areaId, value:v}).then(function(s2){ state.session=s2; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
 "};\n" +
 "function renderPreincDistTotals(s){\n" +
 "  var dist = s.preincDist || {};\n" +
@@ -3449,11 +3487,12 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var fio = DIST_FIOS.filter(function(f){ return f.id===fioId; })[0];\n" +
 "  var current = (s.preincDist && s.preincDist[areaId]) ? (s.preincDist[areaId][fioId]||0) : 0;\n" +
 "  var label = (area?area.label:areaId)+' — '+(fio?fio.label:fioId);\n" +
-"  var input = window.prompt(t('prompt.set_quantity_for',{label:label}), current);\n" +
-"  if (input===null) return;\n" +
-"  var v = parseInt(input,10);\n" +
-"  if (isNaN(v) || v<0){ toast(t('errors.invalid_value')); return; }\n" +
-"  api('/api/session/'+state.currentId+'/preinc-dist','POST',{area:areaId, fio:fioId, value:v}).then(function(s2){ state.session=s2; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  promptDialog(t('prompt.set_quantity_for',{label:label}), current).then(function(input){\n" +
+"    if (input===null) return;\n" +
+"    var v = parseInt(input,10);\n" +
+"    if (isNaN(v) || v<0){ toast(t('errors.invalid_value')); return; }\n" +
+"    api('/api/session/'+state.currentId+'/preinc-dist','POST',{area:areaId, fio:fioId, value:v}).then(function(s2){ state.session=s2; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
 "};\n" +
 "function renderPhotos(s){\n" +
 "  ['marcacao','posop'].forEach(function(cat){\n" +
@@ -3517,8 +3556,10 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    .catch(function(err){ toast(t('toast.photo_upload_error',{msg:err.message})); });\n" +
 "};\n" +
 "App.removePhoto = function(photoId){\n" +
-"  if (!window.confirm(t('confirm.delete_photo'))) return;\n" +
-"  api('/api/session/'+state.currentId+'/photos/'+photoId+'/delete','POST',{}).then(function(s){ state.session=s; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  confirmDialog(t('confirm.delete_photo')).then(function(ok){\n" +
+"    if (!ok) return;\n" +
+"    api('/api/session/'+state.currentId+'/photos/'+photoId+'/delete','POST',{}).then(function(s){ state.session=s; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
 "};\n" +
 "function resizeImageFile(file, maxDim, quality){\n" +
 "  return new Promise(function(resolve, reject){\n" +
@@ -3571,11 +3612,13 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  }).catch(function(err){ toast(t('toast.logo_upload_error',{msg:err.message})); });\n" +
 "};\n" +
 "App.removeLogo = function(){\n" +
-"  if (!window.confirm(t('confirm.delete_logo'))) return;\n" +
-"  api('/api/me/logo/delete','POST',{}).then(function(r){\n" +
-"    state.currentUser = r.user; applyBranding(r.user.branding); renderSettingsScreen();\n" +
-"    toast(t('toast.logo_removed'));\n" +
-"  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  confirmDialog(t('confirm.delete_logo')).then(function(ok){\n" +
+"    if (!ok) return;\n" +
+"    api('/api/me/logo/delete','POST',{}).then(function(r){\n" +
+"      state.currentUser = r.user; applyBranding(r.user.branding); renderSettingsScreen();\n" +
+"      toast(t('toast.logo_removed'));\n" +
+"    }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
 "};\n" +
 "App.setTheme = function(theme){\n" +
 "  api('/api/me/branding','POST',{theme:theme}).then(function(r){\n" +
@@ -3592,14 +3635,14 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var action = state.session.timer.running ? 'pause' : 'start';\n" +
 "  api('/api/session/'+state.currentId+'/timer','POST',{action:action}).then(function(s){ state.session=s; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
 "};\n" +
-"App.resetTimer = function(){ if (!window.confirm(t('confirm.reset_extraction_timer'))) return; api('/api/session/'+state.currentId+'/timer','POST',{action:'reset'}).then(function(s){ state.session=s; render(); }); };\n" +
+"App.resetTimer = function(){ confirmDialog(t('confirm.reset_extraction_timer')).then(function(ok){ if (!ok) return; api('/api/session/'+state.currentId+'/timer','POST',{action:'reset'}).then(function(s){ state.session=s; render(); }); }); };\n" +
 "App.togglePreincTimer = function(){\n" +
 "  if (!state.currentId || !state.session) return;\n" +
 "  var action = state.session.preincTimer.running ? 'pause' : 'start';\n" +
 "  api('/api/session/'+state.currentId+'/preinc-timer','POST',{action:action}).then(function(s){ state.session=s; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
 "};\n" +
-"App.resetPreincTimer = function(){ if (!window.confirm(t('confirm.reset_preinc_timer'))) return; api('/api/session/'+state.currentId+'/preinc-timer','POST',{action:'reset'}).then(function(s){ state.session=s; render(); }); };\n" +
-"App.finalizeSession = function(){ if (!window.confirm(t('confirm.finalize_surgery'))) return; api('/api/session/'+state.currentId+'/finalize','POST',{}).then(function(s){ state.session=s; render(); App.switchTab('resumofinal'); toast(t('toast.surgery_finalized')); }); };\n" +
+"App.resetPreincTimer = function(){ confirmDialog(t('confirm.reset_preinc_timer')).then(function(ok){ if (!ok) return; api('/api/session/'+state.currentId+'/preinc-timer','POST',{action:'reset'}).then(function(s){ state.session=s; render(); }); }); };\n" +
+"App.finalizeSession = function(){ confirmDialog(t('confirm.finalize_surgery')).then(function(ok){ if (!ok) return; api('/api/session/'+state.currentId+'/finalize','POST',{}).then(function(s){ state.session=s; render(); App.switchTab('resumofinal'); toast(t('toast.surgery_finalized')); }); }); };\n" +
 "App.reopenSession = function(){ api('/api/session/'+state.currentId+'/reopen','POST',{}).then(function(s){ state.session=s; render(); toast(t('toast.surgery_reopened')); }); };\n" +
 "App.openShareModal = function(){\n" +
 "  document.getElementById('share-url').textContent = shareUrlFor(state.currentId);\n" +
@@ -3608,6 +3651,57 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "App.closeShareModal = function(){\n" +
 "  document.getElementById('share-modal-overlay').classList.remove('show');\n" +
 "};\n" +
+"// confirmDialog()/promptDialog(): substitutos do window.confirm()/window.prompt()\n" +
+"// nativos, usando o mesmo modal HTML (.modal-overlay/.modal-box) do modal de\n" +
+"// compartilhar. Ambos retornam uma Promise, então todo call site que usava\n" +
+"// confirm()/prompt() de forma síncrona precisou virar um .then(). O motivo é o\n" +
+"// bug relatado pelo Dr. Vitor: no iPad dele, depois de vários confirm()/prompt()\n" +
+"// na mesma cirurgia (editCount usa prompt() dezenas de vezes por quadrante), o\n" +
+"// Safari do iOS passa a bloquear silenciosamente TODOS os diálogos nativos\n" +
+"// seguintes — sem erro, sem aviso, só retornando false/null direto — fazendo o\n" +
+"// botão de finalizar quadrante parecer travado sem motivo aparente. Um modal\n" +
+"// próprio não sofre desse bloqueio.\n" +
+"var dialogModalResolve = null;\n" +
+"var dialogModalIsPrompt = false;\n" +
+"function showDialogModal(message, opts){\n" +
+"  opts = opts || {};\n" +
+"  return new Promise(function(resolve){\n" +
+"    dialogModalResolve = resolve;\n" +
+"    dialogModalIsPrompt = !!opts.isPrompt;\n" +
+"    document.getElementById('dialog-modal-message').textContent = message;\n" +
+"    var inputWrap = document.getElementById('dialog-modal-input-wrap');\n" +
+"    var input = document.getElementById('dialog-modal-input');\n" +
+"    if (dialogModalIsPrompt){\n" +
+"      inputWrap.style.display = 'block';\n" +
+"      input.value = (opts.defaultValue===undefined || opts.defaultValue===null) ? '' : opts.defaultValue;\n" +
+"    } else {\n" +
+"      inputWrap.style.display = 'none';\n" +
+"    }\n" +
+"    document.getElementById('dialog-modal-overlay').classList.add('show');\n" +
+"    if (dialogModalIsPrompt){\n" +
+"      setTimeout(function(){ if (input.focus) input.focus(); if (input.select) input.select(); }, 50);\n" +
+"    }\n" +
+"  });\n" +
+"}\n" +
+"function closeDialogModal(result){\n" +
+"  document.getElementById('dialog-modal-overlay').classList.remove('show');\n" +
+"  var resolveFn = dialogModalResolve;\n" +
+"  dialogModalResolve = null;\n" +
+"  if (resolveFn) resolveFn(result);\n" +
+"}\n" +
+"App.dialogModalOk = function(){\n" +
+"  if (dialogModalIsPrompt){\n" +
+"    var v = document.getElementById('dialog-modal-input').value;\n" +
+"    closeDialogModal(v);\n" +
+"  } else {\n" +
+"    closeDialogModal(true);\n" +
+"  }\n" +
+"};\n" +
+"App.dialogModalCancel = function(){\n" +
+"  closeDialogModal(dialogModalIsPrompt ? null : false);\n" +
+"};\n" +
+"function confirmDialog(message){ return showDialogModal(message, {isPrompt:false}); }\n" +
+"function promptDialog(message, defaultValue){ return showDialogModal(message, {isPrompt:true, defaultValue:defaultValue}); }\n" +
 "App.copyShareUrl = function(){\n" +
 "  var url = shareUrlFor(state.currentId);\n" +
 "  if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(function(){ toast(t('toast.address_copied')); }, function(){ toast(t('toast.copy_failed_manual')); }); }\n" +
