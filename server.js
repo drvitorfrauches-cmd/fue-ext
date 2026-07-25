@@ -3412,7 +3412,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      var nextQuad = (idx!==-1 && idx+1<QUADRANTS.length) ? QUADRANTS[idx+1] : null;\n" +
 "      if (nextQuad) { state.activeQuadrant = nextQuad.id; }\n" +
 "      render();\n" +
-"      announceQuadFinishAudio(updated);\n" +
+"      announceQuadFinishAudio(updated, quad);\n" +
 "      toast(t('toast.quadrant_finished'));\n" +
 "    }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
 "  });\n" +
@@ -3933,23 +3933,35 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "}\n" +
 "// Disparado uma vez, na hora em que o \"Contagem finalizada\" de um quadrante tem\n" +
 "// sucesso (não fica escutando mudança nenhuma, ao contrário do checkPreincAudioOnChange\n" +
-"// acima) — anuncia o Mamba mais recente, os folículos extraídos somados até aquele\n" +
-"// ponto (todos os quadrantes já preenchidos, cadeia inclusa) e a diferença % do Mamba,\n" +
-"// já atualizados com o que acabou de ser finalizado. Pedido do Dr. Vitor depois de\n" +
-"// sentir falta dessa leitura em voz alta durante uma cirurgia de verdade. Se o Mamba\n" +
+"// acima) — anuncia o Mamba PRÓPRIO do quadrante que acabou de ser finalizado, os\n" +
+"// folículos extraídos somados até aquele ponto (todos os quadrantes já preenchidos,\n" +
+"// cadeia inclusa) e a diferença % do Mamba. Pedido do Dr. Vitor depois de sentir\n" +
+"// falta dessa leitura em voz alta durante uma cirurgia de verdade. Se o Mamba\n" +
 "// daquele quadrante ainda não tiver sido preenchido (equipe finalizou a contagem antes\n" +
 "// de anotar o Mamba), não dá pra calcular a diferença — nesse caso anuncia só os\n" +
 "// folículos extraídos, em vez de travar ou falar um número incompleto/errado.\n" +
-"function announceQuadFinishAudio(s){\n" +
+"//\n" +
+"// Correção (17/07/2026): a versão original usava mambaFinalCumulativo(s), que pega\n" +
+"// o Mamba com o relógio real (mambaMarkedAtMs) mais recente em TODA a cirurgia, sem\n" +
+"// saber qual quadrante estava sendo finalizado. Bug relatado pelo Dr. Vitor: se a\n" +
+"// equipe digita o Mamba de um quadrante ainda EM ABERTO (ex: adianta a leitura do\n" +
+"// temporal direito) antes de finalizar um quadrante anterior (ex: temporal\n" +
+"// esquerdo), o áudio ao finalizar o temporal esquerdo anunciava o Mamba do temporal\n" +
+"// direito (mais recente por horário, mas de outro quadrante, ainda nem fechado) —\n" +
+"// nunca o do quadrante que de fato tinha acabado de ser finalizado. Agora a função\n" +
+"// recebe o id do quadrante finalizado e usa só o Mamba digitado NELE, ignorando\n" +
+"// completamente o que estiver em qualquer outro quadrante, aberto ou não.\n" +
+"function announceQuadFinishAudio(s, quadId){\n" +
 "  if (!state.quadFinishAudioEnabled) return;\n" +
 "  var combined = combinedExtractionCounts(s);\n" +
 "  var sum = computeSummary(combined, s.mode||'completo');\n" +
-"  var finalMamba = mambaFinalCumulativo(s);\n" +
-"  if (finalMamba===null || finalMamba===undefined || finalMamba===''){\n" +
+"  var qd = s.quadrants[quadId];\n" +
+"  var ownMamba = (qd && qd.mambaCumulativo!==null && qd.mambaCumulativo!==undefined && qd.mambaCumulativo!=='') ? Number(qd.mambaCumulativo) : null;\n" +
+"  if (ownMamba===null){\n" +
 "    speak(t('audio.quadfinish_extraidos_only',{extraidos:String(sum.foliculosExtraidos)}));\n" +
 "    return;\n" +
 "  }\n" +
-"  var mdiff = computeMambaDiff(finalMamba, sum.foliculosExtraidos);\n" +
+"  var mdiff = computeMambaDiff(ownMamba, sum.foliculosExtraidos);\n" +
 "  speak(t('audio.quadfinish_summary',{mamba:String(mdiff.mamba), extraidos:String(sum.foliculosExtraidos), diffpct:mdiff.diffPct.toFixed(1)}));\n" +
 "}\n" +
 "setInterval(function(){ api('/api/ping').catch(function(){}); }, 5000);\n" +
