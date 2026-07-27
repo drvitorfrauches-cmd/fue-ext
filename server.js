@@ -1961,6 +1961,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    #print-patient-report .pr-seal .pr-num{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:800;font-size:20px;letter-spacing:-.5px;color:#073A40;font-variant-numeric:tabular-nums;line-height:1;}\n" +
 "    #print-patient-report .pr-seal .pr-cap{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:6.5px;letter-spacing:.3px;text-transform:uppercase;color:#B8804A;margin-top:3px;text-align:center;max-width:70px;}\n" +
 "    #print-patient-report .pr-hero-copy h1{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;font-size:13px;margin:0;color:#073A40;letter-spacing:-.2px;}\n" +
+"    #print-patient-report .pr-hero-copy p{margin:3px 0 0;font-size:9.5px;line-height:1.35;color:#4A5A5C;max-width:420px;}\n" +
 "    #print-patient-report .pr-kpi-row{display:flex;padding:0 14px 8px;page-break-inside:avoid;break-inside:avoid;}\n" +
 "    #print-patient-report .pr-kpi{flex:1;padding-right:12px;margin-right:12px;border-right:1px solid #DDD3C2;}\n" +
 "    #print-patient-report .pr-kpi:last-child{border-right:none;margin-right:0;padding-right:0;}\n" +
@@ -1990,7 +1991,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    #print-patient-report .pr-photos-block:last-child{margin-bottom:0;}\n" +
 "    #print-patient-report .pr-photo-group-title{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:8.5px;font-weight:700;color:#1B2A2E;margin:0 0 4px;}\n" +
 "    #print-patient-report .pr-photos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}\n" +
-"    #print-patient-report .pr-photos-grid img{width:100%;height:130px;object-fit:cover;border:1px solid #DDD3C2;display:block;}\n" +
+"    #print-patient-report .pr-photos-grid img{width:100%;height:165px;object-fit:cover;border:1px solid #DDD3C2;display:block;}\n" +
 "    #print-patient-report .pr-footer{padding:8px 14px;text-align:center;border-top:1px solid #DDD3C2;}\n" +
 "    #print-patient-report .pr-sig{display:inline-flex;align-items:center;gap:5px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:8px;letter-spacing:.4px;text-transform:uppercase;color:#B8804A;}\n" +
 "  }\n" +
@@ -4057,7 +4058,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    '<div class=\"pr-stub\"><span class=\"pr-item\">'+escapeHtml(t('patrep.patient_label'))+' <b>'+escapeHtml(s.codigo)+'</b></span>'+piParts.join('')+'</div>' +\n" +
 "    '<div class=\"pr-hero\">' +\n" +
 "      '<div class=\"pr-seal\"><div class=\"pr-num\">'+fmtBig(sum.foliculosExtraidos)+'</div><div class=\"pr-cap\">'+escapeHtml(t('patrep.seal_caption'))+'</div></div>' +\n" +
-"      '<div class=\"pr-hero-copy\"><h1>'+escapeHtml(t('patrep.hero_title'))+'</h1></div>' +\n" +
+"      '<div class=\"pr-hero-copy\"><h1>'+escapeHtml(t('patrep.hero_title'))+'</h1><p>'+escapeHtml(t('patrep.hero_body'))+'</p></div>' +\n" +
 "    '</div>' +\n" +
 "    '<div class=\"pr-kpi-row\">' +\n" +
 "      '<div class=\"pr-kpi\"><div class=\"pr-val\">'+sum.indice.toFixed(2)+'</div><div class=\"pr-lbl\">'+escapeHtml(t('patrep.kpi_index'))+'</div></div>' +\n" +
