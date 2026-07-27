@@ -1941,56 +1941,57 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  }\n" +
 "  #print-patient-report{display:none;}\n" +
 "  @media print{\n" +
+"    @page{size:A4;margin:9mm;}\n" +
 "    body *{visibility:hidden;}\n" +
 "    #print-patient-report, #print-patient-report *{visibility:visible;}\n" +
-"    #print-patient-report{display:block;position:absolute;top:0;left:0;width:100%;background:#FAF6EF;color:#1B2A2E;font-family:Georgia,'Iowan Old Style','Times New Roman',serif;}\n" +
-"    #print-patient-report .pr-masthead{background:#073A40;color:#FAF6EF;padding:18px 26px 14px;display:flex;align-items:center;justify-content:space-between;}\n" +
-"    #print-patient-report .pr-brand-mark{display:flex;align-items:center;gap:10px;}\n" +
-"    #print-patient-report .pr-brand-name{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;font-size:16px;letter-spacing:.2px;}\n" +
-"    #print-patient-report .pr-clinic-line{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#E4CBAA;margin-top:2px;}\n" +
+"    #print-patient-report{display:block;position:absolute;top:0;left:0;width:100%;background:#FAF6EF;color:#1B2A2E;font-family:Georgia,'Iowan Old Style','Times New Roman',serif;font-size:11px;line-height:1.3;}\n" +
+"    #print-patient-report .pr-masthead{background:#073A40;color:#FAF6EF;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;}\n" +
+"    #print-patient-report .pr-brand-name{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;font-size:14px;letter-spacing:.2px;}\n" +
+"    #print-patient-report .pr-clinic-line{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:9px;letter-spacing:.4px;text-transform:uppercase;color:#E4CBAA;margin-top:1px;}\n" +
 "    #print-patient-report .pr-masthead-right{text-align:right;}\n" +
-"    #print-patient-report .pr-doc-title{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#E4CBAA;}\n" +
-"    #print-patient-report .pr-doc-date{font-size:12px;margin-top:2px;}\n" +
-"    #print-patient-report .pr-stub{display:flex;justify-content:space-between;padding:12px 26px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:11px;color:#4A5A5C;border-bottom:1px dashed #DDD3C2;flex-wrap:wrap;gap:6px;}\n" +
+"    #print-patient-report .pr-doc-title{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:#E4CBAA;}\n" +
+"    #print-patient-report .pr-doc-date{font-size:11px;margin-top:1px;}\n" +
+"    #print-patient-report .pr-masthead-sig{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:7.5px;letter-spacing:.4px;text-transform:uppercase;color:#B8804A;margin-top:3px;}\n" +
+"    #print-patient-report .pr-stub{display:flex;flex-wrap:wrap;gap:4px 14px;padding:6px 14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:10px;color:#4A5A5C;border-bottom:1px dashed #DDD3C2;}\n" +
 "    #print-patient-report .pr-stub b{color:#1B2A2E;font-weight:700;}\n" +
-"    #print-patient-report .pr-stub .pr-item{margin-right:16px;}\n" +
-"    #print-patient-report .pr-hero{display:flex;align-items:center;gap:24px;padding:22px 26px 18px;page-break-inside:avoid;break-inside:avoid;}\n" +
-"    #print-patient-report .pr-seal{flex:0 0 auto;width:128px;height:128px;border-radius:50%;border:3px solid #B8804A;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;}\n" +
-"    #print-patient-report .pr-seal::before{content:'';position:absolute;inset:7px;border-radius:50%;border:1px solid #E4CBAA;}\n" +
-"    #print-patient-report .pr-seal .pr-num{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:800;font-size:29px;letter-spacing:-.5px;color:#073A40;font-variant-numeric:tabular-nums;line-height:1;}\n" +
-"    #print-patient-report .pr-seal .pr-cap{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:8.5px;letter-spacing:.4px;text-transform:uppercase;color:#B8804A;margin-top:5px;text-align:center;max-width:88px;}\n" +
-"    #print-patient-report .pr-hero-copy h1{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;font-size:16px;margin:0 0 5px;color:#073A40;letter-spacing:-.2px;}\n" +
-"    #print-patient-report .pr-hero-copy p{margin:0;font-size:11.5px;line-height:1.5;color:#4A5A5C;max-width:380px;}\n" +
-"    #print-patient-report .pr-kpi-row{display:flex;padding:0 26px 18px;page-break-inside:avoid;break-inside:avoid;}\n" +
-"    #print-patient-report .pr-kpi{flex:1;padding-right:14px;margin-right:14px;border-right:1px solid #DDD3C2;}\n" +
+"    #print-patient-report .pr-hero{display:flex;align-items:center;gap:16px;padding:10px 14px;page-break-inside:avoid;break-inside:avoid;}\n" +
+"    #print-patient-report .pr-seal{flex:0 0 auto;width:88px;height:88px;border-radius:50%;border:2px solid #B8804A;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;}\n" +
+"    #print-patient-report .pr-seal::before{content:'';position:absolute;inset:5px;border-radius:50%;border:1px solid #E4CBAA;}\n" +
+"    #print-patient-report .pr-seal .pr-num{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:800;font-size:20px;letter-spacing:-.5px;color:#073A40;font-variant-numeric:tabular-nums;line-height:1;}\n" +
+"    #print-patient-report .pr-seal .pr-cap{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:6.5px;letter-spacing:.3px;text-transform:uppercase;color:#B8804A;margin-top:3px;text-align:center;max-width:70px;}\n" +
+"    #print-patient-report .pr-hero-copy h1{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;font-size:13px;margin:0;color:#073A40;letter-spacing:-.2px;}\n" +
+"    #print-patient-report .pr-kpi-row{display:flex;padding:0 14px 8px;page-break-inside:avoid;break-inside:avoid;}\n" +
+"    #print-patient-report .pr-kpi{flex:1;padding-right:12px;margin-right:12px;border-right:1px solid #DDD3C2;}\n" +
 "    #print-patient-report .pr-kpi:last-child{border-right:none;margin-right:0;padding-right:0;}\n" +
-"    #print-patient-report .pr-kpi .pr-val{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;font-size:17px;color:#073A40;font-variant-numeric:tabular-nums;}\n" +
-"    #print-patient-report .pr-kpi .pr-lbl{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:9px;letter-spacing:.3px;text-transform:uppercase;color:#4A5A5C;margin-top:2px;}\n" +
-"    #print-patient-report .pr-section{padding:14px 26px;border-top:1px solid #DDD3C2;page-break-inside:avoid;break-inside:avoid;}\n" +
-"    #print-patient-report .pr-eyebrow{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:#B8804A;font-weight:700;margin:0 0 10px;}\n" +
-"    #print-patient-report .pr-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;}\n" +
+"    #print-patient-report .pr-kpi .pr-val{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;font-size:14px;color:#073A40;font-variant-numeric:tabular-nums;}\n" +
+"    #print-patient-report .pr-kpi .pr-lbl{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:8px;letter-spacing:.2px;text-transform:uppercase;color:#4A5A5C;}\n" +
+"    #print-patient-report .pr-section{padding:8px 14px;border-top:1px solid #DDD3C2;page-break-inside:avoid;break-inside:avoid;}\n" +
+"    #print-patient-report .pr-eyebrow{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:8.5px;letter-spacing:.8px;text-transform:uppercase;color:#B8804A;font-weight:700;margin:0 0 6px;}\n" +
+"    #print-patient-report .pr-data-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px;}\n" +
+"    #print-patient-report .pr-incisions-wrap{grid-column:span 2;}\n" +
+"    #print-patient-report .pr-incisions-cols{display:flex;gap:16px;}\n" +
+"    #print-patient-report .pr-incisions-cols > div{flex:1;}\n" +
+"    #print-patient-report .pr-bar-row{display:flex;align-items:center;gap:6px;margin-bottom:3px;}\n" +
 "    #print-patient-report .pr-bar-row:last-child{margin-bottom:0;}\n" +
-"    #print-patient-report .pr-bar-label{width:110px;flex:0 0 110px;font-size:11px;color:#1B2A2E;}\n" +
-"    #print-patient-report .pr-bar-track{flex:1;height:6px;background:#DDD3C2;position:relative;}\n" +
+"    #print-patient-report .pr-bar-label{width:82px;flex:0 0 82px;font-size:9.5px;color:#1B2A2E;}\n" +
+"    #print-patient-report .pr-bar-track{flex:1;height:5px;background:#DDD3C2;position:relative;}\n" +
 "    #print-patient-report .pr-bar-fill{height:100%;background:#0A5C64;}\n" +
-"    #print-patient-report .pr-bar-count{width:38px;flex:0 0 38px;text-align:right;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;font-size:11px;color:#073A40;font-variant-numeric:tabular-nums;}\n" +
-"    #print-patient-report .pr-two-col{display:flex;gap:30px;}\n" +
-"    #print-patient-report .pr-two-col .pr-col{flex:1;}\n" +
-"    #print-patient-report .pr-area-row{display:flex;justify-content:space-between;padding:4px 0;font-size:11px;border-bottom:1px solid #DDD3C2;}\n" +
+"    #print-patient-report .pr-bar-count{width:30px;flex:0 0 30px;text-align:right;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;font-size:9.5px;color:#073A40;font-variant-numeric:tabular-nums;}\n" +
+"    #print-patient-report .pr-area-row{display:flex;justify-content:space-between;padding:2px 0;font-size:9.5px;border-bottom:1px solid #DDD3C2;}\n" +
 "    #print-patient-report .pr-area-row:last-child{border-bottom:none;}\n" +
 "    #print-patient-report .pr-area-row .pr-n{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;color:#073A40;font-variant-numeric:tabular-nums;}\n" +
 "    #print-patient-report .pr-times{display:flex;}\n" +
 "    #print-patient-report .pr-times .pr-t{flex:1;text-align:center;position:relative;}\n" +
-"    #print-patient-report .pr-times .pr-t:not(:last-child)::after{content:'\\2192';position:absolute;right:-3px;top:1px;color:#B8804A;font-size:11px;}\n" +
-"    #print-patient-report .pr-times .pr-t-lbl{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:8.5px;letter-spacing:.3px;text-transform:uppercase;color:#4A5A5C;}\n" +
-"    #print-patient-report .pr-times .pr-t-val{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;font-size:13px;color:#073A40;margin-top:2px;font-variant-numeric:tabular-nums;}\n" +
-"    #print-patient-report .pr-photo-group{margin-bottom:14px;page-break-inside:avoid;break-inside:avoid;}\n" +
-"    #print-patient-report .pr-photo-group:last-child{margin-bottom:0;}\n" +
-"    #print-patient-report .pr-photo-group-title{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:10.5px;font-weight:700;color:#1B2A2E;margin:0 0 6px;}\n" +
-"    #print-patient-report .pr-photos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}\n" +
-"    #print-patient-report .pr-photos img{width:100%;height:140px;object-fit:cover;border:1px solid #DDD3C2;display:block;}\n" +
-"    #print-patient-report .pr-footer{padding:14px 26px 18px;text-align:center;border-top:1px solid #DDD3C2;}\n" +
-"    #print-patient-report .pr-sig{display:inline-flex;align-items:center;gap:6px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#B8804A;}\n" +
+"    #print-patient-report .pr-times .pr-t:not(:last-child)::after{content:'\\2192';position:absolute;right:-3px;top:0;color:#B8804A;font-size:10px;}\n" +
+"    #print-patient-report .pr-times .pr-t-lbl{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:7.5px;letter-spacing:.2px;text-transform:uppercase;color:#4A5A5C;}\n" +
+"    #print-patient-report .pr-times .pr-t-val{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;font-size:11px;color:#073A40;margin-top:1px;font-variant-numeric:tabular-nums;}\n" +
+"    #print-patient-report .pr-photos-row{display:flex;gap:14px;}\n" +
+"    #print-patient-report .pr-photo-col{flex:1;}\n" +
+"    #print-patient-report .pr-photo-group-title{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:8.5px;font-weight:700;color:#1B2A2E;margin:0 0 4px;}\n" +
+"    #print-patient-report .pr-photos-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;}\n" +
+"    #print-patient-report .pr-photos-mini img{width:100%;height:62px;object-fit:cover;border:1px solid #DDD3C2;display:block;}\n" +
+"    #print-patient-report .pr-footer{padding:8px 14px;text-align:center;border-top:1px solid #DDD3C2;}\n" +
+"    #print-patient-report .pr-sig{display:inline-flex;align-items:center;gap:5px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:8px;letter-spacing:.4px;text-transform:uppercase;color:#B8804A;}\n" +
 "  }\n" +
 "</style>\n" +
 "</head>\n" +
@@ -4008,7 +4009,8 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "\n" +
 "  var half = Math.ceil(PREINC_AREAS.length/2);\n" +
 "  var areaRow = function(a){ return '<div class=\"pr-area-row\"><span>'+escapeHtml(a.label)+'</span><span class=\"pr-n\">'+(s.preincCounts[a.id]||0)+'</span></div>'; };\n" +
-"  var areasHtml = '<div class=\"pr-two-col\"><div class=\"pr-col\">'+PREINC_AREAS.slice(0,half).map(areaRow).join('')+'</div><div class=\"pr-col\">'+PREINC_AREAS.slice(half).map(areaRow).join('')+'</div></div>';\n" +
+"  var areasColA = PREINC_AREAS.slice(0,half).map(areaRow).join('');\n" +
+"  var areasColB = PREINC_AREAS.slice(half).map(areaRow).join('');\n" +
 "\n" +
 "  var msPreinc = elapsedMs(s.preincTimer);\n" +
 "  var msExtraction = elapsedMs(s.timer);\n" +
@@ -4021,43 +4023,50 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    (msTotal!==null ? '<div class=\"pr-t\"><div class=\"pr-t-lbl\">'+escapeHtml(t('patrep.time_total'))+'</div><div class=\"pr-t-val\">'+fmtHM(msTotal)+'</div></div>' : '') +\n" +
 "  '</div>';\n" +
 "\n" +
-"  var photoGroup = function(cat, titleKey){\n" +
+"  var photoCol = function(cat, titleKey){\n" +
 "    var list = s.photos[cat]||[];\n" +
 "    if (!list.length) return '';\n" +
-"    return '<div class=\"pr-photo-group\"><p class=\"pr-photo-group-title\">'+escapeHtml(t(titleKey))+'</p><div class=\"pr-photos\">'+list.map(function(p){\n" +
+"    return '<div class=\"pr-photo-col\"><p class=\"pr-photo-group-title\">'+escapeHtml(t(titleKey))+'</p><div class=\"pr-photos-mini\">'+list.map(function(p){\n" +
 "      return '<img src=\"/api/session/'+s.id+'/photos/'+p.id+'\">';\n" +
 "    }).join('')+'</div></div>';\n" +
 "  };\n" +
-"  var photosHtml = photoGroup('marcacao','photos.marcacao_title') + photoGroup('posop','photos.posop_title');\n" +
+"  var photosHtml = '<div class=\"pr-photos-row\">'+photoCol('marcacao','photos.marcacao_title')+photoCol('posop','photos.posop_title')+'</div>';\n" +
 "  var hasPhotos = (s.photos.marcacao||[]).length || (s.photos.posop||[]).length;\n" +
 "\n" +
+"  // Sem logo do médico no cabeçalho — pedido do Dr. Vitor (17/07/2026), depois de\n" +
+"  // testar com a logo de verdade e preferir só o nome/CRM em texto. O cabeçalho\n" +
+"  // verde (teal da marca) foi mantido, ele gostou desse. A pequena assinatura\n" +
+"  // \"Gerado com Graftis\" agora aparece TAMBÉM no cabeçalho (além do rodapé) — ele\n" +
+"  // pediu, pra garantir que a marca apareça mesmo que alguém só veja a primeira\n" +
+"  // parte do documento.\n" +
 "  var ob = s.ownerBranding || {};\n" +
 "  var doctorName = ob.nomeCompleto ? escapeHtml(ob.nomeCompleto) : '';\n" +
 "  var crmLine = ob.crm ? escapeHtml(t('patrep.crm_prefix'))+escapeHtml(ob.crm) : '';\n" +
-"  var logoHtml = (ob.logoFilename && ob.ownerId) ?\n" +
-"    '<img src=\"/api/user/'+ob.ownerId+'/logo\" style=\"max-height:40px;max-width:150px;object-fit:contain;display:block;\">' :\n" +
-"    '<svg width=\"34\" height=\"34\" viewBox=\"0 0 120 120\"><g stroke=\"#FAF6EF\" stroke-width=\"6\" stroke-linecap=\"round\" fill=\"none\"><line x1=\"60\" y1=\"52\" x2=\"60\" y2=\"20\"/><line x1=\"48\" y1=\"55\" x2=\"34\" y2=\"30\"/><line x1=\"72\" y1=\"55\" x2=\"86\" y2=\"30\"/></g><ellipse cx=\"60\" cy=\"76\" rx=\"27\" ry=\"21\" fill=\"#FAF6EF\"/></svg>';\n" +
+"\n" +
+"  var dataGridHtml = '<div class=\"pr-data-grid\">' +\n" +
+"    '<div><p class=\"pr-eyebrow\">'+escapeHtml(t('patrep.section_follicles'))+'</p>'+barsHtml+'</div>' +\n" +
+"    '<div class=\"pr-incisions-wrap\"><p class=\"pr-eyebrow\">'+escapeHtml(t('patrep.section_incisions'))+'</p><div class=\"pr-incisions-cols\"><div>'+areasColA+'</div><div>'+areasColB+'</div></div></div>' +\n" +
+"  '</div>';\n" +
 "\n" +
 "  var html = '' +\n" +
 "    '<div class=\"pr-masthead\">' +\n" +
-"      '<div class=\"pr-brand-mark\">'+logoHtml+'<div><div class=\"pr-brand-name\">'+(doctorName||'Graftis')+'</div>'+(crmLine?'<div class=\"pr-clinic-line\">'+crmLine+'</div>':'')+'</div></div>' +\n" +
-"      '<div class=\"pr-masthead-right\"><div class=\"pr-doc-title\">'+escapeHtml(t('patrep.doc_title'))+'</div><div class=\"pr-doc-date\">'+new Date().toLocaleDateString(localeForLang())+'</div></div>' +\n" +
+"      '<div><div class=\"pr-brand-name\">'+(doctorName||'Graftis')+'</div>'+(crmLine?'<div class=\"pr-clinic-line\">'+crmLine+'</div>':'')+'</div>' +\n" +
+"      '<div class=\"pr-masthead-right\"><div class=\"pr-doc-title\">'+escapeHtml(t('patrep.doc_title'))+'</div><div class=\"pr-doc-date\">'+new Date().toLocaleDateString(localeForLang())+'</div><div class=\"pr-masthead-sig\">'+escapeHtml(t('patrep.footer_signature'))+'</div></div>' +\n" +
 "    '</div>' +\n" +
-"    '<div class=\"pr-stub\"><div><span class=\"pr-item\">'+escapeHtml(t('patrep.patient_label'))+' <b>'+escapeHtml(s.codigo)+'</b></span>'+piParts.join('')+'</div></div>' +\n" +
+"    '<div class=\"pr-stub\"><span class=\"pr-item\">'+escapeHtml(t('patrep.patient_label'))+' <b>'+escapeHtml(s.codigo)+'</b></span>'+piParts.join('')+'</div>' +\n" +
 "    '<div class=\"pr-hero\">' +\n" +
 "      '<div class=\"pr-seal\"><div class=\"pr-num\">'+fmtBig(sum.foliculosExtraidos)+'</div><div class=\"pr-cap\">'+escapeHtml(t('patrep.seal_caption'))+'</div></div>' +\n" +
-"      '<div class=\"pr-hero-copy\"><h1>'+escapeHtml(t('patrep.hero_title'))+'</h1><p>'+escapeHtml(t('patrep.hero_body'))+'</p></div>' +\n" +
+"      '<div class=\"pr-hero-copy\"><h1>'+escapeHtml(t('patrep.hero_title'))+'</h1></div>' +\n" +
 "    '</div>' +\n" +
 "    '<div class=\"pr-kpi-row\">' +\n" +
 "      '<div class=\"pr-kpi\"><div class=\"pr-val\">'+sum.indice.toFixed(2)+'</div><div class=\"pr-lbl\">'+escapeHtml(t('patrep.kpi_index'))+'</div></div>' +\n" +
 "      '<div class=\"pr-kpi\"><div class=\"pr-val\">'+fmtBig(sum.totalFios)+'</div><div class=\"pr-lbl\">'+escapeHtml(t('patrep.kpi_total_hairs'))+'</div></div>' +\n" +
 "      (msTotal!==null ? '<div class=\"pr-kpi\"><div class=\"pr-val\">'+fmtHM(msTotal)+'</div><div class=\"pr-lbl\">'+escapeHtml(t('patrep.kpi_total_time'))+'</div></div>' : '') +\n" +
 "    '</div>' +\n" +
-"    '<div class=\"pr-section\"><p class=\"pr-eyebrow\">'+escapeHtml(t('patrep.section_follicles'))+'</p>'+barsHtml+'</div>' +\n" +
-"    '<div class=\"pr-section\"><p class=\"pr-eyebrow\">'+escapeHtml(t('patrep.section_incisions'))+'</p>'+areasHtml+'</div>' +\n" +
+"    '<div class=\"pr-section\">'+dataGridHtml+'</div>' +\n" +
 "    '<div class=\"pr-section\"><p class=\"pr-eyebrow\">'+escapeHtml(t('patrep.section_times'))+'</p>'+timesHtml+'</div>' +\n" +
 "    (hasPhotos ? '<div class=\"pr-section\"><p class=\"pr-eyebrow\">'+escapeHtml(t('patrep.section_photos'))+'</p>'+photosHtml+'</div>' : '') +\n" +
-"    '<div class=\"pr-footer\"><span class=\"pr-sig\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 120 120\"><g stroke=\"#B8804A\" stroke-width=\"8\" stroke-linecap=\"round\" fill=\"none\"><line x1=\"60\" y1=\"52\" x2=\"60\" y2=\"20\"/><line x1=\"48\" y1=\"55\" x2=\"34\" y2=\"30\"/><line x1=\"72\" y1=\"55\" x2=\"86\" y2=\"30\"/></g><ellipse cx=\"60\" cy=\"76\" rx=\"27\" ry=\"21\" fill=\"#B8804A\"/></svg>'+escapeHtml(t('patrep.footer_signature'))+'</span></div>';\n" +
+"    '<div class=\"pr-footer\"><span class=\"pr-sig\"><svg width=\"11\" height=\"11\" viewBox=\"0 0 120 120\"><g stroke=\"#B8804A\" stroke-width=\"8\" stroke-linecap=\"round\" fill=\"none\"><line x1=\"60\" y1=\"52\" x2=\"60\" y2=\"20\"/><line x1=\"48\" y1=\"55\" x2=\"34\" y2=\"30\"/><line x1=\"72\" y1=\"55\" x2=\"86\" y2=\"30\"/></g><ellipse cx=\"60\" cy=\"76\" rx=\"27\" ry=\"21\" fill=\"#B8804A\"/></svg>'+escapeHtml(t('patrep.footer_signature'))+'</span></div>';\n" +
 "\n" +
 "  document.getElementById('print-patient-report').innerHTML = html;\n" +
 "  window.print();\n" +
