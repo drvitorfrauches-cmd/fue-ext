@@ -516,7 +516,26 @@ const STRINGS = {
     "print.table_total": "Total",
     "print.table_grand_total": "Total geral",
     "print.photos_prefix": "Fotos — ",
-    "print.generated_at": "Gerado em "
+    "print.generated_at": "Gerado em ",
+    "patrep.button": "Relatório para o paciente",
+    "patrep.doc_title": "Relatório da sua cirurgia",
+    "patrep.hero_title": "Sua restauração capilar, em números",
+    "patrep.hero_body": "Este relatório documenta os principais dados da sua cirurgia de transplante capilar por extração folicular (FUE) — do total de folículos implantados aos tempos cirúrgicos.",
+    "patrep.seal_caption": "Folículos transplantados",
+    "patrep.kpi_index": "Índice folicular",
+    "patrep.kpi_total_hairs": "Total de fios",
+    "patrep.kpi_total_time": "Tempo total da cirurgia",
+    "patrep.section_follicles": "Folículos por tipo",
+    "patrep.section_incisions": "Incisões por área",
+    "patrep.section_times": "Tempos cirúrgicos",
+    "patrep.section_photos": "Fotos",
+    "patrep.time_preinc": "Pré-incisões",
+    "patrep.time_extraction": "Extração",
+    "patrep.time_implant": "Implantação",
+    "patrep.time_total": "Tempo total",
+    "patrep.footer_signature": "Gerado com Graftis",
+    "patrep.patient_label": "Paciente",
+    "patrep.crm_prefix": "CRM "
   },
   en: {
     "common.email": "Email",
@@ -882,7 +901,26 @@ const STRINGS = {
     "print.table_total": "Total",
     "print.table_grand_total": "Grand total",
     "print.photos_prefix": "Photos — ",
-    "print.generated_at": "Generated on "
+    "print.generated_at": "Generated on ",
+    "patrep.button": "Patient report",
+    "patrep.doc_title": "Your surgery report",
+    "patrep.hero_title": "Your hair restoration, in numbers",
+    "patrep.hero_body": "This report documents the key data from your FUE hair transplant surgery — from the total grafts implanted to the surgical times.",
+    "patrep.seal_caption": "Grafts transplanted",
+    "patrep.kpi_index": "Follicular index",
+    "patrep.kpi_total_hairs": "Total hairs",
+    "patrep.kpi_total_time": "Total surgery time",
+    "patrep.section_follicles": "Grafts by type",
+    "patrep.section_incisions": "Incisions by area",
+    "patrep.section_times": "Surgical times",
+    "patrep.section_photos": "Photos",
+    "patrep.time_preinc": "Pre-incisions",
+    "patrep.time_extraction": "Extraction",
+    "patrep.time_implant": "Implantation",
+    "patrep.time_total": "Total time",
+    "patrep.footer_signature": "Generated with Graftis",
+    "patrep.patient_label": "Patient",
+    "patrep.crm_prefix": "License "
   },
   es: {
     "common.email": "Correo electrónico",
@@ -1248,7 +1286,26 @@ const STRINGS = {
     "print.table_total": "Total",
     "print.table_grand_total": "Total general",
     "print.photos_prefix": "Fotos — ",
-    "print.generated_at": "Generado el "
+    "print.generated_at": "Generado el ",
+    "patrep.button": "Informe para el paciente",
+    "patrep.doc_title": "Informe de su cirugía",
+    "patrep.hero_title": "Su restauración capilar, en números",
+    "patrep.hero_body": "Este informe documenta los datos principales de su cirugía de trasplante capilar por extracción folicular (FUE) — desde el total de folículos implantados hasta los tiempos quirúrgicos.",
+    "patrep.seal_caption": "Folículos trasplantados",
+    "patrep.kpi_index": "Índice folicular",
+    "patrep.kpi_total_hairs": "Total de pelos",
+    "patrep.kpi_total_time": "Tiempo total de la cirugía",
+    "patrep.section_follicles": "Folículos por tipo",
+    "patrep.section_incisions": "Incisiones por área",
+    "patrep.section_times": "Tiempos quirúrgicos",
+    "patrep.section_photos": "Fotos",
+    "patrep.time_preinc": "Preincisiones",
+    "patrep.time_extraction": "Extracción",
+    "patrep.time_implant": "Implantación",
+    "patrep.time_total": "Tiempo total",
+    "patrep.footer_signature": "Generado con Graftis",
+    "patrep.patient_label": "Paciente",
+    "patrep.crm_prefix": "Matrícula "
   }
 };
 // t(key, lang): busca a tradução; cai pro português se a chave não existir no
@@ -1565,7 +1622,10 @@ function publicUser(u) {
 function brandingForUser(ownerId) {
   var u = ownerId ? db.users[ownerId] : null;
   var b = (u && u.branding) ? u.branding : emptyBranding();
-  return { logoFilename: b.logoFilename || null, theme: THEME_IDS.has(b.theme) ? b.theme : "padrao", darkMode: !!b.darkMode, ownerId: ownerId || null };
+  // nomeCompleto/crm: nome do médico não é dado sensível do paciente (é o próprio
+  // profissional se identificando) — adicionado pro Relatório para o paciente, que
+  // precisa mostrar de qual médico/clínica é o documento entregue ao paciente.
+  return { logoFilename: b.logoFilename || null, theme: THEME_IDS.has(b.theme) ? b.theme : "padrao", darkMode: !!b.darkMode, ownerId: ownerId || null, nomeCompleto: u ? u.nomeCompleto : null, crm: u ? u.crm : null };
 }
 function withOwnerBranding(s) {
   var out = Object.assign({}, s);
@@ -1878,6 +1938,59 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    #print-report table{page-break-inside:auto;}\n" +
 "    #print-report tr{page-break-inside:avoid;break-inside:avoid;}\n" +
 "    #print-report .photo-report-page{page-break-before:always;}\n" +
+"  }\n" +
+"  #print-patient-report{display:none;}\n" +
+"  @media print{\n" +
+"    body *{visibility:hidden;}\n" +
+"    #print-patient-report, #print-patient-report *{visibility:visible;}\n" +
+"    #print-patient-report{display:block;position:absolute;top:0;left:0;width:100%;background:#FAF6EF;color:#1B2A2E;font-family:Georgia,'Iowan Old Style','Times New Roman',serif;}\n" +
+"    #print-patient-report .pr-masthead{background:#073A40;color:#FAF6EF;padding:18px 26px 14px;display:flex;align-items:center;justify-content:space-between;}\n" +
+"    #print-patient-report .pr-brand-mark{display:flex;align-items:center;gap:10px;}\n" +
+"    #print-patient-report .pr-brand-name{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;font-size:16px;letter-spacing:.2px;}\n" +
+"    #print-patient-report .pr-clinic-line{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#E4CBAA;margin-top:2px;}\n" +
+"    #print-patient-report .pr-masthead-right{text-align:right;}\n" +
+"    #print-patient-report .pr-doc-title{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#E4CBAA;}\n" +
+"    #print-patient-report .pr-doc-date{font-size:12px;margin-top:2px;}\n" +
+"    #print-patient-report .pr-stub{display:flex;justify-content:space-between;padding:12px 26px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:11px;color:#4A5A5C;border-bottom:1px dashed #DDD3C2;flex-wrap:wrap;gap:6px;}\n" +
+"    #print-patient-report .pr-stub b{color:#1B2A2E;font-weight:700;}\n" +
+"    #print-patient-report .pr-stub .pr-item{margin-right:16px;}\n" +
+"    #print-patient-report .pr-hero{display:flex;align-items:center;gap:24px;padding:22px 26px 18px;page-break-inside:avoid;break-inside:avoid;}\n" +
+"    #print-patient-report .pr-seal{flex:0 0 auto;width:128px;height:128px;border-radius:50%;border:3px solid #B8804A;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;}\n" +
+"    #print-patient-report .pr-seal::before{content:'';position:absolute;inset:7px;border-radius:50%;border:1px solid #E4CBAA;}\n" +
+"    #print-patient-report .pr-seal .pr-num{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:800;font-size:29px;letter-spacing:-.5px;color:#073A40;font-variant-numeric:tabular-nums;line-height:1;}\n" +
+"    #print-patient-report .pr-seal .pr-cap{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:8.5px;letter-spacing:.4px;text-transform:uppercase;color:#B8804A;margin-top:5px;text-align:center;max-width:88px;}\n" +
+"    #print-patient-report .pr-hero-copy h1{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;font-size:16px;margin:0 0 5px;color:#073A40;letter-spacing:-.2px;}\n" +
+"    #print-patient-report .pr-hero-copy p{margin:0;font-size:11.5px;line-height:1.5;color:#4A5A5C;max-width:380px;}\n" +
+"    #print-patient-report .pr-kpi-row{display:flex;padding:0 26px 18px;page-break-inside:avoid;break-inside:avoid;}\n" +
+"    #print-patient-report .pr-kpi{flex:1;padding-right:14px;margin-right:14px;border-right:1px solid #DDD3C2;}\n" +
+"    #print-patient-report .pr-kpi:last-child{border-right:none;margin-right:0;padding-right:0;}\n" +
+"    #print-patient-report .pr-kpi .pr-val{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;font-size:17px;color:#073A40;font-variant-numeric:tabular-nums;}\n" +
+"    #print-patient-report .pr-kpi .pr-lbl{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:9px;letter-spacing:.3px;text-transform:uppercase;color:#4A5A5C;margin-top:2px;}\n" +
+"    #print-patient-report .pr-section{padding:14px 26px;border-top:1px solid #DDD3C2;page-break-inside:avoid;break-inside:avoid;}\n" +
+"    #print-patient-report .pr-eyebrow{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:#B8804A;font-weight:700;margin:0 0 10px;}\n" +
+"    #print-patient-report .pr-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;}\n" +
+"    #print-patient-report .pr-bar-row:last-child{margin-bottom:0;}\n" +
+"    #print-patient-report .pr-bar-label{width:110px;flex:0 0 110px;font-size:11px;color:#1B2A2E;}\n" +
+"    #print-patient-report .pr-bar-track{flex:1;height:6px;background:#DDD3C2;position:relative;}\n" +
+"    #print-patient-report .pr-bar-fill{height:100%;background:#0A5C64;}\n" +
+"    #print-patient-report .pr-bar-count{width:38px;flex:0 0 38px;text-align:right;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;font-size:11px;color:#073A40;font-variant-numeric:tabular-nums;}\n" +
+"    #print-patient-report .pr-two-col{display:flex;gap:30px;}\n" +
+"    #print-patient-report .pr-two-col .pr-col{flex:1;}\n" +
+"    #print-patient-report .pr-area-row{display:flex;justify-content:space-between;padding:4px 0;font-size:11px;border-bottom:1px solid #DDD3C2;}\n" +
+"    #print-patient-report .pr-area-row:last-child{border-bottom:none;}\n" +
+"    #print-patient-report .pr-area-row .pr-n{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;color:#073A40;font-variant-numeric:tabular-nums;}\n" +
+"    #print-patient-report .pr-times{display:flex;}\n" +
+"    #print-patient-report .pr-times .pr-t{flex:1;text-align:center;position:relative;}\n" +
+"    #print-patient-report .pr-times .pr-t:not(:last-child)::after{content:'\\2192';position:absolute;right:-3px;top:1px;color:#B8804A;font-size:11px;}\n" +
+"    #print-patient-report .pr-times .pr-t-lbl{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:8.5px;letter-spacing:.3px;text-transform:uppercase;color:#4A5A5C;}\n" +
+"    #print-patient-report .pr-times .pr-t-val{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;font-size:13px;color:#073A40;margin-top:2px;font-variant-numeric:tabular-nums;}\n" +
+"    #print-patient-report .pr-photo-group{margin-bottom:14px;page-break-inside:avoid;break-inside:avoid;}\n" +
+"    #print-patient-report .pr-photo-group:last-child{margin-bottom:0;}\n" +
+"    #print-patient-report .pr-photo-group-title{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:10.5px;font-weight:700;color:#1B2A2E;margin:0 0 6px;}\n" +
+"    #print-patient-report .pr-photos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}\n" +
+"    #print-patient-report .pr-photos img{width:100%;height:140px;object-fit:cover;border:1px solid #DDD3C2;display:block;}\n" +
+"    #print-patient-report .pr-footer{padding:14px 26px 18px;text-align:center;border-top:1px solid #DDD3C2;}\n" +
+"    #print-patient-report .pr-sig{display:inline-flex;align-items:center;gap:6px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#B8804A;}\n" +
 "  }\n" +
 "</style>\n" +
 "</head>\n" +
@@ -2349,6 +2462,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "\n" +
 "    <footer class=\"actions\">\n" +
 "      <button class=\"btn secondary\" data-i18n=\"cnt.print_btn\" onclick=\"App.printReport()\">Imprimir / Salvar PDF</button>\n" +
+"      <button class=\"btn secondary\" data-i18n=\"patrep.button\" onclick=\"App.printPatientReport()\">Relatório para o paciente</button>\n" +
 "      <button class=\"btn secondary\" id=\"btn-finalizar\" data-i18n=\"cnt.finalize_btn\" onclick=\"App.finalizeSession()\">Finalizar cirurgia</button>\n" +
 "      <button class=\"btn secondary\" id=\"btn-reabrir\" style=\"display:none;\" data-i18n=\"cnt.reopen_btn\" onclick=\"App.reopenSession()\">Reabrir</button>\n" +
 "    </footer>\n" +
@@ -2356,6 +2470,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "</div>\n" +
 "<div class=\"toast\" id=\"toast\"></div>\n" +
 "<div id=\"print-report\"></div>\n" +
+"<div id=\"print-patient-report\"></div>\n" +
 "<div class=\"modal-overlay\" id=\"share-modal-overlay\" onclick=\"if(event.target===this) App.closeShareModal();\">\n" +
 "  <div class=\"modal-box\">\n" +
 "    <div class=\"row\" style=\"justify-content:space-between;align-items:center;\">\n" +
@@ -3847,6 +3962,104 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    (hasPhotos ? '<div class=\"photo-report-page\">'+photoBlock('marcacao',escapeHtml(t('print.photos_prefix'))+escapeHtml(t('photos.marcacao_title')))+photoBlock('posop',escapeHtml(t('print.photos_prefix'))+escapeHtml(t('photos.posop_title')))+'</div>' : '') +\n" +
 "    '<p style=\"margin-top:16px;font-size:11px;color:#666;\">'+escapeHtml(t('print.generated_at'))+new Date().toLocaleString(localeForLang())+'</p>';\n" +
 "  document.getElementById('print-report').innerHTML = html;\n" +
+"  window.print();\n" +
+"};\n" +
+"// fmtHM: duração amigável \"Xh YYmin\", usada só no Relatório para o paciente — o\n" +
+"// relatório técnico interno (App.printReport) continua usando fmtHMS (HH:MM:SS).\n" +
+"function fmtHM(ms){\n" +
+"  var totalMin = Math.max(0, Math.round(ms/60000));\n" +
+"  var h = Math.floor(totalMin/60), m = totalMin%60;\n" +
+"  return h+'h '+String(m).padStart(2,'0')+'min';\n" +
+"}\n" +
+"// Relatório para o paciente: pedido do Dr. Vitor (17/07/2026) — versão separada e\n" +
+"// redesenhada do relatório de impressão, focada só no que o paciente quer ver e\n" +
+"// pronta pra entregar impressa: dados do paciente, fotos, total de folículos por\n" +
+"// tipo (só íntegros + mini — deixa de fora Mamba, transecção e distribuição de\n" +
+"// unidades por fio, que são controle de qualidade interno, não interessam ao\n" +
+"// paciente), índice, total de fios, incisões por área e tempos cirúrgicos (agora\n" +
+"// em 4 etapas: pré-incisões, extração, implantação — calculada como o tempo total\n" +
+"// menos as outras duas, não cronometrada à parte — e tempo total). O relatório\n" +
+"// técnico completo (App.printReport) continua existindo do jeito que está, pro uso\n" +
+"// interno da equipe.\n" +
+"App.printPatientReport = function(){\n" +
+"  var s = state.session; if (!s) return;\n" +
+"  var combined = combinedExtractionCounts(s);\n" +
+"  var sum = computeSummary(combined, s.mode||'completo');\n" +
+"\n" +
+"  var pi = s.patientInfo || {};\n" +
+"  var piParts = [];\n" +
+"  if (pi.idade!==null && pi.idade!==undefined) piParts.push('<span class=\"pr-item\">'+escapeHtml(t('patient.age_label'))+' <b>'+pi.idade+'</b></span>');\n" +
+"  if (pi.alturaCm!==null && pi.alturaCm!==undefined) piParts.push('<span class=\"pr-item\">'+escapeHtml(t('patient.height_label'))+' <b>'+pi.alturaCm+'</b></span>');\n" +
+"  if (pi.pesoKg!==null && pi.pesoKg!==undefined) piParts.push('<span class=\"pr-item\">'+escapeHtml(t('patient.weight_label'))+' <b>'+pi.pesoKg+'</b></span>');\n" +
+"  if (pi.cabeloEspessura) piParts.push('<span class=\"pr-item\">'+escapeHtml(t('patient.hair_thickness_label'))+' <b>'+escapeHtml(t(pi.cabeloEspessura==='fino'?'patient.hair_thin':'patient.hair_thick'))+'</b></span>');\n" +
+"  if (pi.cabeloTextura){\n" +
+"    var texturaKey = pi.cabeloTextura==='liso' ? 'patient.hair_straight' : (pi.cabeloTextura==='ondulado' ? 'patient.hair_wavy' : 'patient.hair_curly');\n" +
+"    piParts.push('<span class=\"pr-item\">'+escapeHtml(t('patient.hair_texture_label'))+' <b>'+escapeHtml(t(texturaKey))+'</b></span>');\n" +
+"  }\n" +
+"\n" +
+"  var patientCats = CATS.filter(function(c){ return c.group==='integro' || c.group==='mini'; });\n" +
+"  var maxCatCount = 0;\n" +
+"  patientCats.forEach(function(c){ var n = combined[c.id]||0; if (n>maxCatCount) maxCatCount = n; });\n" +
+"  var barsHtml = patientCats.map(function(c){\n" +
+"    var n = combined[c.id]||0;\n" +
+"    var pct = (maxCatCount>0 && n>0) ? Math.max(2, Math.round(n/maxCatCount*100)) : 0;\n" +
+"    return '<div class=\"pr-bar-row\"><div class=\"pr-bar-label\">'+escapeHtml(c.label)+'</div><div class=\"pr-bar-track\"><div class=\"pr-bar-fill\" style=\"width:'+pct+'%\"></div></div><div class=\"pr-bar-count\">'+n+'</div></div>';\n" +
+"  }).join('');\n" +
+"\n" +
+"  var half = Math.ceil(PREINC_AREAS.length/2);\n" +
+"  var areaRow = function(a){ return '<div class=\"pr-area-row\"><span>'+escapeHtml(a.label)+'</span><span class=\"pr-n\">'+(s.preincCounts[a.id]||0)+'</span></div>'; };\n" +
+"  var areasHtml = '<div class=\"pr-two-col\"><div class=\"pr-col\">'+PREINC_AREAS.slice(0,half).map(areaRow).join('')+'</div><div class=\"pr-col\">'+PREINC_AREAS.slice(half).map(areaRow).join('')+'</div></div>';\n" +
+"\n" +
+"  var msPreinc = elapsedMs(s.preincTimer);\n" +
+"  var msExtraction = elapsedMs(s.timer);\n" +
+"  var msTotal = globalElapsedMs(s);\n" +
+"  var msImplant = (msTotal!==null) ? Math.max(0, msTotal - msPreinc - msExtraction) : null;\n" +
+"  var timesHtml = '<div class=\"pr-times\">' +\n" +
+"    '<div class=\"pr-t\"><div class=\"pr-t-lbl\">'+escapeHtml(t('patrep.time_preinc'))+'</div><div class=\"pr-t-val\">'+fmtHM(msPreinc)+'</div></div>' +\n" +
+"    '<div class=\"pr-t\"><div class=\"pr-t-lbl\">'+escapeHtml(t('patrep.time_extraction'))+'</div><div class=\"pr-t-val\">'+fmtHM(msExtraction)+'</div></div>' +\n" +
+"    (msImplant!==null ? '<div class=\"pr-t\"><div class=\"pr-t-lbl\">'+escapeHtml(t('patrep.time_implant'))+'</div><div class=\"pr-t-val\">'+fmtHM(msImplant)+'</div></div>' : '') +\n" +
+"    (msTotal!==null ? '<div class=\"pr-t\"><div class=\"pr-t-lbl\">'+escapeHtml(t('patrep.time_total'))+'</div><div class=\"pr-t-val\">'+fmtHM(msTotal)+'</div></div>' : '') +\n" +
+"  '</div>';\n" +
+"\n" +
+"  var photoGroup = function(cat, titleKey){\n" +
+"    var list = s.photos[cat]||[];\n" +
+"    if (!list.length) return '';\n" +
+"    return '<div class=\"pr-photo-group\"><p class=\"pr-photo-group-title\">'+escapeHtml(t(titleKey))+'</p><div class=\"pr-photos\">'+list.map(function(p){\n" +
+"      return '<img src=\"/api/session/'+s.id+'/photos/'+p.id+'\">';\n" +
+"    }).join('')+'</div></div>';\n" +
+"  };\n" +
+"  var photosHtml = photoGroup('marcacao','photos.marcacao_title') + photoGroup('posop','photos.posop_title');\n" +
+"  var hasPhotos = (s.photos.marcacao||[]).length || (s.photos.posop||[]).length;\n" +
+"\n" +
+"  var ob = s.ownerBranding || {};\n" +
+"  var doctorName = ob.nomeCompleto ? escapeHtml(ob.nomeCompleto) : '';\n" +
+"  var crmLine = ob.crm ? escapeHtml(t('patrep.crm_prefix'))+escapeHtml(ob.crm) : '';\n" +
+"  var logoHtml = (ob.logoFilename && ob.ownerId) ?\n" +
+"    '<img src=\"/api/user/'+ob.ownerId+'/logo\" style=\"max-height:40px;max-width:150px;object-fit:contain;display:block;\">' :\n" +
+"    '<svg width=\"34\" height=\"34\" viewBox=\"0 0 120 120\"><g stroke=\"#FAF6EF\" stroke-width=\"6\" stroke-linecap=\"round\" fill=\"none\"><line x1=\"60\" y1=\"52\" x2=\"60\" y2=\"20\"/><line x1=\"48\" y1=\"55\" x2=\"34\" y2=\"30\"/><line x1=\"72\" y1=\"55\" x2=\"86\" y2=\"30\"/></g><ellipse cx=\"60\" cy=\"76\" rx=\"27\" ry=\"21\" fill=\"#FAF6EF\"/></svg>';\n" +
+"\n" +
+"  var html = '' +\n" +
+"    '<div class=\"pr-masthead\">' +\n" +
+"      '<div class=\"pr-brand-mark\">'+logoHtml+'<div><div class=\"pr-brand-name\">'+(doctorName||'Graftis')+'</div>'+(crmLine?'<div class=\"pr-clinic-line\">'+crmLine+'</div>':'')+'</div></div>' +\n" +
+"      '<div class=\"pr-masthead-right\"><div class=\"pr-doc-title\">'+escapeHtml(t('patrep.doc_title'))+'</div><div class=\"pr-doc-date\">'+new Date().toLocaleDateString(localeForLang())+'</div></div>' +\n" +
+"    '</div>' +\n" +
+"    '<div class=\"pr-stub\"><div><span class=\"pr-item\">'+escapeHtml(t('patrep.patient_label'))+' <b>'+escapeHtml(s.codigo)+'</b></span>'+piParts.join('')+'</div></div>' +\n" +
+"    '<div class=\"pr-hero\">' +\n" +
+"      '<div class=\"pr-seal\"><div class=\"pr-num\">'+fmtBig(sum.foliculosExtraidos)+'</div><div class=\"pr-cap\">'+escapeHtml(t('patrep.seal_caption'))+'</div></div>' +\n" +
+"      '<div class=\"pr-hero-copy\"><h1>'+escapeHtml(t('patrep.hero_title'))+'</h1><p>'+escapeHtml(t('patrep.hero_body'))+'</p></div>' +\n" +
+"    '</div>' +\n" +
+"    '<div class=\"pr-kpi-row\">' +\n" +
+"      '<div class=\"pr-kpi\"><div class=\"pr-val\">'+sum.indice.toFixed(2)+'</div><div class=\"pr-lbl\">'+escapeHtml(t('patrep.kpi_index'))+'</div></div>' +\n" +
+"      '<div class=\"pr-kpi\"><div class=\"pr-val\">'+fmtBig(sum.totalFios)+'</div><div class=\"pr-lbl\">'+escapeHtml(t('patrep.kpi_total_hairs'))+'</div></div>' +\n" +
+"      (msTotal!==null ? '<div class=\"pr-kpi\"><div class=\"pr-val\">'+fmtHM(msTotal)+'</div><div class=\"pr-lbl\">'+escapeHtml(t('patrep.kpi_total_time'))+'</div></div>' : '') +\n" +
+"    '</div>' +\n" +
+"    '<div class=\"pr-section\"><p class=\"pr-eyebrow\">'+escapeHtml(t('patrep.section_follicles'))+'</p>'+barsHtml+'</div>' +\n" +
+"    '<div class=\"pr-section\"><p class=\"pr-eyebrow\">'+escapeHtml(t('patrep.section_incisions'))+'</p>'+areasHtml+'</div>' +\n" +
+"    '<div class=\"pr-section\"><p class=\"pr-eyebrow\">'+escapeHtml(t('patrep.section_times'))+'</p>'+timesHtml+'</div>' +\n" +
+"    (hasPhotos ? '<div class=\"pr-section\"><p class=\"pr-eyebrow\">'+escapeHtml(t('patrep.section_photos'))+'</p>'+photosHtml+'</div>' : '') +\n" +
+"    '<div class=\"pr-footer\"><span class=\"pr-sig\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 120 120\"><g stroke=\"#B8804A\" stroke-width=\"8\" stroke-linecap=\"round\" fill=\"none\"><line x1=\"60\" y1=\"52\" x2=\"60\" y2=\"20\"/><line x1=\"48\" y1=\"55\" x2=\"34\" y2=\"30\"/><line x1=\"72\" y1=\"55\" x2=\"86\" y2=\"30\"/></g><ellipse cx=\"60\" cy=\"76\" rx=\"27\" ry=\"21\" fill=\"#B8804A\"/></svg>'+escapeHtml(t('patrep.footer_signature'))+'</span></div>';\n" +
+"\n" +
+"  document.getElementById('print-patient-report').innerHTML = html;\n" +
 "  window.print();\n" +
 "};\n" +
 "function audioKey(id){ return 'fue_live_audio_'+id; }\n" +
