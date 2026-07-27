@@ -1945,6 +1945,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    body *{visibility:hidden;}\n" +
 "    #print-patient-report, #print-patient-report *{visibility:visible;}\n" +
 "    #print-patient-report{display:block;position:absolute;top:0;left:0;width:100%;background:#FAF6EF;color:#1B2A2E;font-family:Georgia,'Iowan Old Style','Times New Roman',serif;font-size:11px;line-height:1.3;}\n" +
+"    #print-patient-report, #print-patient-report *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;}\n" +
 "    #print-patient-report .pr-masthead{background:#073A40;color:#FAF6EF;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;}\n" +
 "    #print-patient-report .pr-brand-name{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;font-size:14px;letter-spacing:.2px;}\n" +
 "    #print-patient-report .pr-clinic-line{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:9px;letter-spacing:.4px;text-transform:uppercase;color:#E4CBAA;margin-top:1px;}\n" +
@@ -1985,11 +1986,11 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    #print-patient-report .pr-times .pr-t:not(:last-child)::after{content:'\\2192';position:absolute;right:-3px;top:0;color:#B8804A;font-size:10px;}\n" +
 "    #print-patient-report .pr-times .pr-t-lbl{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:7.5px;letter-spacing:.2px;text-transform:uppercase;color:#4A5A5C;}\n" +
 "    #print-patient-report .pr-times .pr-t-val{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:700;font-size:11px;color:#073A40;margin-top:1px;font-variant-numeric:tabular-nums;}\n" +
-"    #print-patient-report .pr-photos-row{display:flex;gap:14px;}\n" +
-"    #print-patient-report .pr-photo-col{flex:1;}\n" +
+"    #print-patient-report .pr-photos-block{margin-bottom:8px;}\n" +
+"    #print-patient-report .pr-photos-block:last-child{margin-bottom:0;}\n" +
 "    #print-patient-report .pr-photo-group-title{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:8.5px;font-weight:700;color:#1B2A2E;margin:0 0 4px;}\n" +
-"    #print-patient-report .pr-photos-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;}\n" +
-"    #print-patient-report .pr-photos-mini img{width:100%;height:62px;object-fit:cover;border:1px solid #DDD3C2;display:block;}\n" +
+"    #print-patient-report .pr-photos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}\n" +
+"    #print-patient-report .pr-photos-grid img{width:100%;height:130px;object-fit:cover;border:1px solid #DDD3C2;display:block;}\n" +
 "    #print-patient-report .pr-footer{padding:8px 14px;text-align:center;border-top:1px solid #DDD3C2;}\n" +
 "    #print-patient-report .pr-sig{display:inline-flex;align-items:center;gap:5px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:8px;letter-spacing:.4px;text-transform:uppercase;color:#B8804A;}\n" +
 "  }\n" +
@@ -4023,14 +4024,14 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    (msTotal!==null ? '<div class=\"pr-t\"><div class=\"pr-t-lbl\">'+escapeHtml(t('patrep.time_total'))+'</div><div class=\"pr-t-val\">'+fmtHM(msTotal)+'</div></div>' : '') +\n" +
 "  '</div>';\n" +
 "\n" +
-"  var photoCol = function(cat, titleKey){\n" +
+"  var photoBlock = function(cat, titleKey){\n" +
 "    var list = s.photos[cat]||[];\n" +
 "    if (!list.length) return '';\n" +
-"    return '<div class=\"pr-photo-col\"><p class=\"pr-photo-group-title\">'+escapeHtml(t(titleKey))+'</p><div class=\"pr-photos-mini\">'+list.map(function(p){\n" +
+"    return '<div class=\"pr-photos-block\"><p class=\"pr-photo-group-title\">'+escapeHtml(t(titleKey))+'</p><div class=\"pr-photos-grid\">'+list.map(function(p){\n" +
 "      return '<img src=\"/api/session/'+s.id+'/photos/'+p.id+'\">';\n" +
 "    }).join('')+'</div></div>';\n" +
 "  };\n" +
-"  var photosHtml = '<div class=\"pr-photos-row\">'+photoCol('marcacao','photos.marcacao_title')+photoCol('posop','photos.posop_title')+'</div>';\n" +
+"  var photosHtml = photoBlock('marcacao','photos.marcacao_title')+photoBlock('posop','photos.posop_title');\n" +
 "  var hasPhotos = (s.photos.marcacao||[]).length || (s.photos.posop||[]).length;\n" +
 "\n" +
 "  // Sem logo do médico no cabeçalho — pedido do Dr. Vitor (17/07/2026), depois de\n" +
