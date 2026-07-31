@@ -1714,7 +1714,18 @@ saveAllScoped();
 console.log("");
 console.log("---- Diagnóstico de armazenamento ----");
 console.log(" DATA_DIR: " + DATA_DIR);
-console.log(" Arquivo de dados: " + DATA_FILE);
+if (usingSplitStorage) {
+  console.log(" Modo: dividido por médico (Fase 2)");
+  console.log(" Índice (auth): " + INDEX_FILE);
+  console.log(" Pasta por médico: " + DOCTORS_DIR);
+  console.log(" Órfãs (sem dono): " + ORFAOS_FILE);
+  console.log(" data.json antigo ainda presente (não deveria, se já migrou): " + (fs.existsSync(DATA_FILE) ? "SIM — verificar" : "não"));
+} else {
+  console.log(" Modo: arquivo único (legado) — " + DATA_FILE);
+  console.log(" Se isso for inesperado (você esperava já estar no modo dividido), procure");
+  console.log(" acima nesse mesmo log por uma linha \"[Fase 2] DIVERGÊNCIA na migração\" —");
+  console.log(" ela explica por que a divisão foi abortada e o app ficou no formato antigo.");
+}
 console.log(" Arquivo já existia ao iniciar: " + (dataFileExistedAtStartup ? "sim" : "não — começando do zero"));
 console.log(" Médicos cadastrados carregados: " + Object.keys(db.users).length);
 console.log(" Cirurgias carregadas: " + Object.keys(db.sessions).length);
