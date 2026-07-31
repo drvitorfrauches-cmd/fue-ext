@@ -338,9 +338,10 @@ nenhum deles muda como você usa o app no dia a dia, só fecham brechas:
   X-Content-Type-Options, Referrer-Policy) foram adicionados em toda
   resposta do servidor.
 
-Isso é a "Fase 1" de um plano maior — o próximo passo (Fase 2) é reestruturar
-como os dados são salvos em disco pra suportar vários médicos usando ao mesmo
-tempo sem travar uns aos outros.
+Isso é a "Fase 1" de um plano maior — o próximo passo (Fase 2, descrita mais
+abaixo em "Banco de dados dividido por médico") reestrutura como os dados são
+salvos em disco pra suportar vários médicos usando ao mesmo tempo sem travar
+uns aos outros.
 
 ## Segurança (reforços adicionais)
 
@@ -789,6 +790,117 @@ Não tem QR code ainda (só o endereço em texto pra digitar/copiar, ou os botõ
 compartilhar/WhatsApp) — eu não tinha como testar de forma confiável um gerador de
 QR code sem depender de internet neste momento, e preferi entregar algo que eu tenha
 certeza que funciona a arriscar um QR code que não escaneia.
+
+## Controle de versão (git) — novo (30/07/2026)
+
+Até agora, cada mudança no `server.js` existia só como "o arquivo mais
+recente" — sem histórico, sem jeito de comparar versões, sem como reverter uma
+mudança ruim além de eu ter guardado uma cópia anterior por conta própria.
+Isso virou risco real conforme o app cresceu (383 chaves de tradução, dezenas
+de features, uma suíte de 29 testes). A partir de agora, o projeto tem um
+repositório git de verdade.
+
+**Onde está:** `graftis-git-repo.zip`, na pasta de saída desta conversa.
+Dentro dele tem uma pasta `graftis_repo/` com `server.js`, `LEIA-ME.md`,
+`.gitignore` e `tests/` (a suíte de 29 testes ativa, mais uma subpasta
+`tests/legacy-pre-11-julho/` com os 17 testes bem antigos do início do
+projeto — 13 deles já não passam contra o código atual, então ficaram
+isolados e identificados como histórico, não como suíte válida). Já tem um
+primeiro commit feito ("Commit inicial: Graftis v1").
+
+**Por que um .zip e não já dentro da pasta do projeto:** o ambiente onde eu
+trabalho consegue criar e sobrescrever arquivos na pasta sincronizada com você,
+mas não consegue apagar nem renomear nada nela — e o git precisa disso o
+tempo todo (arquivos de trava, objetos temporários) pra funcionar. Por isso
+montei o repositório de verdade num espaço à parte e empacotei num .zip só
+pra te entregar.
+
+**O que fazer com o .zip:**
+
+1. Baixe `graftis-git-repo.zip` e descompacte no seu computador (dá pra
+   substituir a pasta `fue-live-rede-local` antiga por essa, ou colocar em
+   outro lugar — o `server.js` de dentro é idêntico ao que você já vinha
+   usando).
+2. Se ainda não tiver o git instalado, baixe em https://git-scm.com (Mac já
+   vem com ele, geralmente).
+3. Pra ver o histórico: abra o Terminal dentro da pasta descompactada e rode
+   `git log`.
+
+**IMPORTANTE:** a pasta `fue-live-rede-local` antiga (a que você já vinha
+usando, sincronizada por aqui) ficou com uma pasta `.git` quebrada e incompleta
+— uma tentativa de repositório que não terminou de ser criada por causa dessa
+mesma limitação de apagar arquivo. Ela não atrapalha o funcionamento do app
+(o `server.js` continua normal), mas é lixo. Pode apagar a pasta `.git` de
+dentro dela quando quiser, direto pelo Finder/Explorador — só não dá pra eu
+fazer isso por aqui.
+
+**Daqui pra frente:** toda vez que eu mexer no `server.js`, o ideal é que você
+me diga pra continuar trabalhando dentro dessa pasta já com git (ou eu te
+aviso quando tiver uma mudança nova pra você aplicar e commitar). Cada mudança
+vira um commit revisável — se algo der errado, dá pra comparar com uma versão
+anterior ou reverter, coisa que não existia até agora.
+
+## Banco de dados dividido por médico (Fase 2) — novo (31/07/2026)
+
+Até aqui, todo o banco de dados do Graftis (todos os médicos, todas as
+cirurgias, todos os tokens de login) vivia num único arquivo, `data.json`.
+Qualquer ação — uma contagem de folículo, um upload de foto, um login —
+reescrevia esse arquivo inteiro. Já era escrita atômica (arquivo temporário +
+rename), então não corrompia, mas era uma única unidade de gravação
+compartilhada por todos os médicos. Pensando no cenário real de 5 a 20 médicos
+na mesma instância, cada um podendo estar numa cirurgia ao vivo ao mesmo
+tempo, o risco era uma escrita pesada de um médico (cirurgia grande, muitos
+dados) atrasar a resposta pra outro médico completamente sem relação, só
+porque os dois disputavam o mesmo arquivo.
+
+**O que mudou:** o banco de dados agora fica dividido em vários arquivos,
+todos dentro da mesma pasta de dados de sempre (`DATA_DIR`) — nenhuma variável
+de ambiente nova, nenhum ajuste no volume do Railway:
+
+```
+DATA_DIR/
+  data/
+    index.json            — auth global: médicos cadastrados, tokens de login
+    doctors/
+      <id-do-médico>.json — só as cirurgias daquele médico
+    orfaos.json            — cirurgias sem dono (casos legados, raros)
+  uploads/                 — continua exatamente como sempre foi, fora de escopo
+```
+
+Uma ação do médico A agora só regrava o arquivo do médico A — nunca disputa
+recurso com o médico B. Testado diretamente: cadastrar dois médicos, criar uma
+cirurgia pro médico A e conferir que o arquivo do médico B (mtime e conteúdo)
+não mudou nem um pouco.
+
+**Migração automática, sem risco pros dados que já existem.** Na primeira vez
+que você rodar esta versão com um `data.json` antigo presente, o servidor
+migra sozinho: lê o arquivo antigo, separa as cirurgias por dono, escreve os
+arquivos novos, e só então confirma — soma o número de cirurgias e de médicos
+nos arquivos novos e compara com o arquivo antigo. Se os números baterem
+exatamente, o `data.json` antigo é renomeado pra
+`data.json.bak-migrado-<data/hora>` (nunca apagado) e o servidor passa a
+rodar com os arquivos novos. **Se os números não baterem por qualquer
+motivo**, a migração é cancelada automaticamente, os arquivos novos que
+tinham acabado de ser criados são removidos, e o servidor continua rodando
+normalmente com o `data.json` antigo, sem aplicar a divisão — nenhuma
+cirurgia é arriscada. Essa é exatamente a garantia pedida: nunca perder uma
+cirurgia já registrada por causa desta atualização.
+
+Isso já foi testado nos dois caminhos: migração com sucesso (2 médicos + 1
+cirurgia sem dono, todos os arquivos batendo com o conteúdo esperado) e
+migração forçada a divergir de propósito (confirma que o `data.json` antigo
+fica intacto e o servidor continua respondendo normalmente, sem erro 500).
+
+**Efeito colateral positivo: o botão "Baixar backup"** (Configurações →
+Segurança da conta) não precisou de nenhuma mudança de código — o arquivo que
+cada médico baixa já era, e continua sendo, só as próprias cirurgias; agora
+esse recorte bate exatamente com o arquivo `data/doctors/<id>.json` daquele
+médico por baixo dos panos.
+
+Pra você que já está rodando o Graftis: não precisa fazer nada de especial —
+é só atualizar o `server.js` pra esta versão e rodar normalmente
+(`node server.js` na rede local, ou `railway up` na nuvem). A migração
+acontece sozinha no próximo boot, uma única vez.
 
 ## Nuvem (Railway)
 

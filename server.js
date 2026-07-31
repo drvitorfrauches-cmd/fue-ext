@@ -1419,30 +1419,218 @@ function emptyTimer() {
   return { accumulatedMs: 0, running: false, startedAt: null };
 }
 
-// ---------- persistência simples em arquivo local (sobrevive a reinício do servidor) ----------
+// ---------- persistência dividida por médico (Fase 2) ----------
+// Cada médico tem seu próprio arquivo (data/doctors/<id>.json) — uma escrita
+// de um médico nunca disputa recurso com a escrita de outro. Auth (usuários,
+// tokens) fica num índice pequeno à parte (data/index.json), e cirurgias sem
+// dono (casos legados) ficam em data/orfaos.json. O objeto `db` em memória
+// continua com a MESMA forma de sempre ({sessions, users, authTokens,
+// resetTokens}) — só a gravação em disco é que ficou dividida.
+var SPLIT_DIR = path.join(DATA_DIR, "data");
+var INDEX_FILE = path.join(SPLIT_DIR, "index.json");
+var DOCTORS_DIR = path.join(SPLIT_DIR, "doctors");
+var ORFAOS_FILE = path.join(SPLIT_DIR, "orfaos.json");
+
+function atomicWriteJson(filePath, obj) {
+  // Escreve num arquivo temporário e só troca de nome no final (rename é atômico
+  // no sistema de arquivos). Se o processo cair no meio da escrita, o pior caso é
+  // perder o arquivo temporário — o arquivo de verdade nunca fica pela metade.
+  // Garante a pasta de destino antes de escrever: depois de uma migração
+  // abortada (que apaga SPLIT_DIR pra não deixar lixo pela metade), a
+  // próxima gravação não pode quebrar só porque a pasta não existe mais.
+  var dir = path.dirname(filePath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  var tmpFile = filePath + ".tmp" + process.pid;
+  fs.writeFileSync(tmpFile, JSON.stringify(obj, null, 2));
+  fs.renameSync(tmpFile, filePath);
+}
+
 function loadData() {
+  // Formato antigo (arquivo único) — usado só como último recurso, se por
+  // algum motivo a migração ainda não rodou nem existe instalação nova.
   try {
     return JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
   } catch (e) {
     return { sessions: {} };
   }
 }
-function saveData() {
-  // Escreve num arquivo temporário e só troca de nome no final (rename é atômico
-  // no sistema de arquivos). Se o processo cair no meio da escrita, o pior caso é
-  // perder o arquivo temporário — o data.json de verdade nunca fica pela metade.
-  // Antes disso, um crash durante o writeFileSync direto podia corromper o arquivo
-  // inteiro (todos os médicos, todas as cirurgias), não só o que estava sendo salvo.
-  var tmpFile = DATA_FILE + ".tmp" + process.pid;
-  fs.writeFileSync(tmpFile, JSON.stringify(db, null, 2));
-  fs.renameSync(tmpFile, DATA_FILE);
+
+function loadSplitData() {
+  var idx;
+  try { idx = JSON.parse(fs.readFileSync(INDEX_FILE, "utf8")); } catch (e) { idx = { users: {}, authTokens: {}, resetTokens: {} }; }
+  var sessions = {};
+  if (fs.existsSync(DOCTORS_DIR)) {
+    fs.readdirSync(DOCTORS_DIR).forEach(function (fname) {
+      if (!fname.endsWith(".json") || fname.indexOf(".tmp") !== -1) return;
+      try {
+        var doc = JSON.parse(fs.readFileSync(path.join(DOCTORS_DIR, fname), "utf8"));
+        Object.assign(sessions, doc.sessions || {});
+      } catch (e) {
+        // Um arquivo de médico corrompido não pode derrubar os outros —
+        // registra e segue (esse médico especificamente perderia acesso às
+        // próprias cirurgias até o arquivo ser investigado, mas todo o
+        // resto do sistema continua de pé).
+        console.log("[Fase 2] aviso: não consegui ler " + fname + " (" + e.message + ") — pulando esse arquivo.");
+      }
+    });
+  }
+  try {
+    var orf = JSON.parse(fs.readFileSync(ORFAOS_FILE, "utf8"));
+    Object.assign(sessions, orf.sessions || {});
+  } catch (e) {}
+  return {
+    users: idx.users || {},
+    authTokens: idx.authTokens || {},
+    resetTokens: idx.resetTokens || {},
+    sessions: sessions
+  };
 }
-var dataFileExistedAtStartup = fs.existsSync(DATA_FILE);
-var db = loadData();
+
+function countSessionsAndUsers(dataLike) {
+  return {
+    sessionCount: Object.keys(dataLike.sessions || {}).length,
+    userCount: Object.keys(dataLike.users || {}).length
+  };
+}
+
+function runMigrationIfNeeded() {
+  if (fs.existsSync(INDEX_FILE)) return; // já migrado, nada a fazer
+  if (!fs.existsSync(DATA_FILE)) return; // instalação nova, sem data.json antigo pra migrar
+
+  console.log("[Fase 2] data.json antigo encontrado — iniciando divisão por médico...");
+  var old;
+  try {
+    old = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+  } catch (e) {
+    console.log("[Fase 2] ERRO lendo data.json antigo (" + e.message + ") — abortando migração, servidor segue com o arquivo único.");
+    return;
+  }
+  var oldCounts = countSessionsAndUsers(old);
+
+  if (!fs.existsSync(DOCTORS_DIR)) fs.mkdirSync(DOCTORS_DIR, { recursive: true });
+
+  var byOwner = {};
+  var orfaosSessions = {};
+  Object.keys(old.sessions || {}).forEach(function (id) {
+    var s = old.sessions[id];
+    var owner = s.ownerId;
+    if (owner && old.users && old.users[owner]) {
+      if (!byOwner[owner]) byOwner[owner] = {};
+      byOwner[owner][id] = s;
+    } else {
+      // Sem dono, ou dono que não existe mais em users — vira órfã, nunca é perdida.
+      orfaosSessions[id] = s;
+    }
+  });
+
+  // Seam de teste — só ativa com a env var explícita, nunca em produção.
+  // Simula um bug de migração derrubando uma sessão de propósito, pra
+  // conseguir testar de verdade o caminho de "abortar com segurança".
+  if (process.env.TEST_BREAK_MIGRATION === "true") {
+    var firstOwner = Object.keys(byOwner)[0];
+    if (firstOwner) {
+      var firstSessId = Object.keys(byOwner[firstOwner])[0];
+      if (firstSessId) delete byOwner[firstOwner][firstSessId];
+    }
+  }
+
+  Object.keys(byOwner).forEach(function (ownerId) {
+    atomicWriteJson(path.join(DOCTORS_DIR, ownerId + ".json"), { sessions: byOwner[ownerId] });
+  });
+  atomicWriteJson(ORFAOS_FILE, { sessions: orfaosSessions });
+  atomicWriteJson(INDEX_FILE, {
+    users: old.users || {},
+    authTokens: old.authTokens || {},
+    resetTokens: old.resetTokens || {}
+  });
+
+  var newData = loadSplitData();
+  var newCounts = countSessionsAndUsers(newData);
+
+  if (newCounts.sessionCount !== oldCounts.sessionCount || newCounts.userCount !== oldCounts.userCount) {
+    console.log(
+      "[Fase 2] DIVERGÊNCIA na migração (antigo: " + oldCounts.userCount + " médicos / " + oldCounts.sessionCount +
+      " cirurgias — novo: " + newCounts.userCount + " médicos / " + newCounts.sessionCount +
+      " cirurgias). Abortando migração e mantendo o data.json antigo intacto."
+    );
+    fs.rmSync(SPLIT_DIR, { recursive: true, force: true });
+    return;
+  }
+
+  var backupName = DATA_FILE + ".bak-migrado-" + Date.now();
+  fs.renameSync(DATA_FILE, backupName);
+  console.log(
+    "[Fase 2] migração concluída — " + newCounts.userCount + " médicos, " + newCounts.sessionCount +
+    " cirurgias. Backup do arquivo antigo em: " + backupName
+  );
+}
+
+runMigrationIfNeeded();
+// Modo de armazenamento decidido uma vez, no boot:
+// - Instalação nova (nem data.json nem data/index.json existem ainda): já
+//   nasce em modo dividido, não tem dado legado pra preservar.
+// - Migração rodou com sucesso (index.json existe): modo dividido.
+// - data.json antigo existe mas a migração abortou por divergência: modo
+//   legado — continua tudo num arquivo só até o problema ser investigado,
+//   exatamente como pedido (nunca aplicar a divisão parcialmente).
+var usingSplitStorage = fs.existsSync(INDEX_FILE) || !fs.existsSync(DATA_FILE);
+var dataFileExistedAtStartup = fs.existsSync(INDEX_FILE) || fs.existsSync(DATA_FILE);
+var db = usingSplitStorage ? loadSplitData() : loadData();
 if (!db.sessions) db.sessions = {};
 if (!db.users) db.users = {};
 if (!db.authTokens) db.authTokens = {};
 if (!db.resetTokens) db.resetTokens = {};
+
+// ---------- funções de salvar, escopadas por médico (Fase 2) ----------
+// Cada uma grava só o arquivo relevante — uma escrita do médico A nunca
+// disputa recurso com uma escrita do médico B. `saveForSession` decide
+// automaticamente qual arquivo gravar a partir do dono da cirurgia.
+// Todas caem de volta pro arquivo único (`saveDataLegacy`) quando o servidor
+// está em modo legado (migração abortada) — nunca escrevem arquivo dividido
+// pela metade nesse caso.
+function saveDataLegacy() {
+  atomicWriteJson(DATA_FILE, db);
+}
+function saveIndex() {
+  if (!usingSplitStorage) { saveDataLegacy(); return; }
+  atomicWriteJson(INDEX_FILE, { users: db.users, authTokens: db.authTokens, resetTokens: db.resetTokens });
+}
+function saveDoctorFile(ownerId) {
+  if (!usingSplitStorage) { saveDataLegacy(); return; }
+  if (!ownerId) { saveOrfaos(); return; }
+  var sessions = {};
+  Object.keys(db.sessions).forEach(function (id) {
+    if (db.sessions[id].ownerId === ownerId) sessions[id] = db.sessions[id];
+  });
+  atomicWriteJson(path.join(DOCTORS_DIR, ownerId + ".json"), { sessions: sessions });
+}
+function saveOrfaos() {
+  if (!usingSplitStorage) { saveDataLegacy(); return; }
+  var sessions = {};
+  Object.keys(db.sessions).forEach(function (id) {
+    if (!db.sessions[id].ownerId) sessions[id] = db.sessions[id];
+  });
+  atomicWriteJson(ORFAOS_FILE, { sessions: sessions });
+}
+function saveForSession(session) {
+  if (session.ownerId) saveDoctorFile(session.ownerId); else saveOrfaos();
+}
+function saveAllScoped() {
+  // Salva tudo de uma vez — usada só no boot, na normalização de dados
+  // antigos (que ainda mexe em cirurgias/médicos de vários donos ao mesmo
+  // tempo). O resto do código usa saveIndex/saveDoctorFile/saveOrfaos/
+  // saveForSession, que gravam só o arquivo relevante a cada ação.
+  if (!usingSplitStorage) { saveDataLegacy(); return; }
+  saveIndex();
+  var ownerIds = {};
+  Object.keys(db.sessions).forEach(function (id) {
+    var o = db.sessions[id].ownerId;
+    if (o) ownerIds[o] = true;
+  });
+  Object.keys(ownerIds).forEach(function (id) { saveDoctorFile(id); });
+  saveOrfaos();
+}
+
 // Normaliza cirurgias salvas antes desta atualização (migra pro formato com quadrantes).
 Object.keys(db.sessions).forEach(function (id) {
   var s = db.sessions[id];
@@ -1517,7 +1705,7 @@ Object.keys(db.users).forEach(function (id) {
   if (u.branding.darkMode === undefined) u.branding.darkMode = false;
   if (!LANG_IDS.has(u.branding.language)) u.branding.language = "pt";
 });
-saveData();
+saveAllScoped();
 
 // ---------- diagnóstico de persistência ----------
 // Mostra no log, toda vez que o servidor inicia, de onde os dados foram carregados —
@@ -1702,7 +1890,7 @@ setInterval(function () {
   Object.keys(db.authTokens).forEach(function (tok) {
     if (now - db.authTokens[tok].createdAt > AUTH_TOKEN_TTL_MS) { delete db.authTokens[tok]; changed = true; }
   });
-  if (changed) saveData();
+  if (changed) saveIndex();
 }, 60 * 60 * 1000);
 function setAuthCookie(res, token) {
   var secure = SECURE_COOKIES ? "; Secure" : "";
@@ -4282,7 +4470,7 @@ var server = http.createServer(function (req, res) {
       db.users[id] = user;
       var token = newId(24);
       db.authTokens[hashToken(token)] = { userId: id, createdAt: Date.now() };
-      saveData();
+      saveIndex();
       setAuthCookie(res, token);
       send(res, 200, { user: publicUser(user) });
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", registerLang) }); });
@@ -4299,7 +4487,7 @@ var server = http.createServer(function (req, res) {
       if (!user || !verifyPassword(password, user.passwordHash)) { send(res, 401, { error: t("errors.invalid_credentials", loginLang) }); return; }
       var token = newId(24);
       db.authTokens[hashToken(token)] = { userId: user.id, createdAt: Date.now() };
-      saveData();
+      saveIndex();
       setAuthCookie(res, token);
       send(res, 200, { user: publicUser(user) });
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", loginLang) }); });
@@ -4309,7 +4497,7 @@ var server = http.createServer(function (req, res) {
   if (p === "/api/logout" && req.method === "POST") {
     var cookiesOut = parseCookies(req);
     var tokOut = cookiesOut["fue_auth"];
-    if (tokOut && db.authTokens[hashToken(tokOut)]) { delete db.authTokens[hashToken(tokOut)]; saveData(); }
+    if (tokOut && db.authTokens[hashToken(tokOut)]) { delete db.authTokens[hashToken(tokOut)]; saveIndex(); }
     clearAuthCookie(res);
     send(res, 200, { ok: true });
     return;
@@ -4323,7 +4511,7 @@ var server = http.createServer(function (req, res) {
     Object.keys(db.authTokens).forEach(function (tok) {
       if (db.authTokens[tok].userId === logoutAllUser.id) delete db.authTokens[tok];
     });
-    saveData();
+    saveIndex();
     clearAuthCookie(res);
     send(res, 200, { ok: true });
     return;
@@ -4352,7 +4540,7 @@ var server = http.createServer(function (req, res) {
       if (body.language !== undefined) {
         brUser.branding.language = LANG_IDS.has(body.language) ? body.language : "pt";
       }
-      saveData();
+      saveIndex();
       send(res, 200, { user: publicUser(brUser) });
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", brLang) }); });
     return;
@@ -4372,7 +4560,7 @@ var server = http.createServer(function (req, res) {
       var filename = logoUser.id + ".png";
       fs.writeFileSync(path.join(LOGOS_DIR, filename), buffer);
       logoUser.branding.logoFilename = filename;
-      saveData();
+      saveIndex();
       send(res, 200, { user: publicUser(logoUser) });
     }).catch(function (err) { send(res, 400, { error: t("errors.image_processing_error_prefix", logoLang) + err.message }); });
     return;
@@ -4385,7 +4573,7 @@ var server = http.createServer(function (req, res) {
       var logoPath = path.join(LOGOS_DIR, logoDelUser.branding.logoFilename);
       fs.unlink(logoPath, function () {});
       logoDelUser.branding.logoFilename = null;
-      saveData();
+      saveIndex();
     }
     send(res, 200, { user: publicUser(logoDelUser) });
     return;
@@ -4420,7 +4608,7 @@ var server = http.createServer(function (req, res) {
       }
       var token = newId(24);
       db.resetTokens[hashToken(token)] = { userId: user.id, createdAt: Date.now(), expiresAt: Date.now() + RESET_TOKEN_TTL_MS };
-      saveData();
+      saveIndex();
       var resetUrl = externalBaseUrl(req) + "/reset/" + token;
       // O e-mail vai no idioma salvo na CONTA do médico (não no idioma de quem está
       // pedindo agora) — importante porque quem pede pode estar num computador
@@ -4447,7 +4635,7 @@ var server = http.createServer(function (req, res) {
       if (!user) { send(res, 400, { error: t("errors.account_not_found", resetLang) }); return; }
       user.passwordHash = hashPassword(password);
       delete db.resetTokens[hashToken(token)];
-      saveData();
+      saveIndex();
       send(res, 200, { ok: true });
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", resetLang) }); });
     return;
@@ -4484,7 +4672,7 @@ var server = http.createServer(function (req, res) {
         finalizedAt: null,
         createdAt: Date.now(), updatedAt: Date.now()
       };
-      saveData();
+      saveForSession(db.sessions[id]);
       send(res, 200, db.sessions[id]);
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", createLang) }); });
     return;
@@ -4502,7 +4690,7 @@ var server = http.createServer(function (req, res) {
       if (!sPat.patientInfo) sPat.patientInfo = emptyPatientInfo();
       Object.assign(sPat.patientInfo, sanitizePatientInfoFields(body));
       sPat.updatedAt = Date.now();
-      saveData();
+      saveForSession(sPat);
       send(res, 200, withOwnerBranding(sPat));
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sPatLang) }); });
     return;
@@ -4588,7 +4776,7 @@ var server = http.createServer(function (req, res) {
       if (next < 0) next = 0;
       counts[catId] = next;
       s2.updatedAt = Date.now();
-      saveData();
+      saveForSession(s2);
       send(res, 200, withOwnerBranding(s2));
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", s2Lang) }); });
     return;
@@ -4616,7 +4804,7 @@ var server = http.createServer(function (req, res) {
         sQF.quadrants[nextQuad.id].carryFromId = quadId;
       }
       sQF.updatedAt = Date.now();
-      saveData();
+      saveForSession(sQF);
       send(res, 200, withOwnerBranding(sQF));
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sQFLang) }); });
     return;
@@ -4633,7 +4821,7 @@ var server = http.createServer(function (req, res) {
       if (!QUAD_IDS.has(quadId)) { send(res, 400, { error: t("errors.invalid_quadrant", sQRLang) }); return; }
       sQR.quadrants[quadId].locked = false;
       sQR.updatedAt = Date.now();
-      saveData();
+      saveForSession(sQR);
       send(res, 200, withOwnerBranding(sQR));
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sQRLang) }); });
     return;
@@ -4660,7 +4848,7 @@ var server = http.createServer(function (req, res) {
         sQL.quadrants[quadId].carryFromId = carryFromId;
       }
       sQL.updatedAt = Date.now();
-      saveData();
+      saveForSession(sQL);
       send(res, 200, withOwnerBranding(sQL));
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sQLLang) }); });
     return;
@@ -4696,7 +4884,7 @@ var server = http.createServer(function (req, res) {
         sM.quadrants[quadId].mambaMarkedAtMs = Date.now();
       }
       sM.updatedAt = Date.now();
-      saveData();
+      saveForSession(sM);
       send(res, 200, withOwnerBranding(sM));
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sMLang) }); });
     return;
@@ -4714,7 +4902,7 @@ var server = http.createServer(function (req, res) {
       if (!PREINC_IDS.has(area) || !Number.isFinite(value) || value < 0) { send(res, 400, { error: t("errors.invalid_parameters", sPLang) }); return; }
       sP.preincCounts[area] = Math.floor(value);
       sP.updatedAt = Date.now();
-      saveData();
+      saveForSession(sP);
       send(res, 200, withOwnerBranding(sP));
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sPLang) }); });
     return;
@@ -4734,7 +4922,7 @@ var server = http.createServer(function (req, res) {
       if (!sPD.preincDist) sPD.preincDist = emptyPreincDist();
       sPD.preincDist[area][fio] = Math.floor(value);
       sPD.updatedAt = Date.now();
-      saveData();
+      saveForSession(sPD);
       send(res, 200, withOwnerBranding(sPD));
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sPDLang) }); });
     return;
@@ -4759,7 +4947,7 @@ var server = http.createServer(function (req, res) {
       fs.writeFileSync(path.join(sessionDir, filename), buffer);
       sPh.photos[category].push({ id: photoId, filename: filename, createdAt: Date.now() });
       sPh.updatedAt = Date.now();
-      saveData();
+      saveForSession(sPh);
       send(res, 200, withOwnerBranding(sPh));
     }).catch(function (err) { send(res, 400, { error: t("errors.photo_processing_error_prefix", sPhLang) + err.message }); });
     return;
@@ -4800,7 +4988,7 @@ var server = http.createServer(function (req, res) {
     if (!foundD) { send(res, 404, { error: t("errors.photo_not_found", sPhDLang) }); return; }
     sPhD.photos[foundD.cat].splice(foundD.idx, 1);
     sPhD.updatedAt = Date.now();
-    saveData();
+    saveForSession(sPhD);
     var filePath2 = path.join(UPLOADS_DIR, sPhD.id, foundD.photo.filename);
     fs.unlink(filePath2, function () {});
     send(res, 200, withOwnerBranding(sPhD));
@@ -4822,7 +5010,7 @@ var server = http.createServer(function (req, res) {
       else if (action === "pause" && s4.timer.running) { s4.timer.accumulatedMs += Date.now() - s4.timer.startedAt; s4.timer.running = false; s4.timer.startedAt = null; }
       else if (action === "reset") { s4.timer.accumulatedMs = 0; s4.timer.running = false; s4.timer.startedAt = null; }
       s4.updatedAt = Date.now();
-      saveData();
+      saveForSession(s4);
       send(res, 200, withOwnerBranding(s4));
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", s4Lang) }); });
     return;
@@ -4844,7 +5032,7 @@ var server = http.createServer(function (req, res) {
       else if (action === "pause" && ptTimer.running) { ptTimer.accumulatedMs += Date.now() - ptTimer.startedAt; ptTimer.running = false; ptTimer.startedAt = null; }
       else if (action === "reset") { ptTimer.accumulatedMs = 0; ptTimer.running = false; ptTimer.startedAt = null; }
       s4b.updatedAt = Date.now();
-      saveData();
+      saveForSession(s4b);
       send(res, 200, withOwnerBranding(s4b));
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", s4bLang) }); });
     return;
@@ -4871,7 +5059,7 @@ var server = http.createServer(function (req, res) {
       s5.finalizedAt = null;
     }
     s5.updatedAt = Date.now();
-    saveData();
+    saveForSession(s5);
     send(res, 200, withOwnerBranding(s5));
     return;
   }
@@ -4887,8 +5075,12 @@ var server = http.createServer(function (req, res) {
     var sDel = db.sessions[m[1]];
     if (!sDel) { send(res, 404, { error: t("errors.surgery_not_found", delLang) }); return; }
     if (sDel.ownerId !== deleter.id) { send(res, 403, { error: t("errors.surgery_not_yours", delLang) }); return; }
+    // Captura o dono ANTES de apagar — depois de removida de db.sessions, não
+    // teria mais como saber qual arquivo (doctors/<id>.json ou orfaos.json)
+    // precisa ser regravado sem ela.
+    var delOwnerId = sDel.ownerId;
     delete db.sessions[m[1]];
-    saveData();
+    if (delOwnerId) saveDoctorFile(delOwnerId); else saveOrfaos();
     var delDir = path.join(UPLOADS_DIR, m[1]);
     if (fs.existsSync(delDir)) {
       try { fs.rmSync(delDir, { recursive: true, force: true }); } catch (e) { console.error("Não consegui apagar fotos da cirurgia " + m[1] + ":", e.message); }
