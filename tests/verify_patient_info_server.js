@@ -70,7 +70,7 @@ function extractCookie(headers) {
   try {
     await waitForServer(10000);
 
-    const email = 'patientinfo_' + Date.now() + '@teste.com';
+    const email = 'drvitorfrauches@gmail.com';
     const reg = await req('POST', '/api/register', { email, password: 'SenhaForte123', nomeCompleto: 'Dr Teste', crm: 'CRM-1234', telefone: '11999999999' });
     if (reg.status !== 200) { console.log('FALHOU registro:', reg.status, reg.body); process.exitCode = 1; return; }
     const cookie = extractCookie(reg.headers);

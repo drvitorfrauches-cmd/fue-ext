@@ -58,7 +58,7 @@ function waitForServer(port, timeoutMs) {
     let out = ''; child.stdout.on('data', d => out += d); child.stderr.on('data', d => out += d);
     await waitForServer(PORT, 10000);
 
-    const reg = await req(PORT, 'POST', '/api/register', { nomeCompleto: 'Dra. Backup', crm: 'CRM-BK', email: 'backup@teste.com', telefone: '1', password: 'senha123' });
+    const reg = await req(PORT, 'POST', '/api/register', { nomeCompleto: 'Dra. Backup', crm: 'CRM-BK', email: 'drvitorfrauches@gmail.com', telefone: '1', password: 'senha123' });
     const cookie = extractCookie(reg.headers);
     const userId = reg.body.user.id;
     console.log('médico cadastrado:', reg.status === 200);
