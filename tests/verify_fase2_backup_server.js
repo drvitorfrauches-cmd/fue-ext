@@ -29,6 +29,20 @@ function req(port, method, urlPath, body, cookie) {
 }
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 function extractCookie(headers) { const sc = headers['set-cookie']; if (!sc) return null; return sc.map(c => c.split(';')[0]).join('; '); }
+// Espera o servidor de verdade aceitar conexão, em vez de um sleep fixo — em
+// runners de CI mais lentos/variáveis (GitHub Actions), um sleep fixo curto
+// demais dava ECONNREFUSED mesmo com o servidor subindo normal, só mais devagar.
+function waitForServer(port, timeoutMs) {
+  const deadline = Date.now() + (timeoutMs || 10000);
+  function attempt() {
+    return req(port, 'GET', '/api/session/__ping__', null, null)
+      .catch(err => {
+        if (Date.now() > deadline) throw new Error('Servidor não respondeu a tempo na porta ' + port + ' (' + err.message + ')');
+        return sleep(150).then(attempt);
+      });
+  }
+  return attempt();
+}
 
 (async () => {
   let child = null;
@@ -42,7 +56,7 @@ function extractCookie(headers) { const sc = headers['set-cookie']; if (!sc) ret
     const env = Object.assign({}, process.env, { DATA_DIR: DIR, PORT: String(PORT), SMTP_ENABLED: 'false' });
     child = spawn('node', [path.join(__dirname, 'server.js')], { env, cwd: __dirname });
     let out = ''; child.stdout.on('data', d => out += d); child.stderr.on('data', d => out += d);
-    await sleep(600);
+    await waitForServer(PORT, 10000);
 
     const reg = await req(PORT, 'POST', '/api/register', { nomeCompleto: 'Dra. Backup', crm: 'CRM-BK', email: 'backup@teste.com', telefone: '1', password: 'senha123' });
     const cookie = extractCookie(reg.headers);

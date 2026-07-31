@@ -30,6 +30,20 @@ function req(port, method, urlPath, body, cookie) {
 }
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 function extractCookie(headers) { const sc = headers['set-cookie']; if (!sc) return null; return sc.map(c => c.split(';')[0]).join('; '); }
+// Espera o servidor de verdade aceitar conexão, em vez de um sleep fixo — em
+// runners de CI mais lentos/variáveis (GitHub Actions), um sleep fixo curto
+// demais dava ECONNREFUSED mesmo com o servidor subindo normal, só mais devagar.
+function waitForServer(port, timeoutMs) {
+  const deadline = Date.now() + (timeoutMs || 10000);
+  function attempt() {
+    return req(port, 'GET', '/api/session/__ping__', null, null)
+      .catch(err => {
+        if (Date.now() > deadline) throw new Error('Servidor não respondeu a tempo na porta ' + port + ' (' + err.message + ')');
+        return sleep(150).then(attempt);
+      });
+  }
+  return attempt();
+}
 
 function seedOldFormatData(dataDir, users, sessions) {
   fs.mkdirSync(dataDir, { recursive: true });
@@ -55,7 +69,7 @@ function seedOldFormatData(dataDir, users, sessions) {
     const env1 = Object.assign({}, process.env, { DATA_DIR: DIR1, PORT: String(PORT1), SMTP_ENABLED: 'false' });
     child1 = spawn('node', [path.join(__dirname, 'server.js')], { env: env1, cwd: __dirname });
     let out1 = ''; child1.stdout.on('data', d => out1 += d); child1.stderr.on('data', d => out1 += d);
-    await sleep(700);
+    await waitForServer(PORT1, 10000);
 
     console.log('data.json antigo foi renomeado (não existe mais com esse nome):', !fs.existsSync(path.join(DIR1, 'data.json')));
     const bakFiles = fs.readdirSync(DIR1).filter(f => f.startsWith('data.json.bak-migrado-'));
@@ -91,7 +105,7 @@ function seedOldFormatData(dataDir, users, sessions) {
     const env2 = Object.assign({}, process.env, { DATA_DIR: DIR2, PORT: String(PORT2), SMTP_ENABLED: 'false', TEST_BREAK_MIGRATION: 'true' });
     child2 = spawn('node', [path.join(__dirname, 'server.js')], { env: env2, cwd: __dirname });
     let out2 = ''; child2.stdout.on('data', d => out2 += d); child2.stderr.on('data', d => out2 += d);
-    await sleep(700);
+    await waitForServer(PORT2, 10000);
 
     console.log('data.json antigo AINDA existe (migração abortada, nada foi renomeado):', fs.existsSync(path.join(DIR2, 'data.json')));
     console.log('data/index.json NÃO existe (migração não foi aceita):', !fs.existsSync(path.join(DIR2, 'data', 'index.json')));

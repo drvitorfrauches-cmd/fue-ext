@@ -5,6 +5,7 @@
 const http = require('http');
 const { spawn } = require('child_process');
 const fs = require('fs');
+const path = require('path');
 
 const DATA_DIR = '/tmp/fuetest/datatest_chain';
 fs.rmSync(DATA_DIR, { recursive: true, force: true });
@@ -12,7 +13,7 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 
 const PORT = 4773;
 const env = Object.assign({}, process.env, { DATA_DIR, PORT: String(PORT), SMTP_ENABLED: 'false' });
-const child = spawn('node', ['/tmp/fuetest/server.js'], { env, cwd: '/tmp/fuetest' });
+const child = spawn('node', [path.join(__dirname, 'server.js')], { env, cwd: __dirname });
 let serverOut = '';
 child.stdout.on('data', d => serverOut += d);
 child.stderr.on('data', d => serverOut += d);

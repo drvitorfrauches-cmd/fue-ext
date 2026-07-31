@@ -17,7 +17,7 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 
 const PORT = 4771;
 const env = Object.assign({}, process.env, { DATA_DIR, PORT: String(PORT), SMTP_ENABLED: 'false' });
-const child = spawn('node', ['/tmp/fuetest/server.js'], { env, cwd: '/tmp/fuetest' });
+const child = spawn('node', [path.join(__dirname, 'server.js')], { env, cwd: __dirname });
 let serverOut = '';
 child.stdout.on('data', d => serverOut += d);
 child.stderr.on('data', d => serverOut += d);
