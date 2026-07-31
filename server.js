@@ -30,6 +30,8 @@ const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const MAX_BODY_BYTES = 15 * 1024 * 1024; // 15MB — folga generosa pra fotos comprimidas
 const RESET_TOKEN_TTL_MS = 30 * 60 * 1000; // link de redefinição de senha expira em 30 minutos
 const AUTH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000; // token de login expira em 30 dias (mesmo prazo do cookie)
+const INVITE_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // link de convite de cadastro expira em 7 dias
+const ADMIN_EMAIL = "drvitorfrauches@gmail.com"; // única conta com acesso à seção de Convites
 // Depois desse prazo contado a partir da finalização da cirurgia, o link (sem
 // login) para de servir as FOTOS do paciente — só o médico dono, autenticado,
 // continua vendo. Escolhido pra cobrir o acompanhamento pós-operatório usual
@@ -191,6 +193,20 @@ const STRINGS = {
     "toast.password_changed_login": "Senha alterada. Faça login com a nova senha.",
     "errors.invalid_email": "E-mail inválido.",
     "errors.email_already_registered": "Já existe um cadastro com esse e-mail.",
+    "errors.invite_invalid": "Este cadastro precisa de um link de convite válido.",
+    "errors.admin_only": "Só o administrador pode fazer isso.",
+    "config.invites_title": "Convites",
+    "config.invites_subtitle": "Gere um link de convite pra outro médico se cadastrar no Graftis. Cada link serve pra um único cadastro e expira em 7 dias.",
+    "config.invites_generate_btn": "Gerar link de convite",
+    "config.invites_empty": "Nenhum convite gerado ainda.",
+    "config.invites_status_pending": "Pendente",
+    "config.invites_status_used": "Usado",
+    "config.invites_status_expired": "Expirado",
+    "invite.modal_title": "Convite gerado",
+    "invite.modal_url_label": "Link do convite (expira em 7 dias, vale pra 1 cadastro)",
+    "invite.modal_whatsapp_btn": "Enviar por WhatsApp",
+    "invite.modal_copy_btn": "Copiar link",
+    "invite.invalid_body": "Este link de convite não é mais válido. Peça um novo link a quem te convidou.",
     "errors.invalid_credentials": "E-mail ou senha incorretos.",
     "errors.invalid_body": "Corpo inválido.",
     "errors.reset_link_invalid": "Link inválido ou expirado. Peça um novo pela tela de login.",
@@ -576,6 +592,20 @@ const STRINGS = {
     "toast.password_changed_login": "Password changed. Log in with your new password.",
     "errors.invalid_email": "Invalid email.",
     "errors.email_already_registered": "An account with this email already exists.",
+    "errors.invite_invalid": "This sign-up requires a valid invite link.",
+    "errors.admin_only": "Only the administrator can do that.",
+    "config.invites_title": "Invites",
+    "config.invites_subtitle": "Generate an invite link for another doctor to sign up for Graftis. Each link is good for a single sign-up and expires in 7 days.",
+    "config.invites_generate_btn": "Generate invite link",
+    "config.invites_empty": "No invites generated yet.",
+    "config.invites_status_pending": "Pending",
+    "config.invites_status_used": "Used",
+    "config.invites_status_expired": "Expired",
+    "invite.modal_title": "Invite generated",
+    "invite.modal_url_label": "Invite link (expires in 7 days, valid for 1 sign-up)",
+    "invite.modal_whatsapp_btn": "Send via WhatsApp",
+    "invite.modal_copy_btn": "Copy link",
+    "invite.invalid_body": "This invite link is no longer valid. Ask whoever invited you for a new link.",
     "errors.invalid_credentials": "Incorrect email or password.",
     "errors.invalid_body": "Invalid request body.",
     "errors.reset_link_invalid": "Invalid or expired link. Request a new one from the login screen.",
@@ -961,6 +991,20 @@ const STRINGS = {
     "toast.password_changed_login": "Contraseña cambiada. Inicia sesión con la nueva contraseña.",
     "errors.invalid_email": "Correo inválido.",
     "errors.email_already_registered": "Ya existe una cuenta con este correo.",
+    "errors.invite_invalid": "Este registro necesita un enlace de invitación válido.",
+    "errors.admin_only": "Solo el administrador puede hacer esto.",
+    "config.invites_title": "Invitaciones",
+    "config.invites_subtitle": "Genera un enlace de invitación para que otro médico se registre en Graftis. Cada enlace sirve para un único registro y expira en 7 días.",
+    "config.invites_generate_btn": "Generar enlace de invitación",
+    "config.invites_empty": "Todavía no se generó ninguna invitación.",
+    "config.invites_status_pending": "Pendiente",
+    "config.invites_status_used": "Usada",
+    "config.invites_status_expired": "Expirada",
+    "invite.modal_title": "Invitación generada",
+    "invite.modal_url_label": "Enlace de invitación (expira en 7 días, vale para 1 registro)",
+    "invite.modal_whatsapp_btn": "Enviar por WhatsApp",
+    "invite.modal_copy_btn": "Copiar enlace",
+    "invite.invalid_body": "Este enlace de invitación ya no es válido. Pide un enlace nuevo a quien te invitó.",
     "errors.invalid_credentials": "Correo o contraseña incorrectos.",
     "errors.invalid_body": "Cuerpo de solicitud inválido.",
     "errors.reset_link_invalid": "Enlace inválido o caducado. Solicite uno nuevo desde la pantalla de inicio de sesión.",
@@ -1457,7 +1501,7 @@ function loadData() {
 
 function loadSplitData() {
   var idx;
-  try { idx = JSON.parse(fs.readFileSync(INDEX_FILE, "utf8")); } catch (e) { idx = { users: {}, authTokens: {}, resetTokens: {} }; }
+  try { idx = JSON.parse(fs.readFileSync(INDEX_FILE, "utf8")); } catch (e) { idx = { users: {}, authTokens: {}, resetTokens: {}, inviteTokens: {} }; }
   var sessions = {};
   if (fs.existsSync(DOCTORS_DIR)) {
     fs.readdirSync(DOCTORS_DIR).forEach(function (fname) {
@@ -1482,6 +1526,7 @@ function loadSplitData() {
     users: idx.users || {},
     authTokens: idx.authTokens || {},
     resetTokens: idx.resetTokens || {},
+    inviteTokens: idx.inviteTokens || {},
     sessions: sessions
   };
 }
@@ -1580,6 +1625,7 @@ if (!db.sessions) db.sessions = {};
 if (!db.users) db.users = {};
 if (!db.authTokens) db.authTokens = {};
 if (!db.resetTokens) db.resetTokens = {};
+if (!db.inviteTokens) db.inviteTokens = {};
 
 // ---------- funções de salvar, escopadas por médico (Fase 2) ----------
 // Cada uma grava só o arquivo relevante — uma escrita do médico A nunca
@@ -1593,7 +1639,7 @@ function saveDataLegacy() {
 }
 function saveIndex() {
   if (!usingSplitStorage) { saveDataLegacy(); return; }
-  atomicWriteJson(INDEX_FILE, { users: db.users, authTokens: db.authTokens, resetTokens: db.resetTokens });
+  atomicWriteJson(INDEX_FILE, { users: db.users, authTokens: db.authTokens, resetTokens: db.resetTokens, inviteTokens: db.inviteTokens });
 }
 function saveDoctorFile(ownerId) {
   if (!usingSplitStorage) { saveDataLegacy(); return; }
@@ -1699,11 +1745,17 @@ Object.keys(db.sessions).forEach(function (id) {
 // Migra médicos cadastrados antes da identidade visual existir.
 Object.keys(db.users).forEach(function (id) {
   var u = db.users[id];
-  if (!u.branding) { u.branding = emptyBranding(); return; }
-  if (u.branding.logoFilename === undefined) u.branding.logoFilename = null;
-  if (!THEME_IDS.has(u.branding.theme)) u.branding.theme = "padrao";
-  if (u.branding.darkMode === undefined) u.branding.darkMode = false;
-  if (!LANG_IDS.has(u.branding.language)) u.branding.language = "pt";
+  if (!u.branding) {
+    u.branding = emptyBranding();
+  } else {
+    if (u.branding.logoFilename === undefined) u.branding.logoFilename = null;
+    if (!THEME_IDS.has(u.branding.theme)) u.branding.theme = "padrao";
+    if (u.branding.darkMode === undefined) u.branding.darkMode = false;
+    if (!LANG_IDS.has(u.branding.language)) u.branding.language = "pt";
+  }
+  // Migra médicos cadastrados antes do papel de administrador existir — só a
+  // conta do Dr. Vitor (ADMIN_EMAIL) vira admin, todas as outras ficam false.
+  if (u.isAdmin === undefined) u.isAdmin = (String(u.email || "").toLowerCase() === ADMIN_EMAIL);
 });
 saveAllScoped();
 
@@ -1812,7 +1864,7 @@ function hashToken(token) {
 }
 function publicUser(u) {
   var b = u.branding || emptyBranding();
-  return { id: u.id, nomeCompleto: u.nomeCompleto, crm: u.crm, email: u.email, telefone: u.telefone, createdAt: u.createdAt, branding: { logoFilename: b.logoFilename || null, theme: THEME_IDS.has(b.theme) ? b.theme : "padrao", darkMode: !!b.darkMode, language: LANG_IDS.has(b.language) ? b.language : "pt", ownerId: u.id } };
+  return { id: u.id, nomeCompleto: u.nomeCompleto, crm: u.crm, email: u.email, telefone: u.telefone, createdAt: u.createdAt, isAdmin: !!u.isAdmin, branding: { logoFilename: b.logoFilename || null, theme: THEME_IDS.has(b.theme) ? b.theme : "padrao", darkMode: !!b.darkMode, language: LANG_IDS.has(b.language) ? b.language : "pt", ownerId: u.id } };
 }
 // Identidade visual de quem é dono de uma cirurgia — usado pra que auxiliares que só
 // têm o link (sem login) também vejam a marca/tema do médico responsável por aquela
@@ -2221,9 +2273,9 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      </div>\n" +
 "      <h2 data-i18n=\"auth.title\">Área do médico</h2>\n" +
 "      <p class=\"hint\" data-i18n=\"auth.subtitle\">Entre com sua conta pra ver e criar suas próprias cirurgias. Auxiliares que já têm o link de uma cirurgia específica não precisam de conta — só quem cria e gerencia a lista de cirurgias precisa entrar.</p>\n" +
-"      <div class=\"row\" style=\"gap:8px;margin:14px 0;\">\n" +
+"      <p class=\"hint\" id=\"invite-invalid-msg\" style=\"display:none;color:var(--c-erro,#c0392b);\" data-i18n=\"invite.invalid_body\">Este link de convite não é mais válido. Peça um novo link a quem te convidou.</p>\n" +
+"      <div class=\"row\" style=\"gap:8px;margin:14px 0;\" id=\"auth-tabs-row\">\n" +
 "        <button class=\"btn\" id=\"authtab-login-btn\" data-i18n=\"auth.tab_login\" onclick=\"App.switchAuthTab('login')\">Entrar</button>\n" +
-"        <button class=\"btn secondary\" id=\"authtab-cadastro-btn\" data-i18n=\"auth.tab_register\" onclick=\"App.switchAuthTab('cadastro')\">Criar conta</button>\n" +
 "      </div>\n" +
 "      <div id=\"authpanel-login\">\n" +
 "        <div class=\"field\"><label data-i18n=\"common.email\">E-mail</label><input type=\"email\" id=\"login-email\" autocomplete=\"username\"></div>\n" +
@@ -2371,6 +2423,13 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      <h2 style=\"font-size:16px;margin-top:20px;\" data-i18n=\"config.backup_title\">Backup dos seus dados</h2>\n" +
 "      <p class=\"hint\" data-i18n=\"config.backup_subtitle\">Baixa um arquivo com o cadastro da sua conta e todas as suas cirurgias (contagens, tempos, pré-incisões). Não inclui as fotos — essas ficam protegidas separadamente pelo backup de volume do Railway. Guarde este arquivo num lugar seguro fora do Railway (computador, Google Drive, etc.).</p>\n" +
 "      <button class=\"btn secondary\" data-i18n=\"config.backup_btn\" onclick=\"App.downloadBackup()\">Baixar backup</button>\n" +
+"    </div>\n" +
+"\n" +
+"    <div class=\"card\" id=\"settings-invites-card\" style=\"display:none;\">\n" +
+"      <h2 style=\"font-size:16px;\" data-i18n=\"config.invites_title\">Convites</h2>\n" +
+"      <p class=\"hint\" data-i18n=\"config.invites_subtitle\">Gere um link de convite pra outro médico se cadastrar no Graftis. Cada link serve pra um único cadastro e expira em 7 dias.</p>\n" +
+"      <button class=\"btn secondary\" data-i18n=\"config.invites_generate_btn\" onclick=\"App.generateInvite()\">Gerar link de convite</button>\n" +
+"      <div id=\"invites-list\" style=\"margin-top:14px;\"></div>\n" +
 "    </div>\n" +
 "\n" +
 "    <div class=\"card\" id=\"settings-audio-card\" style=\"display:none;\">\n" +
@@ -2689,6 +2748,22 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        <button class=\"btn secondary\" data-i18n=\"share.copy_btn\" onclick=\"App.copyShareUrl()\">Copiar</button>\n" +
 "      </div>\n" +
 "      <p class=\"hint\" style=\"margin-top:8px;\">A auxiliar toca no link recebido e a página abre direto na contagem desta cirurgia — não precisa digitar nada.</p>\n" +
+"    </div>\n" +
+"  </div>\n" +
+"</div>\n" +
+"<div class=\"modal-overlay\" id=\"invite-modal-overlay\" onclick=\"if(event.target===this) App.closeInviteModal();\">\n" +
+"  <div class=\"modal-box\">\n" +
+"    <div class=\"row\" style=\"justify-content:space-between;align-items:center;\">\n" +
+"      <h2 style=\"margin:0;font-size:16px;\" data-i18n=\"invite.modal_title\">Convite gerado</h2>\n" +
+"      <button class=\"icon-btn\" style=\"background:var(--c-surface2);color:var(--c-text);\" onclick=\"App.closeInviteModal()\">✕</button>\n" +
+"    </div>\n" +
+"    <div class=\"field\" style=\"margin-top:14px;margin-bottom:0;\">\n" +
+"      <label data-i18n=\"invite.modal_url_label\">Link do convite (expira em 7 dias, vale pra 1 cadastro)</label>\n" +
+"      <div class=\"share-url\" id=\"invite-url\">—</div>\n" +
+"      <div class=\"row\" style=\"margin-top:8px;gap:8px;\">\n" +
+"        <button class=\"btn secondary\" data-i18n=\"invite.modal_whatsapp_btn\" onclick=\"App.shareInviteViaWhatsapp()\">Enviar por WhatsApp</button>\n" +
+"        <button class=\"btn secondary\" data-i18n=\"invite.modal_copy_btn\" onclick=\"App.copyInviteUrl()\">Copiar link</button>\n" +
+"      </div>\n" +
 "    </div>\n" +
 "  </div>\n" +
 "</div>\n" +
@@ -3081,6 +3156,9 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  }).join('');\n" +
 "  document.getElementById('settings-darkmode-toggle').checked = !!b.darkMode;\n" +
 "  document.getElementById('settings-security-card').style.display = state.currentUser ? 'block' : 'none';\n" +
+"  var isAdminUser = !!(state.currentUser && state.currentUser.isAdmin);\n" +
+"  document.getElementById('settings-invites-card').style.display = isAdminUser ? 'block' : 'none';\n" +
+"  if (isAdminUser) App.loadInvitesList();\n" +
 "}\n" +
 "var App = {};\n" +
 "App.goHome = function(){\n" +
@@ -3114,7 +3192,30 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  document.getElementById('authpanel-login').style.display = tab==='login' ? '' : 'none';\n" +
 "  document.getElementById('authpanel-cadastro').style.display = tab==='cadastro' ? '' : 'none';\n" +
 "  document.getElementById('authtab-login-btn').className = tab==='login' ? 'btn' : 'btn secondary';\n" +
-"  document.getElementById('authtab-cadastro-btn').className = tab==='cadastro' ? 'btn' : 'btn secondary';\n" +
+"  var cadastroTabBtn = document.getElementById('authtab-cadastro-btn');\n" +
+"  if (cadastroTabBtn) cadastroTabBtn.className = tab==='cadastro' ? 'btn' : 'btn secondary';\n" +
+"};\n" +
+"App.checkInviteAndShowScreen = function(token){\n" +
+"  state.inviteToken = token;\n" +
+"  return api('/api/invites/'+token+'/check').then(function(r){\n" +
+"    document.getElementById('auth-tabs-row').style.display = 'none';\n" +
+"    if (r.valid){\n" +
+"      document.getElementById('invite-invalid-msg').style.display = 'none';\n" +
+"      showScreen('auth');\n" +
+"      App.switchAuthTab('cadastro');\n" +
+"    } else {\n" +
+"      document.getElementById('authpanel-login').style.display = 'none';\n" +
+"      document.getElementById('authpanel-cadastro').style.display = 'none';\n" +
+"      document.getElementById('invite-invalid-msg').style.display = 'block';\n" +
+"      showScreen('auth');\n" +
+"    }\n" +
+"  }).catch(function(){\n" +
+"    document.getElementById('auth-tabs-row').style.display = 'none';\n" +
+"    document.getElementById('authpanel-login').style.display = 'none';\n" +
+"    document.getElementById('authpanel-cadastro').style.display = 'none';\n" +
+"    document.getElementById('invite-invalid-msg').style.display = 'block';\n" +
+"    showScreen('auth');\n" +
+"  });\n" +
 "};\n" +
 "App.doLogin = function(){\n" +
 "  var email = document.getElementById('login-email').value.trim();\n" +
@@ -3135,7 +3236,8 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  if (!nomeCompleto || !crm || !email || !telefone || !password){ toast(t('toast.fill_all_fields')); return; }\n" +
 "  if (password !== password2){ toast(t('toast.passwords_dont_match')); return; }\n" +
 "  if (password.length < 6){ toast(t('toast.password_too_short')); return; }\n" +
-"  api('/api/register','POST',{nomeCompleto:nomeCompleto, crm:crm, email:email, telefone:telefone, password:password}).then(function(r){\n" +
+"  api('/api/register','POST',{nomeCompleto:nomeCompleto, crm:crm, email:email, telefone:telefone, password:password, inviteToken: state.inviteToken || ''}).then(function(r){\n" +
+"    state.inviteToken = null;\n" +
 "    state.currentUser = r.user; applyBranding(r.user.branding); App.setLanguage(r.user.branding.language, true); renderUserBar(); showScreen('home'); loadSurgeryList();\n" +
 "    toast(t('toast.account_created_welcome',{name:r.user.nomeCompleto.split(' ')[0]}));\n" +
 "  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
@@ -3969,6 +4071,41 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "App.closeShareModal = function(){\n" +
 "  document.getElementById('share-modal-overlay').classList.remove('show');\n" +
 "};\n" +
+"App.generateInvite = function(){\n" +
+"  return api('/api/admin/invites','POST',{}).then(function(r){\n" +
+"    App.openInviteModal(r.url);\n" +
+"    return App.loadInvitesList();\n" +
+"  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.loadInvitesList = function(){\n" +
+"  return api('/api/admin/invites').then(function(r){\n" +
+"    var el = document.getElementById('invites-list');\n" +
+"    if (!r.invites.length){ el.innerHTML = '<p class=\"hint\">'+escapeHtml(t('config.invites_empty'))+'</p>'; return; }\n" +
+"    var statusLabel = { pendente: t('config.invites_status_pending'), usado: t('config.invites_status_used'), expirado: t('config.invites_status_expired') };\n" +
+"    el.innerHTML = r.invites.map(function(inv){\n" +
+"      var d = new Date(inv.createdAt);\n" +
+"      return '<div class=\"row\" style=\"justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--c-border);\"><span>'+escapeHtml(d.toLocaleDateString())+'</span><span>'+escapeHtml(statusLabel[inv.status]||inv.status)+'</span></div>';\n" +
+"    }).join('');\n" +
+"  }).catch(function(){});\n" +
+"};\n" +
+"App.openInviteModal = function(url){\n" +
+"  state.currentInviteUrl = url;\n" +
+"  document.getElementById('invite-url').textContent = url;\n" +
+"  document.getElementById('invite-modal-overlay').classList.add('show');\n" +
+"};\n" +
+"App.closeInviteModal = function(){\n" +
+"  document.getElementById('invite-modal-overlay').classList.remove('show');\n" +
+"};\n" +
+"App.copyInviteUrl = function(){\n" +
+"  var url = state.currentInviteUrl;\n" +
+"  if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(function(){ toast(t('toast.address_copied')); }, function(){ toast(t('toast.copy_failed_manual')); }); }\n" +
+"  else { toast(t('toast.copy_manually',{url:url}), 4000); }\n" +
+"};\n" +
+"App.shareInviteViaWhatsapp = function(){\n" +
+"  var url = state.currentInviteUrl;\n" +
+"  var text = 'Você foi convidado(a) a se cadastrar no Graftis: '+url;\n" +
+"  window.open('https://wa.me/?text='+encodeURIComponent(text), '_blank');\n" +
+"};\n" +
 "// confirmDialog()/promptDialog(): substitutos do window.confirm()/window.prompt()\n" +
 "// nativos, usando o mesmo modal HTML (.modal-overlay/.modal-box) do modal de\n" +
 "// compartilhar. Ambos retornam uma Promise, então todo call site que usava\n" +
@@ -4396,6 +4533,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  resolveBaseUrl().then(function(){ if (state.session) render(); });\n" +
 "  var m = window.location.pathname.match(/^\\/s\\/([a-f0-9]+)$/);\n" +
 "  var mReset = window.location.pathname.match(/^\\/reset\\/([a-f0-9]+)$/);\n" +
+"  var mInvite = window.location.pathname.match(/^\\/convite\\/([a-f0-9]+)$/);\n" +
 "  if (m){\n" +
 "    // Acesso direto a uma cirurgia via link — não exige login (fluxo das auxiliares).\n" +
 "    state.currentId=m[1]; loadAudioPrefs(m[1]); showScreen('counting'); App.switchTab('extracao'); fetchAndRender().then(function(){ startPolling(); });\n" +
@@ -4408,6 +4546,8 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    api('/api/me').then(function(r){ state.currentUser = r.user; renderUserBar(); }).catch(function(){});\n" +
 "  } else if (mReset){\n" +
 "    state.resetToken = mReset[1]; showScreen('reset');\n" +
+"  } else if (mInvite){\n" +
+"    App.checkInviteAndShowScreen(mInvite[1]);\n" +
 "  } else {\n" +
 "    App.checkAuthAndShowHome();\n" +
 "  }\n" +
@@ -4470,15 +4610,27 @@ var server = http.createServer(function (req, res) {
       var email = String(body.email || "").trim().toLowerCase().slice(0, 160);
       var telefone = String(body.telefone || "").trim().slice(0, 40);
       var password = String(body.password || "");
+      var inviteTokenRaw = String(body.inviteToken || "");
       if (!nomeCompleto || !crm || !email || !telefone || !password) { send(res, 400, { error: t("toast.fill_all_fields", registerLang) }); return; }
       if (email.indexOf("@") === -1) { send(res, 400, { error: t("errors.invalid_email", registerLang) }); return; }
       if (password.length < 6) { send(res, 400, { error: t("toast.password_too_short", registerLang) }); return; }
       if (findUserByEmail(email)) { send(res, 409, { error: t("errors.email_already_registered", registerLang) }); return; }
+      // Cadastro fechado por padrão: exige link de convite válido — exceto
+      // pra conta do próprio Dr. Vitor (ADMIN_EMAIL), que precisa conseguir
+      // existir antes de qualquer convite poder ser gerado (bootstrap).
+      var inviteHash = null;
+      if (email !== ADMIN_EMAIL) {
+        inviteHash = hashToken(inviteTokenRaw);
+        var inviteEntry = inviteTokenRaw ? db.inviteTokens[inviteHash] : null;
+        var inviteOk = !!inviteEntry && !inviteEntry.usedAt && inviteEntry.expiresAt > Date.now();
+        if (!inviteOk) { send(res, 400, { error: t("errors.invite_invalid", registerLang) }); return; }
+      }
       var id = newId(6);
       var branding = emptyBranding();
       branding.language = registerLang; // herda o idioma usado no cadastro
-      var user = { id: id, nomeCompleto: nomeCompleto, crm: crm, email: email, telefone: telefone, passwordHash: hashPassword(password), createdAt: Date.now(), branding: branding };
+      var user = { id: id, nomeCompleto: nomeCompleto, crm: crm, email: email, telefone: telefone, passwordHash: hashPassword(password), createdAt: Date.now(), branding: branding, isAdmin: (email === ADMIN_EMAIL) };
       db.users[id] = user;
+      if (inviteHash && db.inviteTokens[inviteHash]) { db.inviteTokens[inviteHash].usedAt = Date.now(); }
       var token = newId(24);
       db.authTokens[hashToken(token)] = { userId: id, createdAt: Date.now() };
       saveIndex();
@@ -4649,6 +4801,57 @@ var server = http.createServer(function (req, res) {
       saveIndex();
       send(res, 200, { ok: true });
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", resetLang) }); });
+    return;
+  }
+
+  // Gera um novo convite de cadastro — só o admin (ADMIN_EMAIL) pode.
+  // O valor bruto do token só existe nesta resposta; a partir daqui só o
+  // hash fica gravado, igual ao padrão de resetTokens/authTokens.
+  if (p === "/api/admin/invites" && req.method === "POST") {
+    var invGenUser = getAuthedUser(req);
+    var invGenLang = requestLang(req);
+    if (!invGenUser) { send(res, 401, { error: t("errors.not_authenticated", invGenLang) }); return; }
+    if (!invGenUser.isAdmin) { send(res, 403, { error: t("errors.admin_only", invGenLang) }); return; }
+    var inviteToken = newId(24);
+    var inviteExpiresAt = Date.now() + INVITE_TOKEN_TTL_MS;
+    db.inviteTokens[hashToken(inviteToken)] = { createdAt: Date.now(), expiresAt: inviteExpiresAt, createdBy: invGenUser.id, usedAt: null };
+    saveIndex();
+    var inviteUrl = externalBaseUrl(req) + "/convite/" + inviteToken;
+    send(res, 200, { token: inviteToken, url: inviteUrl, expiresAt: inviteExpiresAt });
+    return;
+  }
+
+  // Lista os convites que O PRÓPRIO admin autenticado gerou (não todos os
+  // convites do sistema, embora hoje só exista um admin) — pra mostrar na
+  // seção de Configurações.
+  if (p === "/api/admin/invites" && req.method === "GET") {
+    var invListUser = getAuthedUser(req);
+    var invListLang = requestLang(req);
+    if (!invListUser) { send(res, 401, { error: t("errors.not_authenticated", invListLang) }); return; }
+    if (!invListUser.isAdmin) { send(res, 403, { error: t("errors.admin_only", invListLang) }); return; }
+    var invNow = Date.now();
+    var invites = Object.keys(db.inviteTokens)
+      .map(function (hash) { return db.inviteTokens[hash]; })
+      .filter(function (inv) { return inv.createdBy === invListUser.id; })
+      .map(function (inv) {
+        var status = inv.usedAt ? "usado" : (inv.expiresAt < invNow ? "expirado" : "pendente");
+        return { createdAt: inv.createdAt, expiresAt: inv.expiresAt, usedAt: inv.usedAt, status: status };
+      })
+      .sort(function (a, b) { return b.createdAt - a.createdAt; });
+    send(res, 200, { invites: invites });
+    return;
+  }
+
+  // Confere se um convite é válido — chamado sem login, pela tela de
+  // cadastro via convite, ANTES de mostrar o formulário. Não revela qual
+  // dos três motivos (não existe / expirou / já foi usado) — só
+  // válido/inválido, pra não vazar informação sobre convites de outras
+  // pessoas.
+  m = p.match(/^\/api\/invites\/([a-f0-9]+)\/check$/);
+  if (m && req.method === "GET") {
+    var checkEntry = db.inviteTokens[hashToken(m[1])];
+    var checkValid = !!checkEntry && !checkEntry.usedAt && checkEntry.expiresAt > Date.now();
+    send(res, 200, { valid: checkValid });
     return;
   }
 

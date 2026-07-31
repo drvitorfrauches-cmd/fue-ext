@@ -902,6 +902,68 @@ Pra você que já está rodando o Graftis: não precisa fazer nada de especial �
 (`node server.js` na rede local, ou `railway up` na nuvem). A migração
 acontece sozinha no próximo boot, uma única vez.
 
+## Testes automáticos a cada push (CI) — novo (31/07/2026)
+
+Até aqui, os 32 testes (`tests/verify_*.js`) só rodavam quando alguém — eu,
+manualmente — lembrava de rodar antes de te entregar um arquivo novo. Agora
+existe um workflow do GitHub Actions (`.github/workflows/tests.yml`) que roda
+essa suíte inteira sozinho, toda vez que alguém sobe um commit pra qualquer
+branch do repositório. Se algum teste falhar, o commit aparece com um X
+vermelho na aba "Actions" do GitHub — dá pra ver exatamente qual teste
+quebrou e por quê, sem precisar me chamar primeiro.
+
+Ele também confere, como primeiro passo, se o `package.json` existe no
+repositório — é o arquivo que faltou e derrubou o build no Railway em
+31/07/2026 (ver seção "Nuvem (Railway)" abaixo).
+
+**Importante entender o limite disso**: esse CI roda em paralelo ao deploy do
+Railway, não *antes* dele — os dois disparam do mesmo jeito, no mesmo push.
+Ou seja, o CI te avisa rápido que algo quebrou, mas **não impede** um deploy
+ruim de ir pro ar antes de você ver o aviso. Pra isso realmente bloquear
+(exigir o "check" verde antes de aceitar uma mudança), seria preciso mudar
+seu fluxo de trabalho pra usar branches + pull request em vez de commitar
+direto na `main` — um passo a mais que, por enquanto, decidimos não vale a
+complexidade adicional pro seu uso.
+
+**Onde colocar o arquivo no GitHub:** diferente dos outros arquivos, esse não
+dá pra simplesmente arrastar — ele precisa ficar exatamente no caminho
+`.github/workflows/tests.yml` (duas pastas, a primeira começando com ponto).
+No GitHub, use "Add file" → "Create new file", e no campo do nome do arquivo
+digite o caminho completo `.github/workflows/tests.yml` — o GitHub cria as
+pastas sozinho ao ver as barras "/". Cole o conteúdo do arquivo `tests.yml`
+que eu te entreguei e comite.
+
+## Cadastro só por link de convite — novo (31/07/2026)
+
+Antes, qualquer pessoa que chegasse na tela de login podia clicar em "Criar
+conta" e se cadastrar livremente. Agora o cadastro é fechado por padrão: só
+quem recebe um link de convite gerado por você consegue criar conta, e cada
+link serve pra um único cadastro.
+
+**Quem administra:** só a conta com o e-mail `drvitorfrauches@gmail.com` tem
+acesso à seção de convites — é reconhecida automaticamente (nenhuma
+configuração manual necessária, inclusive pras 3 contas de médico que já
+existiam antes deste recurso).
+
+**Como gerar e enviar um convite:** em Configurações, na seção "Convites",
+toque em "Gerar link de convite". Abre um popup com o link pronto — copie
+ou envie direto por WhatsApp. Esse link:
+- vale por 7 dias;
+- serve pra um único cadastro — depois de usado (ou depois de expirar),
+  abrir o mesmo link de novo mostra uma mensagem de link inválido em vez do
+  formulário;
+- não trava um e-mail específico: quem abre o link preenche os próprios
+  dados normalmente.
+
+A mesma seção mostra a lista dos convites que você já gerou, com o status
+de cada um (pendente / usado / expirado).
+
+**O que muda pra quem já usa o app:** nada além disso — login de quem já
+tem conta continua idêntico, e as 3 contas de médico já cadastradas não
+precisam fazer nada. O botão "Criar conta" simplesmente não aparece mais na
+tela de login normal; o único jeito de chegar no formulário de cadastro
+agora é abrindo um link de convite.
+
 ## Nuvem (Railway)
 
 Rodar na nuvem faz sentido quando você quer acessar de qualquer lugar (não só da
