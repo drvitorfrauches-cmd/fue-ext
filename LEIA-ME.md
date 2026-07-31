@@ -920,8 +920,11 @@ cadastrar forma de pagamento, e isso só você deve fazer.
 
 ### Passo a passo
 
-1. Crie uma pasta só com o arquivo `server.js` dentro (nenhum outro arquivo precisa
-   ir junto).
+1. Crie uma pasta com o arquivo `server.js` **e também o `package.json`** (os
+   dois, juntos — sem o `package.json`, o Railway não consegue nem reconhecer
+   que é um app Node e o build falha antes de começar. Não precisa de mais
+   nada: o `package.json` é só um arquivo de identificação, não traz nenhuma
+   dependência externa nova).
 2. Crie uma conta em https://railway.com
 3. No Terminal, instale a ferramenta de linha de comando do Railway:
    ```
@@ -962,6 +965,12 @@ de dentro da mesma pasta.
 
 ### Coisas importantes de saber
 
+- **`package.json` precisa estar na raiz do repositório/pasta enviada ao
+  Railway.** Confirmado em produção (31/07/2026): sem esse arquivo, o build
+  falha antes mesmo de tentar rodar o servidor, com o erro "Railpack could
+  not determine how to build the app". Se você deletou esse arquivo do
+  repositório em algum momento achando que era lixo (não é), é só devolver o
+  `package.json` na raiz e reenviar — não precisa mudar mais nada.
 - **Sem `DATA_DIR` apontando pro volume, os dados somem a cada nova publicação** —
   não pule o passo 6/7.
 - Sem os volumes, cada `railway up` recria o serviço do zero.
