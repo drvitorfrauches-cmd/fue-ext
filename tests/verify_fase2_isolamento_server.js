@@ -11,7 +11,7 @@ function req(port, method, urlPath, body, cookie) {
   return new Promise((resolve, reject) => {
     const data = body ? JSON.stringify(body) : null;
     const options = {
-      hostname: 'localhost', port, path: urlPath, method,
+      hostname: '127.0.0.1', port, path: urlPath, method,
       headers: Object.assign(
         { 'Content-Type': 'application/json' },
         data ? { 'Content-Length': Buffer.byteLength(data) } : {},

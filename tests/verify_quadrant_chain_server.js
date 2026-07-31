@@ -22,7 +22,7 @@ function req(method, urlPath, body, cookie) {
   return new Promise((resolve, reject) => {
     const data = body ? JSON.stringify(body) : null;
     const options = {
-      hostname: 'localhost', port: PORT, path: urlPath, method,
+      hostname: '127.0.0.1', port: PORT, path: urlPath, method,
       headers: Object.assign(
         { 'Content-Type': 'application/json' },
         data ? { 'Content-Length': Buffer.byteLength(data) } : {},
@@ -44,6 +44,20 @@ function req(method, urlPath, body, cookie) {
   });
 }
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+// Espera o servidor de verdade aceitar conexão, em vez de um sleep fixo — em
+// runners de CI mais lentos/variáveis (GitHub Actions), um sleep fixo curto
+// demais dava ECONNREFUSED mesmo com o servidor subindo normal, só mais devagar.
+function waitForServer(timeoutMs) {
+  const deadline = Date.now() + (timeoutMs || 10000);
+  function attempt() {
+    return req('GET', '/api/session/__ping__', null, null)
+      .catch(err => {
+        if (Date.now() > deadline) throw new Error('Servidor não respondeu a tempo (' + err.message + ')');
+        return sleep(150).then(attempt);
+      });
+  }
+  return attempt();
+}
 function extractCookie(headers) {
   const sc = headers['set-cookie'];
   if (!sc) return null;
@@ -52,7 +66,7 @@ function extractCookie(headers) {
 
 (async () => {
   try {
-    await sleep(700);
+    await waitForServer(10000);
     const email = 'chain_' + Date.now() + '@teste.com';
     const reg = await req('POST', '/api/register', { email, password: 'SenhaForte123', nomeCompleto: 'Dr Teste', crm: 'CRM-1234', telefone: '11999999999' });
     if (reg.status !== 200) { console.log('FALHOU registro:', reg.status, reg.body); process.exitCode = 1; return; }
