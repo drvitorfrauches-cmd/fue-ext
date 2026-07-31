@@ -1,0 +1,50 @@
+name: Testes do Graftis
+
+# Roda em todo push pra qualquer branch e em todo pull request pra main.
+# Não substitui rodar isso manualmente antes de mandar pra mim — mas pega
+# regressão de lógica (os 32 testes) e um repositório sem package.json
+# (o que quebrou o deploy no Railway em 31/07/2026) automaticamente, sem
+# depender de alguém lembrar de checar.
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Conferir que o package.json existe (Railway precisa dele pra buildar)
+        run: test -f package.json
+
+      - name: Preparar pasta de teste (server.js + testes juntos)
+        run: cp tests/*.js .
+
+      - name: Gerar extracted.js (HTML/JS que vai pro navegador)
+        run: node extract.js
+
+      - name: Rodar a suíte de testes
+        run: |
+          FAIL=0
+          for f in verify_*.js; do
+            echo "--- $f ---"
+            if ! node "$f"; then
+              echo "FALHOU: $f"
+              FAIL=1
+            fi
+          done
+          if [ "$FAIL" = "1" ]; then
+            echo ""
+            echo "Um ou mais testes falharam — veja acima qual e o que ele esperava."
+            exit 1
+          fi
+          echo ""
+          echo "Todos os testes passaram."
