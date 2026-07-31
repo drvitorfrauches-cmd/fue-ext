@@ -1926,6 +1926,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  #print-report{display:none;}\n" +
 "  @media print{\n" +
 "    body *{visibility:hidden;}\n" +
+"    .app,.toast,.modal-overlay{display:none !important;}\n" +
 "    #print-report, #print-report *{visibility:visible;}\n" +
 "    #print-report{display:block;position:absolute;top:0;left:0;width:100%;padding:20px;}\n" +
 "    #print-report table{width:100%;border-collapse:collapse;margin-top:10px;}\n" +
