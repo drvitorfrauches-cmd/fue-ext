@@ -230,6 +230,10 @@ const STRINGS = {
     "errors.photo_processing_error_prefix": "Erro ao processar foto: ",
     "errors.photo_not_found": "Foto não encontrada.",
     "errors.surgery_finalized_reopen_timer": "Cirurgia finalizada — reabra pra mexer no cronômetro.",
+    "errors.fix_duration_needs_finalized": "Finalize a cirurgia antes de corrigir a duração.",
+    "errors.fix_duration_no_start": "Esta cirurgia não tem cronômetro global iniciado — não há duração para corrigir.",
+    "errors.fix_duration_invalid": "Duração inválida. Informe os minutos reais da cirurgia (entre 1 e 1440).",
+    "errors.fix_duration_future": "Essa duração colocaria o término no futuro — confira o valor.",
     "errors.login_required_delete_surgery": "Faça login pra apagar uma cirurgia.",
     "errors.surgery_not_yours": "Essa cirurgia não é sua.",
     "errors.quadrant_locked": "Este quadrante está travado. Reabra pra editar.",
@@ -251,6 +255,7 @@ const STRINGS = {
     "toast.logo_removed": "Logomarca removida.",
     "toast.surgery_finalized": "Cirurgia finalizada.",
     "toast.surgery_reopened": "Cirurgia reaberta.",
+    "toast.duration_fixed": "Duração corrigida.",
     "toast.quadrant_finished": "Quadrante finalizado.",
     "toast.quadrant_reopened": "Quadrante reaberto.",
     "toast.address_copied": "Endereço copiado.",
@@ -437,6 +442,8 @@ const STRINGS = {
     "cnt.print_btn": "Imprimir / Salvar PDF",
     "cnt.finalize_btn": "Finalizar cirurgia",
     "cnt.reopen_btn": "Reabrir",
+    "cnt.fix_duration_btn": "Corrigir duração",
+    "cnt.fix_duration_prompt": "Quantos minutos a cirurgia durou de verdade? (ex: 200 para 3h20)",
     "share.title": "Compartilhar cirurgia",
     "share.url_label": "Endereço desta cirurgia (compartilhe com os outros celulares)",
     "share.share_link_btn": "Compartilhar link",
@@ -629,6 +636,10 @@ const STRINGS = {
     "errors.photo_processing_error_prefix": "Error processing photo: ",
     "errors.photo_not_found": "Photo not found.",
     "errors.surgery_finalized_reopen_timer": "Surgery finalized — reopen it to change the timer.",
+    "errors.fix_duration_needs_finalized": "Finalize the surgery before correcting the duration.",
+    "errors.fix_duration_no_start": "This surgery has no global timer started — there's no duration to correct.",
+    "errors.fix_duration_invalid": "Invalid duration. Enter the actual minutes the surgery took (between 1 and 1440).",
+    "errors.fix_duration_future": "That duration would place the end time in the future — check the value.",
     "errors.login_required_delete_surgery": "Log in to delete a surgery.",
     "errors.surgery_not_yours": "This surgery isn't yours.",
     "errors.quadrant_locked": "This quadrant is locked. Reopen it to edit.",
@@ -650,6 +661,7 @@ const STRINGS = {
     "toast.logo_removed": "Logo removed.",
     "toast.surgery_finalized": "Surgery finalized.",
     "toast.surgery_reopened": "Surgery reopened.",
+    "toast.duration_fixed": "Duration corrected.",
     "toast.quadrant_finished": "Quadrant finished.",
     "toast.quadrant_reopened": "Quadrant reopened.",
     "toast.address_copied": "Address copied.",
@@ -836,6 +848,8 @@ const STRINGS = {
     "cnt.print_btn": "Print / Save PDF",
     "cnt.finalize_btn": "Finalize surgery",
     "cnt.reopen_btn": "Reopen",
+    "cnt.fix_duration_btn": "Correct duration",
+    "cnt.fix_duration_prompt": "How many minutes did the surgery actually take? (e.g. 200 for 3h20)",
     "share.title": "Share surgery",
     "share.url_label": "This surgery's address (share it with other phones)",
     "share.share_link_btn": "Share link",
@@ -1028,6 +1042,10 @@ const STRINGS = {
     "errors.photo_processing_error_prefix": "Error al procesar la foto: ",
     "errors.photo_not_found": "Foto no encontrada.",
     "errors.surgery_finalized_reopen_timer": "Cirugía finalizada — reábrela para modificar el cronómetro.",
+    "errors.fix_duration_needs_finalized": "Finaliza la cirugía antes de corregir la duración.",
+    "errors.fix_duration_no_start": "Esta cirugía no tiene cronómetro global iniciado — no hay duración para corregir.",
+    "errors.fix_duration_invalid": "Duración inválida. Indica los minutos reales de la cirugía (entre 1 y 1440).",
+    "errors.fix_duration_future": "Esa duración pondría el término en el futuro — revisa el valor.",
     "errors.login_required_delete_surgery": "Inicia sesión para eliminar una cirugía.",
     "errors.surgery_not_yours": "Esta cirugía no es tuya.",
     "errors.quadrant_locked": "Este cuadrante está bloqueado. Reábrelo para editar.",
@@ -1049,6 +1067,7 @@ const STRINGS = {
     "toast.logo_removed": "Logotipo eliminado.",
     "toast.surgery_finalized": "Cirugía finalizada.",
     "toast.surgery_reopened": "Cirugía reabierta.",
+    "toast.duration_fixed": "Duración corregida.",
     "toast.quadrant_finished": "Cuadrante finalizado.",
     "toast.quadrant_reopened": "Cuadrante reabierto.",
     "toast.address_copied": "Dirección copiada.",
@@ -1235,6 +1254,8 @@ const STRINGS = {
     "cnt.print_btn": "Imprimir / Guardar PDF",
     "cnt.finalize_btn": "Finalizar cirugía",
     "cnt.reopen_btn": "Reabrir",
+    "cnt.fix_duration_btn": "Corregir duración",
+    "cnt.fix_duration_prompt": "¿Cuántos minutos duró realmente la cirugía? (ej: 200 para 3h20)",
     "share.title": "Compartir cirugía",
     "share.url_label": "Dirección de esta cirugía (compártela con los otros celulares)",
     "share.share_link_btn": "Compartir enlace",
@@ -2730,6 +2751,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      <button class=\"btn secondary\" data-i18n=\"patrep.button\" onclick=\"App.printPatientReport()\">Relatório para o paciente</button>\n" +
 "      <button class=\"btn secondary\" id=\"btn-finalizar\" data-i18n=\"cnt.finalize_btn\" onclick=\"App.finalizeSession()\">Finalizar cirurgia</button>\n" +
 "      <button class=\"btn secondary\" id=\"btn-reabrir\" style=\"display:none;\" data-i18n=\"cnt.reopen_btn\" onclick=\"App.reopenSession()\">Reabrir</button>\n" +
+"      <button class=\"btn secondary\" id=\"btn-fix-duration\" style=\"display:none;\" data-i18n=\"cnt.fix_duration_btn\" onclick=\"App.fixDuration()\">Corrigir duração</button>\n" +
 "    </footer>\n" +
 "  </section>\n" +
 "</div>\n" +
@@ -3605,6 +3627,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  document.getElementById('cnt-mode').textContent = (s.mode==='reduzido') ? t('cnt.mode_reduced') : t('cnt.mode_full');\n" +
 "  document.getElementById('btn-finalizar').style.display = s.status==='finalizada'?'none':'inline-block';\n" +
 "  document.getElementById('btn-reabrir').style.display = s.status==='finalizada'?'inline-block':'none';\n" +
+"  document.getElementById('btn-fix-duration').style.display = s.status==='finalizada'?'inline-block':'none';\n" +
 "  document.getElementById('share-url').textContent = shareUrlFor(s.id);\n" +
 "  var readonly = s.status==='finalizada';\n" +
 "\n" +
@@ -4067,6 +4090,19 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "App.resetPreincTimer = function(){ confirmDialog(t('confirm.reset_preinc_timer')).then(function(ok){ if (!ok) return; api('/api/session/'+state.currentId+'/preinc-timer','POST',{action:'reset'}).then(function(s){ state.session=s; render(); }); }); };\n" +
 "App.finalizeSession = function(){ confirmDialog(t('confirm.finalize_surgery')).then(function(ok){ if (!ok) return; api('/api/session/'+state.currentId+'/finalize','POST',{}).then(function(s){ state.session=s; render(); App.switchTab('resumofinal'); toast(t('toast.surgery_finalized')); }); }); };\n" +
 "App.reopenSession = function(){ api('/api/session/'+state.currentId+'/reopen','POST',{}).then(function(s){ state.session=s; render(); toast(t('toast.surgery_reopened')); }); };\n" +
+"// App.fixDuration: corrige a duração da cirurgia quando alguém esqueceu de\n" +
+"// apertar \"Finalizar cirurgia\" na hora certa (o tempo global fica contando ao\n" +
+"// vivo até alguém perceber, podendo chegar a 24h+). Pede os minutos reais em vez\n" +
+"// de um horário exato — mais rápido de digitar no celular e reaproveita o mesmo\n" +
+"// modal numérico usado em editCount.\n" +
+"App.fixDuration = function(){\n" +
+"  promptDialog(t('cnt.fix_duration_prompt')).then(function(v){\n" +
+"    if (v === null || v === '') return;\n" +
+"    var minutes = Number(v);\n" +
+"    if (!isFinite(minutes) || minutes <= 0) { toast(t('toast.generic_error',{msg:t('errors.fix_duration_invalid')})); return; }\n" +
+"    api('/api/session/'+state.currentId+'/fix-duration','POST',{minutes:minutes}).then(function(s){ state.session=s; render(); toast(t('toast.duration_fixed')); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
+"};\n" +
 "App.openShareModal = function(){\n" +
 "  document.getElementById('share-url').textContent = shareUrlFor(state.currentId);\n" +
 "  document.getElementById('share-modal-overlay').classList.add('show');\n" +
@@ -5278,6 +5314,36 @@ var server = http.createServer(function (req, res) {
     s5.updatedAt = Date.now();
     saveForSession(s5);
     send(res, 200, withOwnerBranding(s5));
+    return;
+  }
+
+  // Corrigir duração: cobre o caso de esquecer de clicar em "Finalizar cirurgia"
+  // no dia — o tempo global fica contando ao vivo até alguém perceber (podendo
+  // chegar a 24h+), e reabrir/finalizar de novo só carimba a hora ATUAL (ainda
+  // errada), sem jeito de voltar pro horário real. Aqui o médico informa quantos
+  // minutos a cirurgia durou de verdade, e recalculamos o horário de término (e o
+  // finalizedAt, que é o mesmo instante — mantém consistente o prazo de acesso às
+  // fotos por link) a partir do horário de início real (globalTimerStartedAt).
+  // Só funciona com a cirurgia já finalizada — não faz sentido corrigir duração de
+  // algo que ainda está em andamento.
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/fix-duration$/);
+  if (m && req.method === "POST") {
+    var sFix = db.sessions[m[1]];
+    var sFixLang = requestLang(req);
+    if (!sFix) { send(res, 404, { error: t("errors.surgery_not_found", sFixLang) }); return; }
+    if (sFix.status !== "finalizada") { send(res, 409, { error: t("errors.fix_duration_needs_finalized", sFixLang) }); return; }
+    if (!sFix.globalTimerStartedAt) { send(res, 409, { error: t("errors.fix_duration_no_start", sFixLang) }); return; }
+    readBody(req).then(function (body) {
+      var minutes = Number(body.minutes);
+      if (!Number.isFinite(minutes) || minutes <= 0 || minutes > 24 * 60) { send(res, 400, { error: t("errors.fix_duration_invalid", sFixLang) }); return; }
+      var newEnd = sFix.globalTimerStartedAt + Math.round(minutes * 60000);
+      if (newEnd > Date.now()) { send(res, 400, { error: t("errors.fix_duration_future", sFixLang) }); return; }
+      sFix.globalTimerEndedAt = newEnd;
+      sFix.finalizedAt = newEnd;
+      sFix.updatedAt = Date.now();
+      saveForSession(sFix);
+      send(res, 200, withOwnerBranding(sFix));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sFixLang) }); });
     return;
   }
 
