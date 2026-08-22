@@ -2276,7 +2276,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "<body>\n" +
 "<div class=\"app\">\n" +
 "  <header class=\"topbar\">\n" +
-"    <div class=\"row\" style=\"align-items:center;gap:8px;\"><img class=\"brand-logo\" style=\"display:none;height:30px;max-width:110px;object-fit:contain;border-radius:4px;\"><div><h1><span class=\"conn-dot\" id=\"conn-dot\"></span>Graftis</h1><div class=\"sub\">__APP_SUBTITLE__</div></div></div>\n" +
+"    <div class=\"row\" style=\"align-items:center;gap:8px;\"><img class=\"brand-logo\" style=\"display:none;height:30px;max-width:110px;object-fit:contain;border-radius:4px;\"><div><h1><span class=\"conn-dot\" id=\"conn-dot\"></span>Graftis</h1></div></div>\n" +
 "    <div class=\"row\" style=\"gap:8px;align-items:center;\">\n" +
 "      <button class=\"icon-btn\" data-i18n=\"nav.home\" onclick=\"App.goHome()\">Início</button>\n" +
 "      <button class=\"icon-btn\" id=\"dashboard-btn\" style=\"display:none;\" data-i18n=\"nav.dashboard\" onclick=\"App.showDashboard()\">Dashboard</button>\n" +
@@ -4600,22 +4600,11 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "</body>\n" +
 "</html>\n";
 
-// Detecta se está rodando na nuvem (Railway injeta essas variáveis automaticamente
-// no ambiente do serviço) pra trocar o subtítulo do topo — evita o app dizer
-// "rede local · sem nuvem" quando na verdade está publicado no Railway.
-var IS_CLOUD_ENV = !!(
-  process.env.RAILWAY_ENVIRONMENT_NAME ||
-  process.env.RAILWAY_PROJECT_ID ||
-  process.env.RAILWAY_SERVICE_ID ||
-  process.env.RAILWAY_STATIC_URL ||
-  process.env.RAILWAY_PUBLIC_DOMAIN
-);
-var APP_SUBTITLE = IS_CLOUD_ENV ? "nuvem (Railway)" : "rede local · sem nuvem";
 // Escapa "<" pra "<" antes de embutir o dicionário como JSON dentro do <script> —
 // evita que qualquer valor traduzido que por acaso contenha "</script>" feche a tag
 // mais cedo e quebre a página.
 var STRINGS_JSON_SAFE = JSON.stringify(STRINGS).replace(/</g, "\\u003c");
-var INDEX_HTML_RENDERED = INDEX_HTML.replace("__APP_SUBTITLE__", APP_SUBTITLE).replace("__STRINGS_JSON__", STRINGS_JSON_SAFE);
+var INDEX_HTML_RENDERED = INDEX_HTML.replace("__STRINGS_JSON__", STRINGS_JSON_SAFE);
 
 // ==================== SERVIDOR ====================
 var server = http.createServer(function (req, res) {
