@@ -478,6 +478,48 @@ const STRINGS = {
     "cnt.rename_title": "Editar nome do paciente",
     "cnt.rename_prompt": "Novo nome / código do paciente:",
     "toast.patient_renamed": "Nome do paciente atualizado.",
+    "config.backup_auto_title": "Backup automático",
+    "config.backup_auto_hint": "O servidor copia e verifica os dados sozinho e manda o resultado por e-mail. A cópia fica no mesmo volume do Railway — não substitui o backup de volume do Railway nem o botão Baixar backup.",
+    "config.backup_auto_run": "Rodar agora",
+    "config.backup_auto_never": "Ainda não rodou. Primeiro teste automático em breve (a cada {days} dias).",
+    "config.backup_auto_ok": "Último teste: {when} — OK ({n} cirurgias verificadas). Repete a cada {days} dias.",
+    "config.backup_auto_fail": "Último teste: {when} — FALHOU: {msg}",
+    "toast.backup_ok": "Backup copiado e verificado.",
+    "toast.backup_failed": "Backup FALHOU na verificação — veja o detalhe em Configurações.",
+    "dash.tab_overview": "Visão geral",
+    "dash.tab_compare": "Comparar",
+    "dash.tab_list": "Cirurgias",
+    "dash.compare_title": "Comparar por característica",
+    "dash.compare_hint": "Cada linha é um grupo de cirurgias finalizadas com a mesma característica (média por cirurgia, no modo escolhido acima). ★ marca o melhor valor entre os grupos (menor transecção, maior velocidade). ⚠ indica poucas cirurgias no grupo — pode ser acaso, não conclua nada ainda.",
+    "dash.compare_rates_todos": "Na aba Todos as taxas de transecção não são comparáveis (completo e reduzido calculam diferente). Escolha Completo ou Reduzido.",
+    "dash.group_unknown": "Não informado",
+    "dash.age_under40": "Menos de 40",
+    "dash.age_40_49": "40 a 49",
+    "dash.age_50_59": "50 a 59",
+    "dash.age_60plus": "60 ou mais",
+    "dash.col_n": "Cirurgias",
+    "dash.col_extracted_avg": "Extraídos (méd.)",
+    "dash.col_index": "Índice",
+    "dash.col_partial": "Tx. parcial",
+    "dash.col_total": "Tx. total",
+    "dash.col_fpm": "Fol./min",
+    "dash.col_minis": "Minis/1000",
+    "dash.small_sample": "Grupo com menos de 5 cirurgias — amostra pequena.",
+    "dash.pair_title": "Comparar duas cirurgias",
+    "dash.pair_hint": "Escolha duas cirurgias finalizadas e veja lado a lado, com a diferença (B − A).",
+    "dash.pair_a": "Cirurgia A",
+    "dash.pair_b": "Cirurgia B",
+    "dash.pair_metric": "Métrica",
+    "dash.pair_diff": "Diferença (B − A)",
+    "dash.pair_need_two": "É preciso ter pelo menos 2 cirurgias finalizadas pra comparar.",
+    "dash.pair_mode_warning": "Modos diferentes (completo × reduzido): as taxas de transecção não são comparáveis, por isso não mostro a diferença delas.",
+    "dash.metric_time": "Tempo de extração",
+    "dash.sort_hint": "Toque no título da coluna pra ordenar.",
+    "dash.col_punch": "Punch",
+    "dash.col_thickness": "Espessura",
+    "dash.col_texture": "Textura",
+    "dash.col_shaving": "Raspagem",
+    "dash.col_age": "Idade",
     "cnt.fix_duration_btn": "Corrigir duração",
     "cnt.fix_duration_prompt": "Quantos minutos a cirurgia durou de verdade? (ex: 200 para 3h20)",
     "share.title": "Compartilhar cirurgia",
@@ -920,6 +962,48 @@ const STRINGS = {
     "cnt.rename_title": "Edit patient name",
     "cnt.rename_prompt": "New patient name / code:",
     "toast.patient_renamed": "Patient name updated.",
+    "config.backup_auto_title": "Automatic backup",
+    "config.backup_auto_hint": "The server copies and verifies the data by itself and emails you the result. The copy lives on the same Railway volume — it does not replace Railway's volume backup or the Download backup button.",
+    "config.backup_auto_run": "Run now",
+    "config.backup_auto_never": "Hasn't run yet. First automatic test soon (every {days} days).",
+    "config.backup_auto_ok": "Last test: {when} — OK ({n} surgeries verified). Repeats every {days} days.",
+    "config.backup_auto_fail": "Last test: {when} — FAILED: {msg}",
+    "toast.backup_ok": "Backup copied and verified.",
+    "toast.backup_failed": "Backup FAILED verification — see details in Settings.",
+    "dash.tab_overview": "Overview",
+    "dash.tab_compare": "Compare",
+    "dash.tab_list": "Surgeries",
+    "dash.compare_title": "Compare by characteristic",
+    "dash.compare_hint": "Each row is a group of finalized surgeries sharing the same characteristic (average per surgery, in the mode chosen above). ★ marks the best value among groups (lowest transection, highest speed). ⚠ means few surgeries in the group — could be chance, don't conclude anything yet.",
+    "dash.compare_rates_todos": "On the All tab transection rates are not comparable (complete and reduced are calculated differently). Choose Complete or Reduced.",
+    "dash.group_unknown": "Not provided",
+    "dash.age_under40": "Under 40",
+    "dash.age_40_49": "40 to 49",
+    "dash.age_50_59": "50 to 59",
+    "dash.age_60plus": "60 or older",
+    "dash.col_n": "Surgeries",
+    "dash.col_extracted_avg": "Extracted (avg.)",
+    "dash.col_index": "Index",
+    "dash.col_partial": "Partial rate",
+    "dash.col_total": "Total rate",
+    "dash.col_fpm": "Fol./min",
+    "dash.col_minis": "Minis/1000",
+    "dash.small_sample": "Group with fewer than 5 surgeries — small sample.",
+    "dash.pair_title": "Compare two surgeries",
+    "dash.pair_hint": "Pick two finalized surgeries and see them side by side, with the difference (B − A).",
+    "dash.pair_a": "Surgery A",
+    "dash.pair_b": "Surgery B",
+    "dash.pair_metric": "Metric",
+    "dash.pair_diff": "Difference (B − A)",
+    "dash.pair_need_two": "You need at least 2 finalized surgeries to compare.",
+    "dash.pair_mode_warning": "Different modes (complete × reduced): transection rates are not comparable, so their difference is not shown.",
+    "dash.metric_time": "Extraction time",
+    "dash.sort_hint": "Tap a column title to sort.",
+    "dash.col_punch": "Punch",
+    "dash.col_thickness": "Thickness",
+    "dash.col_texture": "Texture",
+    "dash.col_shaving": "Shaving",
+    "dash.col_age": "Age",
     "cnt.fix_duration_btn": "Correct duration",
     "cnt.fix_duration_prompt": "How many minutes did the surgery actually take? (e.g. 200 for 3h20)",
     "share.title": "Share surgery",
@@ -1362,6 +1446,48 @@ const STRINGS = {
     "cnt.rename_title": "Editar nombre del paciente",
     "cnt.rename_prompt": "Nuevo nombre / código del paciente:",
     "toast.patient_renamed": "Nombre del paciente actualizado.",
+    "config.backup_auto_title": "Copia de seguridad automática",
+    "config.backup_auto_hint": "El servidor copia y verifica los datos solo y te envía el resultado por e-mail. La copia queda en el mismo volumen de Railway — no sustituye la copia de volumen de Railway ni el botón Descargar copia.",
+    "config.backup_auto_run": "Ejecutar ahora",
+    "config.backup_auto_never": "Aún no se ha ejecutado. Primera prueba automática pronto (cada {days} días).",
+    "config.backup_auto_ok": "Última prueba: {when} — OK ({n} cirugías verificadas). Se repite cada {days} días.",
+    "config.backup_auto_fail": "Última prueba: {when} — FALLÓ: {msg}",
+    "toast.backup_ok": "Copia realizada y verificada.",
+    "toast.backup_failed": "La copia FALLÓ en la verificación — vea el detalle en Configuración.",
+    "dash.tab_overview": "Resumen",
+    "dash.tab_compare": "Comparar",
+    "dash.tab_list": "Cirugías",
+    "dash.compare_title": "Comparar por característica",
+    "dash.compare_hint": "Cada fila es un grupo de cirugías finalizadas con la misma característica (promedio por cirugía, en el modo elegido arriba). ★ marca el mejor valor entre grupos (menor transección, mayor velocidad). ⚠ indica pocas cirugías en el grupo — puede ser azar, no saque conclusiones aún.",
+    "dash.compare_rates_todos": "En la pestaña Todos las tasas de transección no son comparables (completo y reducido se calculan distinto). Elija Completo o Reducido.",
+    "dash.group_unknown": "No informado",
+    "dash.age_under40": "Menos de 40",
+    "dash.age_40_49": "40 a 49",
+    "dash.age_50_59": "50 a 59",
+    "dash.age_60plus": "60 o más",
+    "dash.col_n": "Cirugías",
+    "dash.col_extracted_avg": "Extraídos (prom.)",
+    "dash.col_index": "Índice",
+    "dash.col_partial": "Tasa parcial",
+    "dash.col_total": "Tasa total",
+    "dash.col_fpm": "Fol./min",
+    "dash.col_minis": "Minis/1000",
+    "dash.small_sample": "Grupo con menos de 5 cirugías — muestra pequeña.",
+    "dash.pair_title": "Comparar dos cirugías",
+    "dash.pair_hint": "Elija dos cirugías finalizadas y véalas lado a lado, con la diferencia (B − A).",
+    "dash.pair_a": "Cirugía A",
+    "dash.pair_b": "Cirugía B",
+    "dash.pair_metric": "Métrica",
+    "dash.pair_diff": "Diferencia (B − A)",
+    "dash.pair_need_two": "Se necesitan al menos 2 cirugías finalizadas para comparar.",
+    "dash.pair_mode_warning": "Modos distintos (completo × reducido): las tasas de transección no son comparables, por eso no muestro su diferencia.",
+    "dash.metric_time": "Tiempo de extracción",
+    "dash.sort_hint": "Toque el título de la columna para ordenar.",
+    "dash.col_punch": "Punch",
+    "dash.col_thickness": "Grosor",
+    "dash.col_texture": "Textura",
+    "dash.col_shaving": "Rapado",
+    "dash.col_age": "Edad",
     "cnt.fix_duration_btn": "Corregir duración",
     "cnt.fix_duration_prompt": "¿Cuántos minutos duró realmente la cirugía? (ej: 200 para 3h20)",
     "share.title": "Compartir cirugía",
@@ -2288,6 +2414,8 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  .dash-table th{background:var(--c-tint);font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;color:var(--c-muted);}\n" +
 "  .dash-table td:first-child,.dash-table th:first-child{text-align:left;padding-left:10px;}\n" +
 "  .dash-table-wrap{overflow-x:auto;}\n" +
+"  .mbar{height:4px;background:var(--c-border);border-radius:2px;margin-top:3px;min-width:48px;} .mbar i{display:block;height:4px;border-radius:2px;background:var(--c-primary);}\n" +
+"  .dash-table td.best{font-weight:700;color:var(--c-primary-dark);}\n" +
 "  .cat-count.clickable{cursor:pointer;border-style:solid;border-color:var(--c-primary);}\n" +
 "  .cat-count.clickable:active{background:var(--c-tint-active);}\n" +
 "  .increments-editor .inc-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}\n" +
@@ -2579,6 +2707,10 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      <p class=\"hint\" data-i18n=\"config.invites_subtitle\">Gere um link de convite pra outro médico se cadastrar no Graftis. Cada link serve pra um único cadastro e expira em 7 dias.</p>\n" +
 "      <button class=\"btn secondary\" data-i18n=\"config.invites_generate_btn\" onclick=\"App.generateInvite()\">Gerar link de convite</button>\n" +
 "      <div id=\"invites-list\" style=\"margin-top:14px;\"></div>\n" +
+"      <h2 style=\"font-size:16px;margin-top:22px;\" data-i18n=\"config.backup_auto_title\">Backup automático</h2>\n" +
+"      <p class=\"hint\" data-i18n=\"config.backup_auto_hint\">O servidor copia e verifica os dados sozinho a cada poucos dias e manda o resultado por e-mail.</p>\n" +
+"      <p id=\"backup-auto-status\" style=\"margin:6px 0 10px;\"></p>\n" +
+"      <button class=\"btn secondary\" data-i18n=\"config.backup_auto_run\" onclick=\"App.runBackupNow()\">Rodar agora</button>\n" +
 "    </div>\n" +
 "\n" +
 "    <div class=\"card\" id=\"settings-audio-card\" style=\"display:none;\">\n" +
@@ -2626,33 +2758,62 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      <p class=\"hint\" data-i18n=\"dash.subtitle\">Estatísticas calculadas só com cirurgias <b>finalizadas</b> — cirurgias em andamento têm dados parciais e ficam de fora, pra não distorcer as médias.</p>\n" +
 "      <div id=\"dash-empty\" class=\"empty-state\" style=\"display:none;\" data-i18n=\"dash.empty\">Você ainda não tem nenhuma cirurgia finalizada. As estatísticas aparecem aqui assim que a primeira for finalizada.</div>\n" +
 "      <div id=\"dash-content\" style=\"display:none;\">\n" +
-"        <div class=\"summary-bar static\" id=\"dash-summary\"></div>\n" +
-"        <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-integro)\"></span><span data-i18n=\"dash.extracted_by_surgery_title\">Folículos extraídos por cirurgia</span></h3>\n" +
-"        <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"dash.extracted_by_surgery_hint\">Cada barra é uma cirurgia finalizada, em ordem cronológica — dá pra ver se o volume por cirurgia está subindo ou caindo ao longo do tempo.</p>\n" +
-"        <div id=\"dash-extraidos-chart\" class=\"chart-box\"></div>\n" +
-"        <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-primary)\"></span><span data-i18n=\"dash.index_by_surgery_title\">Índice fios/folículo por cirurgia</span></h3>\n" +
-"        <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"dash.index_by_surgery_hint\">Cada barra é uma cirurgia finalizada, em ordem cronológica.</p>\n" +
-"        <div id=\"dash-index-chart\" class=\"chart-box\"></div>\n" +
-"        <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-integro)\"></span><span data-i18n=\"dash.uf_distribution_title\">Distribuição por tipo de unidade folicular</span></h3>\n" +
-"        <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"dash.uf_distribution_hint\">Percentual entre todos os folículos íntegros, somando todas as cirurgias finalizadas.</p>\n" +
-"        <div id=\"dash-uf-table\"></div>\n" +
-"        <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-parcial)\"></span><span data-i18n=\"dash.transec_rate_title\">Taxa de transecção por cirurgia</span></h3>\n" +
-"        <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"dash.transec_rate_hint\">Modo completo e modo reduzido calculam a taxa de formas diferentes — por isso ficam em abas separadas, não misture os números.</p>\n" +
-"        <div class=\"row\" style=\"gap:8px;margin-bottom:10px;\">\n" +
+"        <div class=\"row\" style=\"gap:8px;margin:10px 0;\">\n" +
+"          <button type=\"button\" class=\"btn\" id=\"dash-tab-geral\" data-i18n=\"dash.tab_overview\" onclick=\"App.switchDashTab('geral')\">Visão geral</button>\n" +
+"          <button type=\"button\" class=\"btn secondary\" id=\"dash-tab-comparar\" data-i18n=\"dash.tab_compare\" onclick=\"App.switchDashTab('comparar')\">Comparar</button>\n" +
+"          <button type=\"button\" class=\"btn secondary\" id=\"dash-tab-lista\" data-i18n=\"dash.tab_list\" onclick=\"App.switchDashTab('lista')\">Cirurgias</button>\n" +
+"        </div>\n" +
+"        <div class=\"row\" id=\"dash-mode-row\" style=\"gap:8px;margin-bottom:4px;align-items:center;flex-wrap:wrap;\">\n" +
 "          <button type=\"button\" class=\"btn\" id=\"dash-mode-completo\" data-i18n=\"common.mode_complete\" onclick=\"App.switchDashboardMode('completo')\">Completo</button>\n" +
 "          <button type=\"button\" class=\"btn secondary\" id=\"dash-mode-reduzido\" data-i18n=\"common.mode_reduced\" onclick=\"App.switchDashboardMode('reduzido')\">Reduzido</button>\n" +
 "          <button type=\"button\" class=\"btn secondary\" id=\"dash-mode-todos\" data-i18n=\"dash.mode_all\" onclick=\"App.switchDashboardMode('todos')\">Todos</button>\n" +
 "        </div>\n" +
-"        <div class=\"summary-bar static\" id=\"dash-rate-summary\"></div>\n" +
-"        <p class=\"hint\" id=\"dash-rate-todos-hint\" style=\"display:none;margin-top:6px;\" data-i18n=\"dash.rate_todos_hint\">Aqui é só pra ver a evolução cronológica de todas as cirurgias juntas — cada barra usa a taxa correta da própria cirurgia. Não existe uma \"taxa média geral\" porque completo e reduzido calculam a taxa de formas diferentes. Pra ver a média, use as abas Completo ou Reduzido.</p>\n" +
-"        <div id=\"dash-rate-chart\" class=\"chart-box\"></div>\n" +
-"        <div id=\"dash-rate-empty\" class=\"hint\" style=\"display:none;\" data-i18n=\"dash.rate_empty\">Nenhuma cirurgia finalizada nesse modo ainda.</div>\n" +
-"        <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-mini)\"></span><span data-i18n=\"dash.quad_index_title\">Índice e transecção por quadrante</span></h3>\n" +
-"        <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"dash.quad_hint\">Usa a mesma aba Completo/Reduzido/Todos acima. Diferença Mamba × bancada só entra na média das cirurgias em que o Mamba foi preenchido naquele quadrante.</p>\n" +
-"        <p class=\"hint\" id=\"dash-quad-todos-hint\" style=\"display:none;\" data-i18n=\"dash.quad_todos_hint\">Na aba \"Todos\" essas médias somem pelo mesmo motivo da taxa de transecção — completo e reduzido não são comparáveis. Use as abas Completo ou Reduzido.</p>\n" +
-"        <div id=\"dash-quad-table\"></div>\n" +
-"        <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-preinc)\"></span><span data-i18n=\"dash.finalized_surgeries_title\">Cirurgias finalizadas</span></h3>\n" +
-"        <div id=\"dash-table\"></div>\n" +
+"        <p class=\"hint\" style=\"margin-top:0;\" data-i18n=\"dash.transec_rate_hint\">Modo completo e modo reduzido calculam a taxa de formas diferentes — por isso ficam em abas separadas, não misture os números.</p>\n" +
+"\n" +
+"        <div id=\"dash-panel-geral\">\n" +
+"          <div class=\"summary-bar static\" id=\"dash-summary\"></div>\n" +
+"          <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-integro)\"></span><span data-i18n=\"dash.extracted_by_surgery_title\">Folículos extraídos por cirurgia</span></h3>\n" +
+"          <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"dash.extracted_by_surgery_hint\">Cada barra é uma cirurgia finalizada, em ordem cronológica.</p>\n" +
+"          <div id=\"dash-extraidos-chart\" class=\"chart-box\"></div>\n" +
+"          <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-primary)\"></span><span data-i18n=\"dash.index_by_surgery_title\">Índice fios/folículo por cirurgia</span></h3>\n" +
+"          <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"dash.index_by_surgery_hint\">Cada barra é uma cirurgia finalizada, em ordem cronológica.</p>\n" +
+"          <div id=\"dash-index-chart\" class=\"chart-box\"></div>\n" +
+"          <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-parcial)\"></span><span data-i18n=\"dash.transec_rate_title\">Taxa de transecção por cirurgia</span></h3>\n" +
+"          <div class=\"summary-bar static\" id=\"dash-rate-summary\"></div>\n" +
+"          <p class=\"hint\" id=\"dash-rate-todos-hint\" style=\"display:none;margin-top:6px;\" data-i18n=\"dash.rate_todos_hint\">Aqui é só pra ver a evolução cronológica.</p>\n" +
+"          <div id=\"dash-rate-chart\" class=\"chart-box\"></div>\n" +
+"          <div id=\"dash-rate-empty\" class=\"hint\" style=\"display:none;\" data-i18n=\"dash.rate_empty\">Nenhuma cirurgia finalizada nesse modo ainda.</div>\n" +
+"          <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-mini)\"></span><span data-i18n=\"dash.quad_index_title\">Índice e transecção por quadrante</span></h3>\n" +
+"          <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"dash.quad_hint\">Usa o modo escolhido acima.</p>\n" +
+"          <p class=\"hint\" id=\"dash-quad-todos-hint\" style=\"display:none;\" data-i18n=\"dash.quad_todos_hint\">Na aba Todos essas médias somem.</p>\n" +
+"          <div id=\"dash-quad-table\"></div>\n" +
+"          <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-integro)\"></span><span data-i18n=\"dash.uf_distribution_title\">Distribuição por tipo de unidade folicular</span></h3>\n" +
+"          <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"dash.uf_distribution_hint\">Percentual entre todos os folículos íntegros, somando todas as cirurgias finalizadas.</p>\n" +
+"          <div id=\"dash-uf-table\"></div>\n" +
+"        </div>\n" +
+"\n" +
+"        <div id=\"dash-panel-comparar\" style=\"display:none;\">\n" +
+"          <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-primary)\"></span><span data-i18n=\"dash.compare_title\">Comparar por característica</span></h3>\n" +
+"          <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"dash.compare_hint\">Cada linha é um grupo de cirurgias finalizadas.</p>\n" +
+"          <div class=\"row\" style=\"gap:6px;flex-wrap:wrap;margin-bottom:10px;\">\n" +
+"            <button type=\"button\" class=\"btn\" id=\"dash-dim-punch\" onclick=\"App.switchDashDim('punch')\">Punch</button>\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"dash-dim-espessura\" onclick=\"App.switchDashDim('espessura')\">Espessura</button>\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"dash-dim-textura\" onclick=\"App.switchDashDim('textura')\">Textura</button>\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"dash-dim-raspagem\" onclick=\"App.switchDashDim('raspagem')\">Raspagem</button>\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"dash-dim-idade\" onclick=\"App.switchDashDim('idade')\">Idade</button>\n" +
+"          </div>\n" +
+"          <p class=\"hint\" id=\"dash-compare-rates-hint\" style=\"display:none;\" data-i18n=\"dash.compare_rates_todos\">Na aba Todos as taxas não são comparáveis.</p>\n" +
+"          <div id=\"dash-compare-table\"></div>\n" +
+"          <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-mini)\"></span><span data-i18n=\"dash.pair_title\">Comparar duas cirurgias</span></h3>\n" +
+"          <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"dash.pair_hint\">Escolha duas cirurgias finalizadas e veja lado a lado.</p>\n" +
+"          <div id=\"dash-pair-box\"></div>\n" +
+"        </div>\n" +
+"\n" +
+"        <div id=\"dash-panel-lista\" style=\"display:none;\">\n" +
+"          <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-preinc)\"></span><span data-i18n=\"dash.finalized_surgeries_title\">Cirurgias finalizadas</span></h3>\n" +
+"          <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"dash.sort_hint\">Toque no título da coluna pra ordenar.</p>\n" +
+"          <div id=\"dash-table\"></div>\n" +
+"        </div>\n" +
 "      </div>\n" +
 "    </div>\n" +
 "    <footer class=\"actions\" id=\"dashboard-back-footer\" style=\"display:none;\">\n" +
@@ -3333,7 +3494,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  document.getElementById('settings-security-card').style.display = state.currentUser ? 'block' : 'none';\n" +
 "  var isAdminUser = !!(state.currentUser && state.currentUser.isAdmin);\n" +
 "  document.getElementById('settings-invites-card').style.display = isAdminUser ? 'block' : 'none';\n" +
-"  if (isAdminUser) App.loadInvitesList();\n" +
+"  if (isAdminUser){ App.loadInvitesList(); App.loadBackupStatus(); }\n" +
 "}\n" +
 "var App = {};\n" +
 "App.goHome = function(){\n" +
@@ -3517,7 +3678,13 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        if (qmdiff) quadStats[q.id].mambaDiffs[m].push(qmdiff.diffPct);\n" +
 "      }\n" +
 "    });\n" +
+"    var pinfo = s.patientInfo || {};\n" +
+"    var tms = elapsedMs(s.timer);\n" +
 "    return {\n" +
+"      punchMm: pinfo.punchMm || null, espessura: pinfo.cabeloEspessura || null, textura: pinfo.cabeloTextura || null, raspagem: pinfo.raspagem || null,\n" +
+"      idade: (pinfo.idade===undefined || pinfo.idade===null) ? null : pinfo.idade,\n" +
+"      folPerMin: (tms>0 && sum.foliculosExtraidos>0) ? sum.foliculosExtraidos/(tms/60000) : null,\n" +
+"      minisPorMil: sum.foliculosExtraidos>0 ? sum.miniTotal/sum.foliculosExtraidos*1000 : null,\n" +
 "      id: s.id, codigo: s.codigo, mode: m, createdAt: s.createdAt,\n" +
 "      extraidos: sum.foliculosExtraidos, totalFios: sum.totalFios, indice: sum.indice,\n" +
 "      taxaParcial: sum.taxaParcial, taxaTotal: sum.taxaTotal, miniTotal: sum.miniTotal,\n" +
@@ -3610,11 +3777,193 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    '<rect x=\"58\" y=\"0\" width=\"9\" height=\"9\" fill=\"var(--c-total)\"/><text x=\"71\" y=\"9\" font-size=\"9\" fill=\"var(--c-muted)\">total</text></g>'+\n" +
 "    '</svg>';\n" +
 "}\n" +
+"function dashAgeBucket(age){\n" +
+"  if (age===null || age===undefined || age==='' || isNaN(Number(age))) return 'na';\n" +
+"  var a = Number(age);\n" +
+"  if (a < 40) return 'u40';\n" +
+"  if (a < 50) return 'a40';\n" +
+"  if (a < 60) return 'a50';\n" +
+"  return 'a60';\n" +
+"}\n" +
+"var DASH_DIMS = {\n" +
+"  punch:     { labelKey:'patient.punch_label',          order:['0.95','1.0'],                   get:function(r){ return r.punchMm || 'na'; },       name:function(k){ return k==='0.95' ? t('patient.punch_095') : t('patient.punch_10'); } },\n" +
+"  espessura: { labelKey:'patient.hair_thickness_label', order:['fino','grosso'],                get:function(r){ return r.espessura || 'na'; },     name:function(k){ return k==='fino' ? t('patient.hair_thin') : t('patient.hair_thick'); } },\n" +
+"  textura:   { labelKey:'patient.hair_texture_label',   order:['liso','ondulado','crespo'],     get:function(r){ return r.textura || 'na'; },       name:function(k){ return {liso:t('patient.hair_straight'), ondulado:t('patient.hair_wavy'), crespo:t('patient.hair_curly')}[k]; } },\n" +
+"  raspagem:  { labelKey:'patient.surgery_type_label',   order:['sim','nao'],                    get:function(r){ return r.raspagem || 'na'; },      name:function(k){ return k==='sim' ? t('patient.with_shaving') : t('patient.without_shaving'); } },\n" +
+"  idade:     { labelKey:'patient.age_label',            order:['u40','a40','a50','a60'],        get:function(r){ return dashAgeBucket(r.idade); },  name:function(k){ return {u40:t('dash.age_under40'), a40:t('dash.age_40_49'), a50:t('dash.age_50_59'), a60:t('dash.age_60plus')}[k]; } }\n" +
+"};\n" +
+"function dashMeanOf(arr, key){\n" +
+"  var vals = arr.map(function(r){ return r[key]; }).filter(function(v){ return v!==null && v!==undefined && isFinite(v); });\n" +
+"  if (!vals.length) return null;\n" +
+"  var sum = 0; vals.forEach(function(v){ sum += v; });\n" +
+"  return sum / vals.length;\n" +
+"}\n" +
+"// rows: cirurgias finalizadas COM dados. mode: 'completo' | 'reduzido' | 'todos'.\n" +
+"// Taxas de transecção só são calculadas quando o modo é único (completo e reduzido não são comparáveis).\n" +
+"function groupDashboardRows(rows, dim, mode){\n" +
+"  var def = DASH_DIMS[dim];\n" +
+"  var src = mode==='todos' ? rows : rows.filter(function(r){ return r.mode===mode; });\n" +
+"  var buckets = {};\n" +
+"  src.forEach(function(r){ var k = def.get(r); (buckets[k] = buckets[k] || []).push(r); });\n" +
+"  var keys = def.order.concat(['na']).filter(function(k){ return buckets[k] && buckets[k].length; });\n" +
+"  var ratesOk = mode!=='todos';\n" +
+"  return keys.map(function(k){\n" +
+"    var arr = buckets[k];\n" +
+"    return {\n" +
+"      key:k, label: k==='na' ? t('dash.group_unknown') : def.name(k), n: arr.length,\n" +
+"      extraidos: dashMeanOf(arr,'extraidos'), indice: dashMeanOf(arr,'indice'),\n" +
+"      taxaParcial: ratesOk ? dashMeanOf(arr,'taxaParcial') : null,\n" +
+"      taxaTotal: ratesOk ? dashMeanOf(arr,'taxaTotal') : null,\n" +
+"      folPerMin: dashMeanOf(arr,'folPerMin'), minisPorMil: dashMeanOf(arr,'minisPorMil')\n" +
+"    };\n" +
+"  });\n" +
+"}\n" +
+"function dashBestIdx(groups, key, lowerIsBetter){\n" +
+"  var cand = groups.map(function(g,i){ return {v:g[key], i:i}; }).filter(function(x){ return x.v!==null && x.v!==undefined && isFinite(x.v); });\n" +
+"  if (cand.length < 2) return -1;\n" +
+"  var best = cand[0];\n" +
+"  cand.forEach(function(x){ if (lowerIsBetter ? x.v < best.v : x.v > best.v) best = x; });\n" +
+"  return best.i;\n" +
+"}\n" +
+"function dashMetricCell(groups, gi, key, digits, suffix, bestIdx){\n" +
+"  var v = groups[gi][key];\n" +
+"  if (v===null || v===undefined || !isFinite(v)) return '<td>—</td>';\n" +
+"  var max = 0; groups.forEach(function(g){ if (g[key]!==null && g[key]!==undefined && g[key]>max) max = g[key]; });\n" +
+"  var pct = max>0 ? Math.max(3, v/max*100) : 0;\n" +
+"  var txt = digits===0 ? fmtBig(Math.round(v)) : v.toFixed(digits);\n" +
+"  return '<td class=\"'+(bestIdx===gi?'best':'')+'\"><div>'+(bestIdx===gi?'★ ':'')+txt+(suffix||'')+'</div><div class=\"mbar\"><i style=\"width:'+pct.toFixed(0)+'%\"></i></div></td>';\n" +
+"}\n" +
+"function renderDashCompare(data, mode){\n" +
+"  var dim = state.dashDim || 'punch';\n" +
+"  Object.keys(DASH_DIMS).forEach(function(d){\n" +
+"    document.getElementById('dash-dim-'+d).className = 'btn'+(d===dim?'':' secondary');\n" +
+"    document.getElementById('dash-dim-'+d).textContent = t(DASH_DIMS[d].labelKey);\n" +
+"  });\n" +
+"  document.getElementById('dash-compare-rates-hint').style.display = mode==='todos' ? 'block' : 'none';\n" +
+"  var groups = groupDashboardRows(data.withData, dim, mode);\n" +
+"  var box = document.getElementById('dash-compare-table');\n" +
+"  if (!groups.length){ box.innerHTML = '<p class=\"hint\">'+escapeHtml(t('dash.rate_empty'))+'</p>'; }\n" +
+"  else {\n" +
+"    var bT = dashBestIdx(groups,'taxaTotal',true), bP = dashBestIdx(groups,'taxaParcial',true), bF = dashBestIdx(groups,'folPerMin',false);\n" +
+"    var anySmall = false;\n" +
+"    var body = groups.map(function(g,i){\n" +
+"      var small = g.n < 5; if (small) anySmall = true;\n" +
+"      return '<tr><td>'+escapeHtml(g.label)+'</td><td>'+g.n+(small?' ⚠':'')+'</td>'+\n" +
+"        dashMetricCell(groups,i,'extraidos',0,'',-1)+dashMetricCell(groups,i,'indice',2,'',-1)+\n" +
+"        dashMetricCell(groups,i,'taxaParcial',1,'%',bP)+dashMetricCell(groups,i,'taxaTotal',1,'%',bT)+\n" +
+"        dashMetricCell(groups,i,'folPerMin',1,'',bF)+dashMetricCell(groups,i,'minisPorMil',1,'',-1)+'</tr>';\n" +
+"    }).join('');\n" +
+"    box.innerHTML = '<div class=\"dash-table-wrap\"><table class=\"dash-table\">'+\n" +
+"      '<tr><th>'+escapeHtml(t(DASH_DIMS[dim].labelKey))+'</th><th>'+escapeHtml(t('dash.col_n'))+'</th><th>'+escapeHtml(t('dash.col_extracted_avg'))+'</th><th>'+escapeHtml(t('dash.col_index'))+'</th><th>'+escapeHtml(t('dash.col_partial'))+'</th><th>'+escapeHtml(t('dash.col_total'))+'</th><th>'+escapeHtml(t('dash.col_fpm'))+'</th><th>'+escapeHtml(t('dash.col_minis'))+'</th></tr>'+\n" +
+"      body+'</table></div>'+(anySmall?'<p class=\"hint\">⚠ '+escapeHtml(t('dash.small_sample'))+'</p>':'');\n" +
+"  }\n" +
+"  renderDashPair(data);\n" +
+"}\n" +
+"function dashPairLabel(r){ return r.codigo+' · '+shortDate(r.createdAt)+' ('+(r.mode==='reduzido'?'R':'C')+')'; }\n" +
+"function renderDashPair(data){\n" +
+"  var rows = data.withData;\n" +
+"  var box = document.getElementById('dash-pair-box');\n" +
+"  if (rows.length < 2){ box.innerHTML = '<p class=\"hint\">'+escapeHtml(t('dash.pair_need_two'))+'</p>'; return; }\n" +
+"  var ids = rows.map(function(r){ return r.id; });\n" +
+"  if (ids.indexOf(state.dashPairA) === -1) state.dashPairA = rows[rows.length-2].id;\n" +
+"  if (ids.indexOf(state.dashPairB) === -1) state.dashPairB = rows[rows.length-1].id;\n" +
+"  var opts = function(sel){ return rows.map(function(r){ return '<option value=\"'+escapeHtml(r.id)+'\"'+(r.id===sel?' selected':'')+'>'+escapeHtml(dashPairLabel(r))+'</option>'; }).join(''); };\n" +
+"  var A = rows.filter(function(r){ return r.id===state.dashPairA; })[0], B = rows.filter(function(r){ return r.id===state.dashPairB; })[0];\n" +
+"  var unk = t('dash.group_unknown');\n" +
+"  var info = function(r){ return {\n" +
+"    date: new Date(r.createdAt).toLocaleDateString(localeForLang()),\n" +
+"    mode: r.mode==='reduzido' ? t('common.mode_reduced') : t('common.mode_complete'),\n" +
+"    punch: r.punchMm ? DASH_DIMS.punch.name(r.punchMm) : unk,\n" +
+"    esp: r.espessura ? DASH_DIMS.espessura.name(r.espessura) : unk,\n" +
+"    tex: r.textura ? DASH_DIMS.textura.name(r.textura) : unk,\n" +
+"    ras: r.raspagem ? DASH_DIMS.raspagem.name(r.raspagem) : unk,\n" +
+"    age: (r.idade!==null && r.idade!==undefined) ? String(r.idade) : unk\n" +
+"  }; };\n" +
+"  var ia = info(A), ib = info(B);\n" +
+"  var sameMode = A.mode === B.mode;\n" +
+"  var textRow = function(lbl, a, b){ return '<tr><td>'+escapeHtml(lbl)+'</td><td>'+escapeHtml(a)+'</td><td>'+escapeHtml(b)+'</td><td></td></tr>'; };\n" +
+"  var numRow = function(lbl, a, b, digits, suffix, skipDiff){\n" +
+"    var f = function(v){ return (v===null||v===undefined||!isFinite(v)) ? '—' : (digits===0 ? fmtBig(Math.round(v)) : v.toFixed(digits))+(suffix||''); };\n" +
+"    var diff = '—';\n" +
+"    if (!skipDiff && a!==null && b!==null && isFinite(a) && isFinite(b)){\n" +
+"      var d = b - a; diff = (d>0?'+':d<0?'−':'')+(digits===0 ? fmtBig(Math.abs(Math.round(d))) : Math.abs(d).toFixed(digits))+(suffix ? (suffix==='%' ? ' pp' : suffix) : '');\n" +
+"    }\n" +
+"    return '<tr><td>'+escapeHtml(lbl)+'</td><td>'+f(a)+'</td><td>'+f(b)+'</td><td>'+diff+'</td></tr>';\n" +
+"  };\n" +
+"  box.innerHTML =\n" +
+"    '<div class=\"row\" style=\"gap:10px;flex-wrap:wrap;\">'+\n" +
+"      '<div class=\"field\" style=\"flex:1;min-width:150px;margin:0;\"><label>'+escapeHtml(t('dash.pair_a'))+'</label><select id=\"dash-pair-a\" onchange=\"App.setDashPair(\\'a\\',this.value)\">'+opts(state.dashPairA)+'</select></div>'+\n" +
+"      '<div class=\"field\" style=\"flex:1;min-width:150px;margin:0;\"><label>'+escapeHtml(t('dash.pair_b'))+'</label><select id=\"dash-pair-b\" onchange=\"App.setDashPair(\\'b\\',this.value)\">'+opts(state.dashPairB)+'</select></div>'+\n" +
+"    '</div>'+\n" +
+"    (sameMode ? '' : '<p class=\"hint\" style=\"margin-top:8px;\">⚠ '+escapeHtml(t('dash.pair_mode_warning'))+'</p>')+\n" +
+"    '<div class=\"dash-table-wrap\" style=\"margin-top:8px;\"><table class=\"dash-table\">'+\n" +
+"      '<tr><th>'+escapeHtml(t('dash.pair_metric'))+'</th><th>A</th><th>B</th><th>'+escapeHtml(t('dash.pair_diff'))+'</th></tr>'+\n" +
+"      textRow(t('dash.table_date'), ia.date, ib.date)+textRow(t('dash.table_mode'), ia.mode, ib.mode)+\n" +
+"      textRow(t('patient.punch_label'), ia.punch, ib.punch)+textRow(t('patient.hair_thickness_label'), ia.esp, ib.esp)+\n" +
+"      textRow(t('patient.hair_texture_label'), ia.tex, ib.tex)+textRow(t('patient.surgery_type_label'), ia.ras, ib.ras)+\n" +
+"      textRow(t('patient.age_label'), ia.age, ib.age)+\n" +
+"      numRow(t('dash.table_extracted'), A.extraidos, B.extraidos, 0, '')+\n" +
+"      numRow(t('dash.table_index'), A.indice, B.indice, 2, '')+\n" +
+"      numRow(t('dash.col_partial'), A.taxaParcial, B.taxaParcial, 1, '%', !sameMode)+\n" +
+"      numRow(t('dash.col_total'), A.taxaTotal, B.taxaTotal, 1, '%', !sameMode)+\n" +
+"      numRow(t('dash.col_fpm'), A.folPerMin, B.folPerMin, 1, '')+\n" +
+"      numRow(t('dash.col_minis'), A.minisPorMil, B.minisPorMil, 1, '')+\n" +
+"      numRow(t('dash.table_preinc'), A.preincTotalVal, B.preincTotalVal, 0, '')+\n" +
+"      '<tr><td>'+escapeHtml(t('dash.metric_time'))+'</td><td>'+fmtHMS(A.tempoMs)+'</td><td>'+fmtHMS(B.tempoMs)+'</td><td></td></tr>'+\n" +
+"    '</table></div>';\n" +
+"}\n" +
+"App.setDashPair = function(which, id){ if (which==='a') state.dashPairA = id; else state.dashPairB = id; renderDashPair(computeDashboardData(state.dashboardSessions||[])); };\n" +
+"App.switchDashTab = function(tab){ state.dashTab = tab; renderDashboardScreen(); };\n" +
+"App.switchDashDim = function(dim){ state.dashDim = dim; renderDashboardScreen(); };\n" +
+"App.sortDashboard = function(key){\n" +
+"  var cur = state.dashSort || {key:'createdAt', dir:-1};\n" +
+"  state.dashSort = { key:key, dir: cur.key===key ? -cur.dir : -1 };\n" +
+"  renderDashboardScreen();\n" +
+"};\n" +
+"function renderDashList(data){\n" +
+"  var sort = state.dashSort || {key:'createdAt', dir:-1};\n" +
+"  var rows = data.rows.slice().sort(function(a,b){\n" +
+"    var va = a[sort.key], vb = b[sort.key];\n" +
+"    var na = (va===null||va===undefined||(typeof va==='number' && !isFinite(va))), nb = (vb===null||vb===undefined||(typeof vb==='number' && !isFinite(vb)));\n" +
+"    if (na && nb) return 0; if (na) return 1; if (nb) return -1;\n" +
+"    if (typeof va === 'string') return va.localeCompare(vb) * sort.dir;\n" +
+"    return (va - vb) * sort.dir;\n" +
+"  });\n" +
+"  var unk = '—';\n" +
+"  var th = function(key, label){ return '<th style=\"cursor:pointer;\" onclick=\"App.sortDashboard(\\''+key+'\\')\">'+escapeHtml(label)+(sort.key===key ? (sort.dir>0?' ▲':' ▼') : '')+'</th>'; };\n" +
+"  var body = rows.map(function(r){\n" +
+"    return '<tr><td>'+escapeHtml(r.codigo)+'</td><td>'+shortDate(r.createdAt)+'</td><td>'+(r.mode==='reduzido'?t('common.mode_reduced'):t('common.mode_complete'))+'</td>'+\n" +
+"      '<td>'+(r.punchMm?DASH_DIMS.punch.name(r.punchMm):unk)+'</td><td>'+(r.espessura?DASH_DIMS.espessura.name(r.espessura):unk)+'</td><td>'+(r.textura?DASH_DIMS.textura.name(r.textura):unk)+'</td>'+\n" +
+"      '<td>'+(r.raspagem?DASH_DIMS.raspagem.name(r.raspagem):unk)+'</td><td>'+((r.idade!==null&&r.idade!==undefined)?r.idade:unk)+'</td>'+\n" +
+"      '<td>'+r.extraidos+'</td><td>'+r.indice.toFixed(2)+'</td><td>'+r.taxaParcial.toFixed(1)+'%</td><td>'+r.taxaTotal.toFixed(1)+'%</td>'+\n" +
+"      '<td>'+((r.folPerMin!==null&&isFinite(r.folPerMin))?r.folPerMin.toFixed(1):unk)+'</td><td>'+r.preincTotalVal+'</td></tr>';\n" +
+"  }).join('');\n" +
+"  document.getElementById('dash-table').innerHTML = '<div class=\"dash-table-wrap\"><table class=\"dash-table\"><tr>'+\n" +
+"    th('codigo',t('dash.table_surgery'))+th('createdAt',t('dash.table_date'))+th('mode',t('dash.table_mode'))+\n" +
+"    th('punchMm',t('dash.col_punch'))+th('espessura',t('dash.col_thickness'))+th('textura',t('dash.col_texture'))+th('raspagem',t('dash.col_shaving'))+th('idade',t('dash.col_age'))+\n" +
+"    th('extraidos',t('dash.table_extracted'))+th('indice',t('dash.table_index'))+th('taxaParcial',t('dash.table_partial_rate'))+th('taxaTotal',t('dash.table_total_rate'))+\n" +
+"    th('folPerMin',t('dash.col_fpm'))+th('preincTotalVal',t('dash.table_preinc'))+'</tr>'+body+'</table></div>';\n" +
+"}\n" +
 "function renderDashboardScreen(){\n" +
 "  var data = computeDashboardData(state.dashboardSessions||[]);\n" +
 "  document.getElementById('dash-empty').style.display = data.totalCirurgias===0 ? 'block' : 'none';\n" +
 "  document.getElementById('dash-content').style.display = data.totalCirurgias===0 ? 'none' : 'block';\n" +
 "  if (data.totalCirurgias===0) return;\n" +
+"  var tab = state.dashTab || 'geral';\n" +
+"  ['geral','comparar','lista'].forEach(function(k){\n" +
+"    document.getElementById('dash-tab-'+k).className = 'btn'+(k===tab?'':' secondary');\n" +
+"    document.getElementById('dash-panel-'+k).style.display = k===tab ? 'block' : 'none';\n" +
+"  });\n" +
+"  var mode = state.dashboardMode||'completo';\n" +
+"  document.getElementById('dash-mode-completo').className = 'btn'+(mode==='completo'?'':' secondary');\n" +
+"  document.getElementById('dash-mode-reduzido').className = 'btn'+(mode==='reduzido'?'':' secondary');\n" +
+"  document.getElementById('dash-mode-todos').className = 'btn'+(mode==='todos'?'':' secondary');\n" +
+"  document.getElementById('dash-mode-row').style.display = tab==='lista' ? 'none' : 'flex';\n" +
+"  if (tab==='geral') renderDashOverview(data, mode);\n" +
+"  else if (tab==='comparar') renderDashCompare(data, mode);\n" +
+"  else renderDashList(data);\n" +
+"}\n" +
+"function renderDashOverview(data, mode){\n" +
 "  document.getElementById('dash-summary').innerHTML =\n" +
 "    '<div class=\"summary-item\"><div class=\"val\">'+data.totalCirurgias+'</div><div class=\"lbl\">'+escapeHtml(t('dash.finalized_surgeries_title'))+'</div></div>'+\n" +
 "    '<div class=\"summary-item\"><div class=\"val\">'+fmtBig(data.foliculosExtraidosGeral)+'</div><div class=\"lbl\">'+escapeHtml(t('dash.stat_extracted_total'))+'</div></div>'+\n" +
@@ -3629,10 +3978,6 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  document.getElementById('dash-extraidos-chart').innerHTML = buildBarChartSvg(extItems, 'var(--c-integro)', function(v){ return fmtBig(v); });\n" +
 "  var idxItems = data.withData.map(function(r){ return {label:shortDate(r.createdAt), value:r.indice}; });\n" +
 "  document.getElementById('dash-index-chart').innerHTML = buildBarChartSvg(idxItems, 'var(--c-primary)', function(v){ return v.toFixed(2); });\n" +
-"  var mode = state.dashboardMode||'completo';\n" +
-"  document.getElementById('dash-mode-completo').className = 'btn'+(mode==='completo'?'':' secondary');\n" +
-"  document.getElementById('dash-mode-reduzido').className = 'btn'+(mode==='reduzido'?'':' secondary');\n" +
-"  document.getElementById('dash-mode-todos').className = 'btn'+(mode==='todos'?'':' secondary');\n" +
 "  var isTodos = mode==='todos';\n" +
 "  var modeRows = isTodos ? data.withData : data.byMode[mode];\n" +
 "  document.getElementById('dash-rate-todos-hint').style.display = (isTodos && modeRows.length) ? 'block' : 'none';\n" +
@@ -3674,13 +4019,6 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  document.getElementById('dash-uf-table').innerHTML = '<div class=\"dash-table-wrap\"><table class=\"dash-table\">'+\n" +
 "    '<tr><th>'+escapeHtml(t('dash.table_category'))+'</th><th>'+escapeHtml(t('dash.table_quantity'))+'</th><th>'+escapeHtml(t('dash.table_pct_intact'))+'</th></tr>'+\n" +
 "    ufRows+'</table></div>';\n" +
-"  var tableRows = data.rows.map(function(r){\n" +
-"    return '<tr><td>'+escapeHtml(r.codigo)+'</td><td>'+shortDate(r.createdAt)+'</td><td>'+(r.mode==='reduzido'?t('common.mode_reduced'):t('common.mode_complete'))+'</td>'+\n" +
-"      '<td>'+r.extraidos+'</td><td>'+r.indice.toFixed(2)+'</td><td>'+r.taxaParcial.toFixed(1)+'%</td><td>'+r.taxaTotal.toFixed(1)+'%</td><td>'+r.preincTotalVal+'</td></tr>';\n" +
-"  }).join('');\n" +
-"  document.getElementById('dash-table').innerHTML = '<div class=\"dash-table-wrap\"><table class=\"dash-table\">'+\n" +
-"    '<tr><th>'+escapeHtml(t('dash.table_surgery'))+'</th><th>'+escapeHtml(t('dash.table_date'))+'</th><th>'+escapeHtml(t('dash.table_mode'))+'</th><th>'+escapeHtml(t('dash.table_extracted'))+'</th><th>'+escapeHtml(t('dash.table_index'))+'</th><th>'+escapeHtml(t('dash.table_partial_rate'))+'</th><th>'+escapeHtml(t('dash.table_total_rate'))+'</th><th>'+escapeHtml(t('dash.table_preinc'))+'</th></tr>'+\n" +
-"    tableRows+'</table></div>';\n" +
 "}\n" +
 "App.addIncrementField = function(){ state.increments.push(1); renderSettingsScreen(); };\n" +
 "App.updateIncrementField = function(inputEl){\n" +
@@ -4300,6 +4638,24 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  document.getElementById('onboard-back-btn').style.display = n > 1 ? '' : 'none';\n" +
 "  document.getElementById('onboard-next-btn').textContent = n < ONBOARD_STEPS ? t('onboard.next') : t('onboard.start');\n" +
 "};\n" +
+"App.renderBackupStatus = function(r){\n" +
+"  var el = document.getElementById('backup-auto-status'); if (!el) return;\n" +
+"  var st = r && r.status;\n" +
+"  if (!st){ el.textContent = t('config.backup_auto_never',{days:String(r ? r.intervalDays : '')}); return; }\n" +
+"  var when = new Date(st.lastRunAt).toLocaleString(localeForLang());\n" +
+"  el.textContent = st.lastOk\n" +
+"    ? t('config.backup_auto_ok',{when:when, n:String(st.sessions), days:String(r.intervalDays)})\n" +
+"    : t('config.backup_auto_fail',{when:when, msg:(st.problems||[]).join(' | ')});\n" +
+"};\n" +
+"App.loadBackupStatus = function(){\n" +
+"  api('/api/admin/backup').then(App.renderBackupStatus).catch(function(){});\n" +
+"};\n" +
+"App.runBackupNow = function(){\n" +
+"  api('/api/admin/backup','POST',{}).then(function(r){\n" +
+"    App.renderBackupStatus(r);\n" +
+"    toast(r.ok ? t('toast.backup_ok') : t('toast.backup_failed'));\n" +
+"  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
 "App.openOnboarding = function(){\n" +
 "  state.onboardStep = 0;\n" +
 "  App.onboardingRender();\n" +
@@ -4805,6 +5161,141 @@ var STRINGS_JSON_SAFE = JSON.stringify(STRINGS).replace(/</g, "\\u003c");
 var INDEX_HTML_RENDERED = INDEX_HTML.replace("__STRINGS_JSON__", STRINGS_JSON_SAFE);
 
 // ==================== SERVIDOR ====================
+// ---------- backup automático com verificação (a cada N dias) ----------
+// A cada BACKUP_INTERVAL_DAYS (padrão 10) o servidor: (1) copia a pasta de dados
+// pra DATA_DIR/backups/<data-hora>, (2) RELÊ a cópia inteira e confere que todo
+// arquivo abre e que usuários/cirurgias batem com o que está em memória, (3) mantém
+// só as últimas BACKUP_KEEP cópias, e (4) manda e-mail pro admin com o resultado
+// (OK ou FALHA). O e-mail NÃO leva dado de paciente — só contagens.
+// LIMITE HONESTO: a cópia fica no mesmo volume do Railway. Protege contra arquivo
+// corrompido, apagado por engano ou deploy ruim — NÃO contra perder o volume
+// inteiro (pra isso valem o backup de volume do Railway e o botão "Baixar backup").
+var BACKUP_DIR = path.join(DATA_DIR, "backups");
+var BACKUP_STATE_FILE = path.join(BACKUP_DIR, "state.json");
+var BACKUP_INTERVAL_DAYS = Number(process.env.BACKUP_INTERVAL_DAYS) > 0 ? Number(process.env.BACKUP_INTERVAL_DAYS) : 10;
+var BACKUP_KEEP = Number(process.env.BACKUP_KEEP) > 0 ? Math.floor(Number(process.env.BACKUP_KEEP)) : 6;
+
+function backupCopyDir(src, dst) {
+  fs.mkdirSync(dst, { recursive: true });
+  fs.readdirSync(src).forEach(function (name) {
+    if (name.indexOf(".tmp") !== -1) return; // temporários de escrita atômica
+    var from = path.join(src, name), to = path.join(dst, name);
+    if (fs.statSync(from).isDirectory()) backupCopyDir(from, to); else fs.copyFileSync(from, to);
+  });
+}
+function backupReadJsonFiles(dir, out) {
+  out = out || [];
+  fs.readdirSync(dir).forEach(function (name) {
+    var full = path.join(dir, name);
+    if (fs.statSync(full).isDirectory()) backupReadJsonFiles(full, out);
+    else if (/\.json$/.test(name)) out.push(full);
+  });
+  return out;
+}
+function backupDirBytes(dir) {
+  var total = 0;
+  fs.readdirSync(dir).forEach(function (name) {
+    var full = path.join(dir, name), st = fs.statSync(full);
+    total += st.isDirectory() ? backupDirBytes(full) : st.size;
+  });
+  return total;
+}
+function backupLoadState() {
+  try { return JSON.parse(fs.readFileSync(BACKUP_STATE_FILE, "utf8")); } catch (e) { return null; }
+}
+function backupSaveState(st) {
+  if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+  atomicWriteJson(BACKUP_STATE_FILE, st);
+}
+function backupStamp(d) {
+  function z(n) { return String(n).padStart(2, "0"); }
+  return d.getUTCFullYear() + "-" + z(d.getUTCMonth() + 1) + "-" + z(d.getUTCDate()) + "_" + z(d.getUTCHours()) + z(d.getUTCMinutes()) + z(d.getUTCSeconds()) + "-" + String(d.getUTCMilliseconds()).padStart(3, "0");
+}
+// Roda a cópia + verificação. Síncrono de propósito: nenhuma gravação do app
+// consegue intercalar, então a comparação com a memória é exata.
+function runBackupVerification() {
+  var started = new Date();
+  var result = { ok: false, stamp: backupStamp(started), startedAt: started.getTime(), problems: [] };
+  try {
+    if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+    var dest = path.join(BACKUP_DIR, result.stamp);
+    fs.mkdirSync(dest, { recursive: true });
+    var liveUsers = Object.keys(db.users).length;
+    var liveSessions = Object.keys(db.sessions).length;
+    if (usingSplitStorage) backupCopyDir(SPLIT_DIR, path.join(dest, "data"));
+    else if (fs.existsSync(DATA_FILE)) fs.copyFileSync(DATA_FILE, path.join(dest, "data.json"));
+    // Releitura completa da CÓPIA
+    var files = backupReadJsonFiles(dest);
+    var copyUsers = 0, copySessions = 0, copyIds = {};
+    files.forEach(function (f) {
+      var parsed;
+      try { parsed = JSON.parse(fs.readFileSync(f, "utf8")); } catch (e) { result.problems.push("Arquivo ilegível na cópia: " + path.relative(dest, f)); return; }
+      var base = path.basename(f);
+      if (base === "index.json" || base === "data.json") copyUsers += Object.keys(parsed.users || {}).length;
+      if (base === "data.json" || /^orfaos\.json$/.test(base) || path.basename(path.dirname(f)) === "doctors") {
+        Object.keys(parsed.sessions || {}).forEach(function (id) { copySessions++; copyIds[id] = (parsed.sessions[id] || {}).codigo; });
+      }
+    });
+    if (!files.length) result.problems.push("A cópia não contém nenhum arquivo .json.");
+    if (copyUsers !== liveUsers) result.problems.push("Usuários: memória " + liveUsers + " × cópia " + copyUsers + ".");
+    if (copySessions !== liveSessions) result.problems.push("Cirurgias: memória " + liveSessions + " × cópia " + copySessions + ".");
+    Object.keys(db.sessions).forEach(function (id) {
+      if (!(id in copyIds)) result.problems.push("Cirurgia ausente na cópia: " + id);
+      else if (copyIds[id] !== db.sessions[id].codigo) result.problems.push("Nome divergente na cirurgia " + id + ".");
+    });
+    result.users = liveUsers; result.sessions = liveSessions;
+    result.bytes = backupDirBytes(dest);
+    result.ok = result.problems.length === 0;
+    // Rotação: apaga as mais antigas além de BACKUP_KEEP. Cópia com problema NÃO
+    // conta como boa — se falhou, mantemos as anteriores intactas.
+    if (!result.ok) { try { fs.rmSync(dest, { recursive: true, force: true }); } catch (e) {} }
+    var dirs = fs.readdirSync(BACKUP_DIR).filter(function (n) { return /^\d{4}-\d{2}-\d{2}_\d{6}-\d{3}$/.test(n); }).sort();
+    while (dirs.length > BACKUP_KEEP) {
+      var old = dirs.shift();
+      try { fs.rmSync(path.join(BACKUP_DIR, old), { recursive: true, force: true }); } catch (e) {}
+    }
+    result.kept = dirs.length;
+  } catch (e) {
+    result.problems.push("Erro inesperado: " + e.message);
+    result.ok = false;
+  }
+  result.finishedAt = Date.now();
+  backupSaveState({ lastRunAt: result.finishedAt, lastOk: result.ok, users: result.users || 0, sessions: result.sessions || 0, bytes: result.bytes || 0, kept: result.kept || 0, problems: result.problems, intervalDays: BACKUP_INTERVAL_DAYS });
+  return result;
+}
+function backupReportEmail(result) {
+  var mb = ((result.bytes || 0) / 1048576).toFixed(2);
+  var subject = (result.ok ? "[Graftis] Backup automático OK" : "[Graftis] ATENÇÃO: backup automático FALHOU");
+  var text = result.ok
+    ? "O backup automático do Graftis foi copiado e VERIFICADO com sucesso.\n\n" +
+      "Médicos cadastrados: " + result.users + "\nCirurgias: " + result.sessions + "\nTamanho: " + mb + " MB\n" +
+      "Cópias guardadas no servidor: " + result.kept + " (máx. " + BACKUP_KEEP + ")\n" +
+      "Próximo teste automático em ~" + BACKUP_INTERVAL_DAYS + " dias.\n\n" +
+      "Lembrete: a cópia fica no mesmo volume do Railway. Continue usando o backup de volume do Railway e o botão \"Baixar backup\" de vez em quando."
+    : "O backup automático do Graftis FALHOU na verificação.\n\nProblemas:\n- " + result.problems.join("\n- ") +
+      "\n\nAs cópias anteriores foram mantidas. Abra Configurações > Backup automático > \"Rodar agora\" pra repetir e, se persistir, baixe um backup manual.";
+  return smtpSendMail({ to: ADMIN_EMAIL, subject: subject, text: text });
+}
+function runBackupAndReport() {
+  var result = runBackupVerification();
+  console.log("[backup] " + (result.ok ? "OK" : "FALHOU") + " — " + (result.sessions || 0) + " cirurgias, " + (result.users || 0) + " médicos" + (result.problems.length ? " — " + result.problems.join(" | ") : ""));
+  if (SMTP_CONFIG.enabled) {
+    backupReportEmail(result).catch(function (e) { console.error("[backup] não consegui enviar o e-mail do relatório:", e.message); });
+  }
+  return result;
+}
+function backupDue() {
+  var st = backupLoadState();
+  if (!st || !st.lastRunAt) return true;
+  return (Date.now() - st.lastRunAt) >= BACKUP_INTERVAL_DAYS * 86400000;
+}
+function backupTick() { try { if (backupDue()) runBackupAndReport(); } catch (e) { console.error("[backup] erro no agendador:", e.message); } }
+// Primeira checagem 2 min depois de subir (não atrapalha o boot) e depois a cada 6 h.
+var backupBootTimer = setTimeout(backupTick, process.env.BACKUP_BOOT_DELAY_MS ? Number(process.env.BACKUP_BOOT_DELAY_MS) : 120000);
+var backupLoopTimer = setInterval(backupTick, 6 * 3600000);
+if (backupBootTimer.unref) backupBootTimer.unref();
+if (backupLoopTimer.unref) backupLoopTimer.unref();
+
 var server = http.createServer(function (req, res) {
   var u;
   try { u = new URL(req.url, "http://localhost"); } catch (e) { res.writeHead(400); res.end(); return; }
@@ -4910,6 +5401,21 @@ var server = http.createServer(function (req, res) {
     var meUser = getAuthedUser(req);
     if (!meUser) { send(res, 401, { error: t("errors.not_authenticated", requestLang(req)) }); return; }
     send(res, 200, { user: publicUser(meUser) });
+    return;
+  }
+
+  // Backup automático — status e execução manual (só admin).
+  if (p === "/api/admin/backup" && (req.method === "GET" || req.method === "POST")) {
+    var bkUser = getAuthedUser(req);
+    var bkLang = requestLang(req);
+    if (!bkUser) { send(res, 401, { error: t("errors.not_authenticated", bkLang) }); return; }
+    if (!bkUser.isAdmin) { send(res, 403, { error: t("errors.admin_only", bkLang) }); return; }
+    if (req.method === "POST") {
+      var bkResult = runBackupAndReport();
+      send(res, 200, { ran: true, ok: bkResult.ok, problems: bkResult.problems, status: backupLoadState(), intervalDays: BACKUP_INTERVAL_DAYS });
+    } else {
+      send(res, 200, { ran: false, status: backupLoadState(), intervalDays: BACKUP_INTERVAL_DAYS });
+    }
     return;
   }
 
@@ -5591,6 +6097,14 @@ var server = http.createServer(function (req, res) {
   }
 
   if (p === "/api/ping" && req.method === "GET") { send(res, 200, { ok: true, now: Date.now() }); return; }
+  // Saúde pro monitor externo (UptimeRobot etc.): confirma que o servidor responde E
+  // que os dados em memória estão carregados. Não expõe nenhum dado de paciente.
+  if ((p === "/api/health" || p === "/health") && (req.method === "GET" || req.method === "HEAD")) {
+    var healthy = !!db && !!db.sessions && !!db.users;
+    res.writeHead(healthy ? 200 : 503, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
+    res.end(req.method === "HEAD" ? undefined : JSON.stringify({ ok: healthy, now: Date.now() }));
+    return;
+  }
 
   if (p === "/api/network-info" && req.method === "GET") {
     var ips = [];
