@@ -202,6 +202,23 @@ const STRINGS = {
     "config.invites_status_pending": "Pendente",
     "config.invites_status_used": "Usado",
     "config.invites_status_expired": "Expirado",
+    "onboard.title": "Bem-vindo(a) ao Graftis",
+    "onboard.step_of": "Passo {n} de {total}",
+    "onboard.s1_title": "1. Crie a cirurgia",
+    "onboard.s1_body": "Na tela inicial, informe o código do paciente e toque em criar. Se quiser, preencha idade, tipo de cabelo e punch — dá pra completar depois na aba Paciente.",
+    "onboard.s2_title": "2. Compartilhe o link com a auxiliar",
+    "onboard.s2_body": "Dentro da cirurgia, toque em Compartilhar e envie o link por WhatsApp. Quem recebe abre direto na contagem, sem login, e todos os aparelhos ficam sincronizados.",
+    "onboard.s3_title": "3. Conte os folículos",
+    "onboard.s3_body": "Toque nas categorias (F1, F2, F3...) conforme os enxertos saem. Cada quadrante tem o próprio cronômetro e o total aparece em tempo real.",
+    "onboard.s4_title": "4. Finalize e consulte o Dashboard",
+    "onboard.s4_body": "Ao terminar, toque em Finalizar cirurgia. Resumo, relatórios e comparações ficam no Dashboard. Você pode rever este guia em Configurações.",
+    "onboard.next": "Próximo",
+    "onboard.back": "Voltar",
+    "onboard.skip": "Pular guia",
+    "onboard.start": "Começar",
+    "onboard.reopen_title": "Guia de boas-vindas",
+    "onboard.reopen_hint": "Rever o passo a passo de como usar o Graftis.",
+    "onboard.reopen_btn": "Rever guia de boas-vindas",
     "invite.modal_title": "Convite gerado",
     "invite.modal_url_label": "Link do convite (expira em 7 dias, vale pra 1 cadastro)",
     "invite.modal_whatsapp_btn": "Enviar por WhatsApp",
@@ -256,6 +273,18 @@ const STRINGS = {
     "toast.surgery_finalized": "Cirurgia finalizada.",
     "toast.surgery_reopened": "Cirurgia reaberta.",
     "toast.duration_fixed": "Duração corrigida.",
+    "common.conn_banner": "Sem conexão com o servidor — verifique se está na mesma rede wifi.",
+    "share.hint": "A auxiliar toca no link recebido e a página abre direto na contagem desta cirurgia — não precisa digitar nada.",
+    "home.card_summary": "{n} folículos · índice {idx}",
+    "photo.read_error": "Não consegui ler essa imagem.",
+    "invite.whatsapp_text": "Você foi convidado(a) a se cadastrar no Graftis: {url}",
+    "audio.enabled": "Áudio ativado.",
+    "audio.preinc_enabled": "Áudio de pré-incisões ativado.",
+    "audio.quadfinish_enabled": "Áudio de finalização de quadrante ativado.",
+    "audio.alert_partial_enabled": "Alarme de transecção parcial ativado.",
+    "audio.alert_total_enabled": "Alarme de transecção total ativado.",
+    "audio.alert_partial_fired": "Atenção: transecção parcial passou de {limit} por cento. Está em {value} por cento.",
+    "audio.alert_total_fired": "Atenção: transecção total passou de {limit} por cento. Está em {value} por cento.",
     "toast.quadrant_finished": "Quadrante finalizado.",
     "toast.quadrant_reopened": "Quadrante reaberto.",
     "toast.address_copied": "Endereço copiado.",
@@ -399,6 +428,9 @@ const STRINGS = {
     "patient.surgery_type_label": "Tipo de cirurgia",
     "patient.with_shaving": "Com raspagem",
     "patient.without_shaving": "Sem raspagem",
+    "patient.punch_label": "Punch utilizado",
+    "patient.punch_095": "0,95 mm",
+    "patient.punch_10": "1,0 mm",
     "home.patient_info_toggle": "Dados do paciente (opcional)",
     "cnt.extraction_time_title": "Tempo de extração",
     "cnt.rate_hint": "Ritmo médio: {rate} folículos/hora",
@@ -608,6 +640,23 @@ const STRINGS = {
     "config.invites_status_pending": "Pending",
     "config.invites_status_used": "Used",
     "config.invites_status_expired": "Expired",
+    "onboard.title": "Welcome to Graftis",
+    "onboard.step_of": "Step {n} of {total}",
+    "onboard.s1_title": "1. Create the surgery",
+    "onboard.s1_body": "On the home screen, enter the patient code and tap create. If you like, fill in age, hair type and punch — you can complete it later in the Patient tab.",
+    "onboard.s2_title": "2. Share the link with your assistant",
+    "onboard.s2_body": "Inside the surgery, tap Share and send the link via WhatsApp. Whoever receives it opens the count directly, no login, and all devices stay in sync.",
+    "onboard.s3_title": "3. Count the follicles",
+    "onboard.s3_body": "Tap the categories (F1, F2, F3...) as grafts are extracted. Each quadrant has its own timer and the total updates in real time.",
+    "onboard.s4_title": "4. Finish and check the Dashboard",
+    "onboard.s4_body": "When done, tap Finish surgery. Summary, reports and comparisons are in the Dashboard. You can review this guide in Settings.",
+    "onboard.next": "Next",
+    "onboard.back": "Back",
+    "onboard.skip": "Skip guide",
+    "onboard.start": "Get started",
+    "onboard.reopen_title": "Welcome guide",
+    "onboard.reopen_hint": "Review the step-by-step on how to use Graftis.",
+    "onboard.reopen_btn": "Review welcome guide",
     "invite.modal_title": "Invite generated",
     "invite.modal_url_label": "Invite link (expires in 7 days, valid for 1 sign-up)",
     "invite.modal_whatsapp_btn": "Send via WhatsApp",
@@ -662,6 +711,18 @@ const STRINGS = {
     "toast.surgery_finalized": "Surgery finalized.",
     "toast.surgery_reopened": "Surgery reopened.",
     "toast.duration_fixed": "Duration corrected.",
+    "common.conn_banner": "No connection to the server — check that you are on the same wifi network.",
+    "share.hint": "The assistant taps the link they receive and the page opens straight to this surgery's count — nothing to type.",
+    "home.card_summary": "{n} follicles · index {idx}",
+    "photo.read_error": "Couldn't read that image.",
+    "invite.whatsapp_text": "You've been invited to sign up for Graftis: {url}",
+    "audio.enabled": "Audio enabled.",
+    "audio.preinc_enabled": "Pre-incision audio enabled.",
+    "audio.quadfinish_enabled": "Quadrant-finish audio enabled.",
+    "audio.alert_partial_enabled": "Partial transection alarm enabled.",
+    "audio.alert_total_enabled": "Total transection alarm enabled.",
+    "audio.alert_partial_fired": "Warning: partial transection exceeded {limit} percent. It is at {value} percent.",
+    "audio.alert_total_fired": "Warning: total transection exceeded {limit} percent. It is at {value} percent.",
     "toast.quadrant_finished": "Quadrant finished.",
     "toast.quadrant_reopened": "Quadrant reopened.",
     "toast.address_copied": "Address copied.",
@@ -805,6 +866,9 @@ const STRINGS = {
     "patient.surgery_type_label": "Surgery type",
     "patient.with_shaving": "With shaving",
     "patient.without_shaving": "Without shaving",
+    "patient.punch_label": "Punch used",
+    "patient.punch_095": "0.95 mm",
+    "patient.punch_10": "1.0 mm",
     "home.patient_info_toggle": "Patient info (optional)",
     "cnt.extraction_time_title": "Extraction time",
     "cnt.rate_hint": "Average rate: {rate} follicles/hour",
@@ -1014,6 +1078,23 @@ const STRINGS = {
     "config.invites_status_pending": "Pendiente",
     "config.invites_status_used": "Usada",
     "config.invites_status_expired": "Expirada",
+    "onboard.title": "Bienvenido/a a Graftis",
+    "onboard.step_of": "Paso {n} de {total}",
+    "onboard.s1_title": "1. Cree la cirugía",
+    "onboard.s1_body": "En la pantalla inicial, ingrese el código del paciente y toque crear. Si quiere, complete edad, tipo de cabello y punch — puede completarlo después en la pestaña Paciente.",
+    "onboard.s2_title": "2. Comparta el enlace con su asistente",
+    "onboard.s2_body": "Dentro de la cirugía, toque Compartir y envíe el enlace por WhatsApp. Quien lo reciba abre directo el conteo, sin login, y todos los dispositivos quedan sincronizados.",
+    "onboard.s3_title": "3. Cuente los folículos",
+    "onboard.s3_body": "Toque las categorías (F1, F2, F3...) a medida que salen los injertos. Cada cuadrante tiene su propio cronómetro y el total se actualiza en tiempo real.",
+    "onboard.s4_title": "4. Finalice y consulte el Dashboard",
+    "onboard.s4_body": "Al terminar, toque Finalizar cirugía. Resumen, informes y comparaciones están en el Dashboard. Puede revisar esta guía en Configuración.",
+    "onboard.next": "Siguiente",
+    "onboard.back": "Atrás",
+    "onboard.skip": "Omitir guía",
+    "onboard.start": "Comenzar",
+    "onboard.reopen_title": "Guía de bienvenida",
+    "onboard.reopen_hint": "Revise el paso a paso de cómo usar Graftis.",
+    "onboard.reopen_btn": "Revisar guía de bienvenida",
     "invite.modal_title": "Invitación generada",
     "invite.modal_url_label": "Enlace de invitación (expira en 7 días, vale para 1 registro)",
     "invite.modal_whatsapp_btn": "Enviar por WhatsApp",
@@ -1068,6 +1149,18 @@ const STRINGS = {
     "toast.surgery_finalized": "Cirugía finalizada.",
     "toast.surgery_reopened": "Cirugía reabierta.",
     "toast.duration_fixed": "Duración corregida.",
+    "common.conn_banner": "Sin conexión con el servidor — verifica que estés en la misma red wifi.",
+    "share.hint": "La auxiliar toca el enlace recibido y la página abre directo en el conteo de esta cirugía — no hay que escribir nada.",
+    "home.card_summary": "{n} folículos · índice {idx}",
+    "photo.read_error": "No pude leer esa imagen.",
+    "invite.whatsapp_text": "Has sido invitado(a) a registrarte en Graftis: {url}",
+    "audio.enabled": "Audio activado.",
+    "audio.preinc_enabled": "Audio de preincisiones activado.",
+    "audio.quadfinish_enabled": "Audio de finalización de cuadrante activado.",
+    "audio.alert_partial_enabled": "Alarma de transección parcial activada.",
+    "audio.alert_total_enabled": "Alarma de transección total activada.",
+    "audio.alert_partial_fired": "Atención: la transección parcial superó el {limit} por ciento. Está en {value} por ciento.",
+    "audio.alert_total_fired": "Atención: la transección total superó el {limit} por ciento. Está en {value} por ciento.",
     "toast.quadrant_finished": "Cuadrante finalizado.",
     "toast.quadrant_reopened": "Cuadrante reabierto.",
     "toast.address_copied": "Dirección copiada.",
@@ -1211,6 +1304,9 @@ const STRINGS = {
     "patient.surgery_type_label": "Tipo de cirugía",
     "patient.with_shaving": "Con rasurado",
     "patient.without_shaving": "Sin rasurado",
+    "patient.punch_label": "Punch utilizado",
+    "patient.punch_095": "0,95 mm",
+    "patient.punch_10": "1,0 mm",
     "home.patient_info_toggle": "Datos del paciente (opcional)",
     "cnt.extraction_time_title": "Tiempo de extracción",
     "cnt.rate_hint": "Ritmo promedio: {rate} folículos/hora",
@@ -1406,8 +1502,12 @@ function emptyQuadrant() {
 var PATIENT_HAIR_THICKNESS = new Set(["fino", "grosso"]);
 var PATIENT_HAIR_TEXTURE = new Set(["liso", "ondulado", "crespo"]);
 var PATIENT_SHAVING = new Set(["sim", "nao"]);
+// Punch usado na extração (diâmetro em mm) — hoje só os dois calibres que o Dr.
+// Vitor usa na prática. Fica junto dos outros dados demográficos/clínicos do
+// paciente pra permitir comparar depois cirurgias com o mesmo punch entre si.
+var PATIENT_PUNCH = new Set(["0.95", "1.0"]);
 function emptyPatientInfo() {
-  return { idade: null, alturaCm: null, pesoKg: null, cabeloEspessura: null, cabeloTextura: null, raspagem: null };
+  return { idade: null, alturaCm: null, pesoKg: null, cabeloEspessura: null, cabeloTextura: null, raspagem: null, punchMm: null };
 }
 // Valida um objeto "flat" com qualquer subconjunto dos campos de patientInfo (vindo
 // tanto do cadastro inicial quanto da aba Paciente depois) e devolve só as chaves
@@ -1433,6 +1533,7 @@ function sanitizePatientInfoFields(body) {
   if (body.cabeloEspessura !== undefined) { var v4 = enumOrNull(body.cabeloEspessura, PATIENT_HAIR_THICKNESS); if (v4 !== undefined) out.cabeloEspessura = v4; }
   if (body.cabeloTextura !== undefined) { var v5 = enumOrNull(body.cabeloTextura, PATIENT_HAIR_TEXTURE); if (v5 !== undefined) out.cabeloTextura = v5; }
   if (body.raspagem !== undefined) { var v6 = enumOrNull(body.raspagem, PATIENT_SHAVING); if (v6 !== undefined) out.raspagem = v6; }
+  if (body.punchMm !== undefined) { var v7 = enumOrNull(body.punchMm, PATIENT_PUNCH); if (v7 !== undefined) out.punchMm = v7; }
   return out;
 }
 // Confere se ligar quadId.carryFromId = candidateId criaria um ciclo (ex: A vem de B,
@@ -1777,6 +1878,8 @@ Object.keys(db.users).forEach(function (id) {
   // Migra médicos cadastrados antes do papel de administrador existir — só a
   // conta do Dr. Vitor (ADMIN_EMAIL) vira admin, todas as outras ficam false.
   if (u.isAdmin === undefined) u.isAdmin = (String(u.email || "").toLowerCase() === ADMIN_EMAIL);
+  // Guia de boas-vindas: médicos que já existiam não devem vê-lo de surpresa.
+  if (u.onboardingPending === undefined) u.onboardingPending = false;
 });
 saveAllScoped();
 
@@ -1885,7 +1988,7 @@ function hashToken(token) {
 }
 function publicUser(u) {
   var b = u.branding || emptyBranding();
-  return { id: u.id, nomeCompleto: u.nomeCompleto, crm: u.crm, email: u.email, telefone: u.telefone, createdAt: u.createdAt, isAdmin: !!u.isAdmin, branding: { logoFilename: b.logoFilename || null, theme: THEME_IDS.has(b.theme) ? b.theme : "padrao", darkMode: !!b.darkMode, language: LANG_IDS.has(b.language) ? b.language : "pt", ownerId: u.id } };
+  return { id: u.id, nomeCompleto: u.nomeCompleto, crm: u.crm, email: u.email, telefone: u.telefone, createdAt: u.createdAt, isAdmin: !!u.isAdmin, onboardingPending: !!u.onboardingPending, branding: { logoFilename: b.logoFilename || null, theme: THEME_IDS.has(b.theme) ? b.theme : "padrao", darkMode: !!b.darkMode, language: LANG_IDS.has(b.language) ? b.language : "pt", ownerId: u.id } };
 }
 // Identidade visual de quem é dono de uma cirurgia — usado pra que auxiliares que só
 // têm o link (sem login) também vejam a marca/tema do médico responsável por aquela
@@ -2284,7 +2387,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      <span id=\"user-bar\"></span>\n" +
 "    </div>\n" +
 "  </header>\n" +
-"  <div class=\"conn-banner\" id=\"conn-banner\">Sem conexão com o servidor — verifique se está na mesma rede wifi.</div>\n" +
+"  <div class=\"conn-banner\" id=\"conn-banner\" data-i18n=\"common.conn_banner\">Sem conexão com o servidor — verifique se está na mesma rede wifi.</div>\n" +
 "\n" +
 "  <section id=\"screen-auth\" class=\"screen\">\n" +
 "    <div class=\"card\">\n" +
@@ -2376,11 +2479,18 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-textura-crespo\" data-i18n=\"patient.hair_curly\" onclick=\"App.setNewPatientField('cabeloTextura','crespo')\">Crespo</button>\n" +
 "            </div>\n" +
 "          </div>\n" +
-"          <div class=\"field\" style=\"margin-bottom:0;\">\n" +
+"          <div class=\"field\">\n" +
 "            <label data-i18n=\"patient.surgery_type_label\">Tipo de cirurgia</label>\n" +
 "            <div class=\"row\" style=\"gap:8px;\">\n" +
 "              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-raspagem-sim\" data-i18n=\"patient.with_shaving\" onclick=\"App.setNewPatientField('raspagem','sim')\">Com raspagem</button>\n" +
 "              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-raspagem-nao\" data-i18n=\"patient.without_shaving\" onclick=\"App.setNewPatientField('raspagem','nao')\">Sem raspagem</button>\n" +
+"            </div>\n" +
+"          </div>\n" +
+"          <div class=\"field\" style=\"margin-bottom:0;\">\n" +
+"            <label data-i18n=\"patient.punch_label\">Punch utilizado</label>\n" +
+"            <div class=\"row\" style=\"gap:8px;\">\n" +
+"              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-punch-095\" data-i18n=\"patient.punch_095\" onclick=\"App.setNewPatientField('punchMm','0.95')\">0,95 mm</button>\n" +
+"              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-punch-10\" data-i18n=\"patient.punch_10\" onclick=\"App.setNewPatientField('punchMm','1.0')\">1,0 mm</button>\n" +
 "            </div>\n" +
 "          </div>\n" +
 "        </div>\n" +
@@ -2447,6 +2557,9 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      <h2 style=\"font-size:16px;margin-top:20px;\" data-i18n=\"config.backup_title\">Backup dos seus dados</h2>\n" +
 "      <p class=\"hint\" data-i18n=\"config.backup_subtitle\">Baixa um arquivo com o cadastro da sua conta e todas as suas cirurgias (contagens, tempos, pré-incisões). Não inclui as fotos — essas ficam protegidas separadamente pelo backup de volume do Railway. Guarde este arquivo num lugar seguro fora do Railway (computador, Google Drive, etc.).</p>\n" +
 "      <button class=\"btn secondary\" data-i18n=\"config.backup_btn\" onclick=\"App.downloadBackup()\">Baixar backup</button>\n" +
+"      <h2 style=\"font-size:16px;margin-top:20px;\" data-i18n=\"onboard.reopen_title\">Guia de boas-vindas</h2>\n" +
+"      <p class=\"hint\" data-i18n=\"onboard.reopen_hint\">Rever o passo a passo de como usar o Graftis.</p>\n" +
+"      <button class=\"btn secondary\" data-i18n=\"onboard.reopen_btn\" onclick=\"App.openOnboarding()\">Rever guia de boas-vindas</button>\n" +
 "    </div>\n" +
 "\n" +
 "    <div class=\"card\" id=\"settings-invites-card\" style=\"display:none;\">\n" +
@@ -2530,6 +2643,9 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        <div id=\"dash-table\"></div>\n" +
 "      </div>\n" +
 "    </div>\n" +
+"    <footer class=\"actions\" id=\"dashboard-back-footer\" style=\"display:none;\">\n" +
+"      <button class=\"btn\" id=\"dashboard-back-btn\" data-i18n=\"config.back_to_surgery\" onclick=\"App.backToSurgery()\">Voltar pra cirurgia</button>\n" +
+"    </footer>\n" +
 "  </section>\n" +
 "\n" +
 "  <section id=\"screen-counting\" class=\"screen\">\n" +
@@ -2695,11 +2811,18 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "            <button type=\"button\" class=\"btn secondary\" id=\"patient-textura-crespo\" data-i18n=\"patient.hair_curly\" onclick=\"App.setPatientField('cabeloTextura','crespo')\">Crespo</button>\n" +
 "          </div>\n" +
 "        </div>\n" +
-"        <div class=\"field\" style=\"margin-bottom:0;\">\n" +
+"        <div class=\"field\">\n" +
 "          <label data-i18n=\"patient.surgery_type_label\">Tipo de cirurgia</label>\n" +
 "          <div class=\"row\" style=\"gap:8px;\">\n" +
 "            <button type=\"button\" class=\"btn secondary\" id=\"patient-raspagem-sim\" data-i18n=\"patient.with_shaving\" onclick=\"App.setPatientField('raspagem','sim')\">Com raspagem</button>\n" +
 "            <button type=\"button\" class=\"btn secondary\" id=\"patient-raspagem-nao\" data-i18n=\"patient.without_shaving\" onclick=\"App.setPatientField('raspagem','nao')\">Sem raspagem</button>\n" +
+"          </div>\n" +
+"        </div>\n" +
+"        <div class=\"field\" style=\"margin-bottom:0;\">\n" +
+"          <label data-i18n=\"patient.punch_label\">Punch utilizado</label>\n" +
+"          <div class=\"row\" style=\"gap:8px;\">\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"patient-punch-095\" data-i18n=\"patient.punch_095\" onclick=\"App.setPatientField('punchMm','0.95')\">0,95 mm</button>\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"patient-punch-10\" data-i18n=\"patient.punch_10\" onclick=\"App.setPatientField('punchMm','1.0')\">1,0 mm</button>\n" +
 "          </div>\n" +
 "        </div>\n" +
 "      </div>\n" +
@@ -2772,7 +2895,21 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        <button class=\"btn secondary\" data-i18n=\"share.whatsapp_btn\" onclick=\"App.shareViaWhatsapp()\">Enviar por WhatsApp</button>\n" +
 "        <button class=\"btn secondary\" data-i18n=\"share.copy_btn\" onclick=\"App.copyShareUrl()\">Copiar</button>\n" +
 "      </div>\n" +
-"      <p class=\"hint\" style=\"margin-top:8px;\">A auxiliar toca no link recebido e a página abre direto na contagem desta cirurgia — não precisa digitar nada.</p>\n" +
+"      <p class=\"hint\" style=\"margin-top:8px;\" data-i18n=\"share.hint\">A auxiliar toca no link recebido e a página abre direto na contagem desta cirurgia — não precisa digitar nada.</p>\n" +
+"    </div>\n" +
+"  </div>\n" +
+"</div>\n" +
+"<div class=\"modal-overlay\" id=\"onboard-modal-overlay\">\n" +
+"  <div class=\"modal-box\">\n" +
+"    <p class=\"hint\" style=\"margin:0 0 4px;\" id=\"onboard-counter\"></p>\n" +
+"    <h2 style=\"margin:0 0 8px;font-size:18px;\" id=\"onboard-title\"></h2>\n" +
+"    <p id=\"onboard-body\" style=\"margin:0 0 16px;\"></p>\n" +
+"    <div class=\"row\" style=\"justify-content:space-between;gap:8px;\">\n" +
+"      <button class=\"btn secondary\" id=\"onboard-skip-btn\" data-i18n=\"onboard.skip\" onclick=\"App.onboardingFinish()\">Pular guia</button>\n" +
+"      <div class=\"row\" style=\"gap:8px;\">\n" +
+"        <button class=\"btn secondary\" id=\"onboard-back-btn\" data-i18n=\"onboard.back\" onclick=\"App.onboardingBack()\">Voltar</button>\n" +
+"        <button class=\"btn\" id=\"onboard-next-btn\" onclick=\"App.onboardingNext()\"></button>\n" +
+"      </div>\n" +
 "    </div>\n" +
 "  </div>\n" +
 "</div>\n" +
@@ -3208,7 +3345,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "}\n" +
 "App.checkAuthAndShowHome = function(){\n" +
 "  api('/api/me').then(function(r){\n" +
-"    state.currentUser = r.user; applyBranding(r.user.branding); App.setLanguage(r.user.branding.language, true); renderUserBar(); showScreen('home'); loadSurgeryList();\n" +
+"    state.currentUser = r.user; applyBranding(r.user.branding); App.setLanguage(r.user.branding.language, true); renderUserBar(); showScreen('home'); loadSurgeryList(); App.maybeShowOnboarding();\n" +
 "  }).catch(function(){\n" +
 "    state.currentUser = null; applyBranding(null); renderUserBar(); showScreen('auth'); App.switchAuthTab('login');\n" +
 "  });\n" +
@@ -3247,7 +3384,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var password = document.getElementById('login-password').value;\n" +
 "  if (!email || !password){ toast(t('toast.fill_email_password')); return; }\n" +
 "  api('/api/login','POST',{email:email, password:password}).then(function(r){\n" +
-"    state.currentUser = r.user; applyBranding(r.user.branding); App.setLanguage(r.user.branding.language, true); renderUserBar(); showScreen('home'); loadSurgeryList();\n" +
+"    state.currentUser = r.user; applyBranding(r.user.branding); App.setLanguage(r.user.branding.language, true); renderUserBar(); showScreen('home'); loadSurgeryList(); App.maybeShowOnboarding();\n" +
 "    toast(t('toast.welcome',{name:r.user.nomeCompleto.split(' ')[0]}));\n" +
 "  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
 "};\n" +
@@ -3263,7 +3400,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  if (password.length < 6){ toast(t('toast.password_too_short')); return; }\n" +
 "  api('/api/register','POST',{nomeCompleto:nomeCompleto, crm:crm, email:email, telefone:telefone, password:password, inviteToken: state.inviteToken || ''}).then(function(r){\n" +
 "    state.inviteToken = null;\n" +
-"    state.currentUser = r.user; applyBranding(r.user.branding); App.setLanguage(r.user.branding.language, true); renderUserBar(); showScreen('home'); loadSurgeryList();\n" +
+"    state.currentUser = r.user; applyBranding(r.user.branding); App.setLanguage(r.user.branding.language, true); renderUserBar(); showScreen('home'); loadSurgeryList(); App.maybeShowOnboarding();\n" +
 "    toast(t('toast.account_created_welcome',{name:r.user.nomeCompleto.split(' ')[0]}));\n" +
 "  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
 "};\n" +
@@ -3337,6 +3474,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "};\n" +
 "App.showDashboard = function(){\n" +
 "  if (!state.currentUser){ toast(t('toast.login_required_dashboard')); return; }\n" +
+"  document.getElementById('dashboard-back-footer').style.display = state.currentId ? 'flex' : 'none';\n" +
 "  showScreen('dashboard');\n" +
 "  api('/api/sessions').then(function(list){\n" +
 "    state.dashboardSessions = list.filter(function(s){ return s.status==='finalizada'; });\n" +
@@ -3560,7 +3698,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    el.innerHTML = list.map(function(s){\n" +
 "      var sum = computeSummary(combinedExtractionCounts(s), s.mode||'completo');\n" +
 "      var badgeClass = s.status==='finalizada'?'finalizada':'andamento';\n" +
-"      return '<div class=\"surgery-card\"><div><b>'+escapeHtml(s.codigo)+'</b><div class=\"hint\">'+sum.foliculosExtraidos+' folículos · índice '+sum.indice.toFixed(2)+'</div></div>'+\n" +
+"      return '<div class=\"surgery-card\"><div><b>'+escapeHtml(s.codigo)+'</b><div class=\"hint\">'+escapeHtml(t('home.card_summary',{n:String(sum.foliculosExtraidos),idx:sum.indice.toFixed(2)}))+'</div></div>'+\n" +
 "        '<div style=\"text-align:right;\"><span class=\"badge '+badgeClass+'\">'+(s.status==='finalizada'?t('common.status_finalized'):t('common.status_in_progress'))+'</span><br>'+\n" +
 "        '<div class=\"row\" style=\"gap:6px;margin-top:8px;justify-content:flex-end;\">'+\n" +
 "        '<button class=\"btn secondary\" onclick=\"App.openSession(\\''+s.id+'\\')\">'+escapeHtml(t('common.open'))+'</button>'+\n" +
@@ -3961,7 +4099,8 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var patientChoicePairs = [\n" +
 "    ['patient-espessura-fino','cabeloEspessura','fino'], ['patient-espessura-grosso','cabeloEspessura','grosso'],\n" +
 "    ['patient-textura-liso','cabeloTextura','liso'], ['patient-textura-ondulado','cabeloTextura','ondulado'], ['patient-textura-crespo','cabeloTextura','crespo'],\n" +
-"    ['patient-raspagem-sim','raspagem','sim'], ['patient-raspagem-nao','raspagem','nao']\n" +
+"    ['patient-raspagem-sim','raspagem','sim'], ['patient-raspagem-nao','raspagem','nao'],\n" +
+"    ['patient-punch-095','punchMm','0.95'], ['patient-punch-10','punchMm','1.0']\n" +
 "  ];\n" +
 "  patientChoicePairs.forEach(function(pair){\n" +
 "    var el = document.getElementById(pair[0]);\n" +
@@ -3977,7 +4116,8 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var pairs = [\n" +
 "    ['new-patient-espessura-fino','cabeloEspessura','fino'], ['new-patient-espessura-grosso','cabeloEspessura','grosso'],\n" +
 "    ['new-patient-textura-liso','cabeloTextura','liso'], ['new-patient-textura-ondulado','cabeloTextura','ondulado'], ['new-patient-textura-crespo','cabeloTextura','crespo'],\n" +
-"    ['new-patient-raspagem-sim','raspagem','sim'], ['new-patient-raspagem-nao','raspagem','nao']\n" +
+"    ['new-patient-raspagem-sim','raspagem','sim'], ['new-patient-raspagem-nao','raspagem','nao'],\n" +
+"    ['new-patient-punch-095','punchMm','0.95'], ['new-patient-punch-10','punchMm','1.0']\n" +
 "  ];\n" +
 "  pairs.forEach(function(pair){\n" +
 "    var el = document.getElementById(pair[0]);\n" +
@@ -4040,7 +4180,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        var ctx = canvas.getContext('2d'); ctx.drawImage(img,0,0,cw,ch);\n" +
 "        resolve(canvas.toDataURL('image/png'));\n" +
 "      };\n" +
-"      img.onerror = function(){ reject(new Error('Não consegui ler essa imagem.')); };\n" +
+"      img.onerror = function(){ reject(new Error(t('photo.read_error'))); };\n" +
 "      img.src = e.target.result;\n" +
 "    };\n" +
 "    reader.onerror = function(){ reject(new Error(t('errors.file_read_error'))); };\n" +
@@ -4127,6 +4267,38 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    }).join('');\n" +
 "  }).catch(function(){});\n" +
 "};\n" +
+"var ONBOARD_STEPS = 4;\n" +
+"App.onboardingRender = function(){\n" +
+"  var n = (state.onboardStep || 0) + 1;\n" +
+"  document.getElementById('onboard-counter').textContent = t('onboard.step_of',{n:n,total:ONBOARD_STEPS});\n" +
+"  var base = 'onboard.s'+n;\n" +
+"  document.getElementById('onboard-title').textContent = t(base+'_title');\n" +
+"  document.getElementById('onboard-body').textContent = t(base+'_body');\n" +
+"  document.getElementById('onboard-back-btn').style.display = n > 1 ? '' : 'none';\n" +
+"  document.getElementById('onboard-next-btn').textContent = n < ONBOARD_STEPS ? t('onboard.next') : t('onboard.start');\n" +
+"};\n" +
+"App.openOnboarding = function(){\n" +
+"  state.onboardStep = 0;\n" +
+"  App.onboardingRender();\n" +
+"  document.getElementById('onboard-modal-overlay').classList.add('show');\n" +
+"};\n" +
+"App.onboardingNext = function(){\n" +
+"  if ((state.onboardStep || 0) < ONBOARD_STEPS - 1){ state.onboardStep = (state.onboardStep || 0) + 1; App.onboardingRender(); }\n" +
+"  else App.onboardingFinish();\n" +
+"};\n" +
+"App.onboardingBack = function(){\n" +
+"  if ((state.onboardStep || 0) > 0){ state.onboardStep--; App.onboardingRender(); }\n" +
+"};\n" +
+"App.onboardingFinish = function(){\n" +
+"  document.getElementById('onboard-modal-overlay').classList.remove('show');\n" +
+"  if (state.currentUser && state.currentUser.onboardingPending){\n" +
+"    state.currentUser.onboardingPending = false;\n" +
+"    api('/api/onboarding/complete','POST',{}).catch(function(){});\n" +
+"  }\n" +
+"};\n" +
+"App.maybeShowOnboarding = function(){\n" +
+"  if (state.currentUser && state.currentUser.onboardingPending) App.openOnboarding();\n" +
+"};\n" +
 "App.openInviteModal = function(url){\n" +
 "  state.currentInviteUrl = url;\n" +
 "  document.getElementById('invite-url').textContent = url;\n" +
@@ -4142,7 +4314,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "};\n" +
 "App.shareInviteViaWhatsapp = function(){\n" +
 "  var url = state.currentInviteUrl;\n" +
-"  var text = 'Você foi convidado(a) a se cadastrar no Graftis: '+url;\n" +
+"  var text = t('invite.whatsapp_text',{url:url});\n" +
 "  window.open('https://wa.me/?text='+encodeURIComponent(text), '_blank');\n" +
 "};\n" +
 "// confirmDialog()/promptDialog(): substitutos do window.confirm()/window.prompt()\n" +
@@ -4237,6 +4409,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    piParts.push('<div>'+escapeHtml(t('patient.hair_texture_label'))+'<br><b>'+escapeHtml(t(texturaKey))+'</b></div>');\n" +
 "  }\n" +
 "  if (pi.raspagem) piParts.push('<div>'+escapeHtml(t('patient.surgery_type_label'))+'<br><b>'+escapeHtml(t(pi.raspagem==='sim'?'patient.with_shaving':'patient.without_shaving'))+'</b></div>');\n" +
+"  if (pi.punchMm) piParts.push('<div>'+escapeHtml(t('patient.punch_label'))+'<br><b>'+escapeHtml(t(pi.punchMm==='0.95'?'patient.punch_095':'patient.punch_10'))+'</b></div>');\n" +
 "  var patientInfoHtml = piParts.length ? ('<h2>'+escapeHtml(t('patient.section_title'))+'</h2><div class=\"print-summary\">'+piParts.join('')+'</div>') : '';\n" +
 "\n" +
 "  var quadrantsHtml = QUADRANTS.map(function(q){\n" +
@@ -4483,22 +4656,22 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    alertTotalEnabled:state.alertTotalEnabled, alertTotalThreshold:state.alertTotalThreshold\n" +
 "  }));\n" +
 "}\n" +
-"App.toggleAudio = function(checked){ state.audioEnabled = checked; saveAudioPrefs(); if (checked) speak('Áudio ativado.'); };\n" +
-"App.togglePreincAudio = function(checked){ state.preincAudioEnabled = checked; saveAudioPrefs(); if (checked) speak('Áudio de pré-incisões ativado.'); };\n" +
-"App.toggleQuadFinishAudio = function(checked){ state.quadFinishAudioEnabled = checked; saveAudioPrefs(); if (checked) speak('Áudio de finalização de quadrante ativado.'); };\n" +
-"App.toggleAlertParcial = function(checked){ state.alertParcialEnabled = checked; state.alertParcialFired = false; saveAudioPrefs(); if (checked) speak('Alarme de transecção parcial ativado.'); };\n" +
+"App.toggleAudio = function(checked){ state.audioEnabled = checked; saveAudioPrefs(); if (checked) speak(t('audio.enabled')); };\n" +
+"App.togglePreincAudio = function(checked){ state.preincAudioEnabled = checked; saveAudioPrefs(); if (checked) speak(t('audio.preinc_enabled')); };\n" +
+"App.toggleQuadFinishAudio = function(checked){ state.quadFinishAudioEnabled = checked; saveAudioPrefs(); if (checked) speak(t('audio.quadfinish_enabled')); };\n" +
+"App.toggleAlertParcial = function(checked){ state.alertParcialEnabled = checked; state.alertParcialFired = false; saveAudioPrefs(); if (checked) speak(t('audio.alert_partial_enabled')); };\n" +
 "App.saveAlertParcialThreshold = function(value){ var n = parseFloat(value); state.alertParcialThreshold = (isNaN(n)||n<0) ? null : n; state.alertParcialFired = false; saveAudioPrefs(); };\n" +
-"App.toggleAlertTotal = function(checked){ state.alertTotalEnabled = checked; state.alertTotalFired = false; saveAudioPrefs(); if (checked) speak('Alarme de transecção total ativado.'); };\n" +
+"App.toggleAlertTotal = function(checked){ state.alertTotalEnabled = checked; state.alertTotalFired = false; saveAudioPrefs(); if (checked) speak(t('audio.alert_total_enabled')); };\n" +
 "App.saveAlertTotalThreshold = function(value){ var n = parseFloat(value); state.alertTotalThreshold = (isNaN(n)||n<0) ? null : n; state.alertTotalFired = false; saveAudioPrefs(); };\n" +
 "function checkTransectionAlerts(taxaParcial, taxaTotal){\n" +
 "  if (state.alertParcialEnabled && state.alertParcialThreshold!==null){\n" +
 "    if (taxaParcial > state.alertParcialThreshold){\n" +
-"      if (!state.alertParcialFired){ state.alertParcialFired = true; speak('Atenção: transecção parcial passou de '+state.alertParcialThreshold+' por cento. Está em '+taxaParcial.toFixed(1)+' por cento.'); }\n" +
+"      if (!state.alertParcialFired){ state.alertParcialFired = true; speak(t('audio.alert_partial_fired',{limit:String(state.alertParcialThreshold),value:taxaParcial.toFixed(1)})); }\n" +
 "    } else if (state.alertParcialFired){ state.alertParcialFired = false; }\n" +
 "  }\n" +
 "  if (state.alertTotalEnabled && state.alertTotalThreshold!==null){\n" +
 "    if (taxaTotal > state.alertTotalThreshold){\n" +
-"      if (!state.alertTotalFired){ state.alertTotalFired = true; speak('Atenção: transecção total passou de '+state.alertTotalThreshold+' por cento. Está em '+taxaTotal.toFixed(1)+' por cento.'); }\n" +
+"      if (!state.alertTotalFired){ state.alertTotalFired = true; speak(t('audio.alert_total_fired',{limit:String(state.alertTotalThreshold),value:taxaTotal.toFixed(1)})); }\n" +
 "    } else if (state.alertTotalFired){ state.alertTotalFired = false; }\n" +
 "  }\n" +
 "}\n" +
@@ -4656,7 +4829,7 @@ var server = http.createServer(function (req, res) {
       var id = newId(6);
       var branding = emptyBranding();
       branding.language = registerLang; // herda o idioma usado no cadastro
-      var user = { id: id, nomeCompleto: nomeCompleto, crm: crm, email: email, telefone: telefone, passwordHash: hashPassword(password), createdAt: Date.now(), branding: branding, isAdmin: (email === ADMIN_EMAIL) };
+      var user = { id: id, nomeCompleto: nomeCompleto, crm: crm, email: email, telefone: telefone, passwordHash: hashPassword(password), createdAt: Date.now(), branding: branding, isAdmin: (email === ADMIN_EMAIL), onboardingPending: (!!inviteHash && email !== ADMIN_EMAIL) };
       db.users[id] = user;
       if (inviteHash && db.inviteTokens[inviteHash]) { db.inviteTokens[inviteHash].usedAt = Date.now(); }
       var token = newId(24);
@@ -4712,6 +4885,16 @@ var server = http.createServer(function (req, res) {
     var meUser = getAuthedUser(req);
     if (!meUser) { send(res, 401, { error: t("errors.not_authenticated", requestLang(req)) }); return; }
     send(res, 200, { user: publicUser(meUser) });
+    return;
+  }
+
+  // Marca o guia de boas-vindas como visto/pulado (não volta a abrir sozinho).
+  if (p === "/api/onboarding/complete" && req.method === "POST") {
+    var obUser = getAuthedUser(req);
+    if (!obUser) { send(res, 401, { error: t("errors.not_authenticated", requestLang(req)) }); return; }
+    obUser.onboardingPending = false;
+    saveIndex();
+    send(res, 200, { user: publicUser(obUser) });
     return;
   }
 
