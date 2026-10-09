@@ -474,6 +474,10 @@ const STRINGS = {
     "cnt.print_btn": "Imprimir / Salvar PDF",
     "cnt.finalize_btn": "Finalizar cirurgia",
     "cnt.reopen_btn": "Reabrir",
+    "errors.login_required_rename_patient": "Faça login pra editar o nome do paciente.",
+    "cnt.rename_title": "Editar nome do paciente",
+    "cnt.rename_prompt": "Novo nome / código do paciente:",
+    "toast.patient_renamed": "Nome do paciente atualizado.",
     "cnt.fix_duration_btn": "Corrigir duração",
     "cnt.fix_duration_prompt": "Quantos minutos a cirurgia durou de verdade? (ex: 200 para 3h20)",
     "share.title": "Compartilhar cirurgia",
@@ -912,6 +916,10 @@ const STRINGS = {
     "cnt.print_btn": "Print / Save PDF",
     "cnt.finalize_btn": "Finalize surgery",
     "cnt.reopen_btn": "Reopen",
+    "errors.login_required_rename_patient": "Log in to edit the patient name.",
+    "cnt.rename_title": "Edit patient name",
+    "cnt.rename_prompt": "New patient name / code:",
+    "toast.patient_renamed": "Patient name updated.",
     "cnt.fix_duration_btn": "Correct duration",
     "cnt.fix_duration_prompt": "How many minutes did the surgery actually take? (e.g. 200 for 3h20)",
     "share.title": "Share surgery",
@@ -1350,6 +1358,10 @@ const STRINGS = {
     "cnt.print_btn": "Imprimir / Guardar PDF",
     "cnt.finalize_btn": "Finalizar cirugía",
     "cnt.reopen_btn": "Reabrir",
+    "errors.login_required_rename_patient": "Inicia sesión para editar el nombre del paciente.",
+    "cnt.rename_title": "Editar nombre del paciente",
+    "cnt.rename_prompt": "Nuevo nombre / código del paciente:",
+    "toast.patient_renamed": "Nombre del paciente actualizado.",
     "cnt.fix_duration_btn": "Corregir duración",
     "cnt.fix_duration_prompt": "¿Cuántos minutos duró realmente la cirugía? (ej: 200 para 3h20)",
     "share.title": "Compartir cirugía",
@@ -2651,7 +2663,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  <section id=\"screen-counting\" class=\"screen\">\n" +
 "    <div class=\"card\">\n" +
 "      <div class=\"row\" style=\"justify-content:space-between;align-items:flex-start;\">\n" +
-"        <div><h2 id=\"cnt-codigo\">—</h2><div class=\"hint\" id=\"cnt-meta\">—</div><div class=\"hint\" id=\"cnt-global-timer\" style=\"font-weight:700;color:var(--c-primary-dark);margin-top:2px;\"></div></div>\n" +
+"        <div><div style=\"display:flex;align-items:center;gap:8px;\"><h2 id=\"cnt-codigo\" style=\"margin:0;\">—</h2><button class=\"icon-btn\" id=\"btn-rename-patient\" style=\"display:none;background:var(--c-surface2);color:var(--c-text);\" data-i18n-title=\"cnt.rename_title\" title=\"Editar nome do paciente\" onclick=\"App.renamePatient()\">✏️</button></div><div class=\"hint\" id=\"cnt-meta\">—</div><div class=\"hint\" id=\"cnt-global-timer\" style=\"font-weight:700;color:var(--c-primary-dark);margin-top:2px;\"></div></div>\n" +
 "        <div style=\"display:flex;flex-direction:column;gap:6px;align-items:flex-end;\">\n" +
 "          <span class=\"badge\" id=\"cnt-status\">—</span><span class=\"badge\" id=\"cnt-mode\" style=\"background:var(--c-primary-dark);\">—</span>\n" +
 "          <button class=\"btn secondary\" style=\"padding:6px 10px;font-size:12px;white-space:nowrap;\" data-i18n=\"cnt.share_btn\" onclick=\"App.openShareModal()\">🔗 Compartilhar</button>\n" +
@@ -2976,6 +2988,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  document.documentElement.lang = state.lang;\n" +
 "  document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent = t(el.getAttribute('data-i18n')); });\n" +
 "  document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el){ el.placeholder = t(el.getAttribute('data-i18n-placeholder')); });\n" +
+"  document.querySelectorAll('[data-i18n-title]').forEach(function(el){ el.title = t(el.getAttribute('data-i18n-title')); });\n" +
 "  document.querySelectorAll('.lang-switch-btn').forEach(function(btn){\n" +
 "    btn.className = (btn.getAttribute('data-lang')===state.lang) ? 'btn lang-switch-btn' : 'btn secondary lang-switch-btn';\n" +
 "  });\n" +
@@ -3754,6 +3767,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var s = state.session; if (!s) return;\n" +
 "  applyBranding(s.ownerBranding);\n" +
 "  document.getElementById('cnt-codigo').textContent = s.codigo;\n" +
+"  document.getElementById('btn-rename-patient').style.display = (state.currentUser && s.ownerBranding && s.ownerBranding.ownerId === state.currentUser.id) ? 'inline-block' : 'none';\n" +
 "  document.getElementById('cnt-meta').textContent = new Date(s.createdAt).toLocaleString(localeForLang());\n" +
 "  var gMs = globalElapsedMs(s);\n" +
 "  var gEl = document.getElementById('cnt-global-timer');\n" +
@@ -4243,6 +4257,15 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    api('/api/session/'+state.currentId+'/fix-duration','POST',{minutes:minutes}).then(function(s){ state.session=s; render(); toast(t('toast.duration_fixed')); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
 "  });\n" +
 "};\n" +
+"App.renamePatient = function(){\n" +
+"  var cur = state.session ? state.session.codigo : '';\n" +
+"  promptDialog(t('cnt.rename_prompt'), cur, 'text').then(function(v){\n" +
+"    if (v === null) return;\n" +
+"    v = String(v).trim();\n" +
+"    if (!v || v === cur) return;\n" +
+"    api('/api/session/'+state.currentId+'/rename','POST',{codigo:v}).then(function(s){ state.session=s; render(); toast(t('toast.patient_renamed')); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
+"};\n" +
 "App.openShareModal = function(){\n" +
 "  document.getElementById('share-url').textContent = shareUrlFor(state.currentId);\n" +
 "  document.getElementById('share-modal-overlay').classList.add('show');\n" +
@@ -4339,6 +4362,8 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    var input = document.getElementById('dialog-modal-input');\n" +
 "    if (dialogModalIsPrompt){\n" +
 "      inputWrap.style.display = 'block';\n" +
+"      input.type = opts.inputType || 'number';\n" +
+"      input.inputMode = (opts.inputType==='text' ? 'text' : 'numeric');\n" +
 "      input.value = (opts.defaultValue===undefined || opts.defaultValue===null) ? '' : opts.defaultValue;\n" +
 "    } else {\n" +
 "      inputWrap.style.display = 'none';\n" +
@@ -4367,7 +4392,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  closeDialogModal(dialogModalIsPrompt ? null : false);\n" +
 "};\n" +
 "function confirmDialog(message){ return showDialogModal(message, {isPrompt:false}); }\n" +
-"function promptDialog(message, defaultValue){ return showDialogModal(message, {isPrompt:true, defaultValue:defaultValue}); }\n" +
+"function promptDialog(message, defaultValue, inputType){ return showDialogModal(message, {isPrompt:true, defaultValue:defaultValue, inputType:inputType}); }\n" +
 "App.copyShareUrl = function(){\n" +
 "  var url = shareUrlFor(state.currentId);\n" +
 "  if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(function(){ toast(t('toast.address_copied')); }, function(){ toast(t('toast.copy_failed_manual')); }); }\n" +
@@ -5516,6 +5541,27 @@ var server = http.createServer(function (req, res) {
       saveForSession(sFix);
       send(res, 200, withOwnerBranding(sFix));
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sFixLang) }); });
+    return;
+  }
+
+  // Renomear paciente (campo "codigo") — exige login E ser o médico dono da cirurgia.
+  // Quem só tem o link (auxiliar) não consegue, de propósito.
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/rename$/);
+  if (m && req.method === "POST") {
+    var renamer = getAuthedUser(req);
+    var renLang = requestLang(req);
+    if (!renamer) { send(res, 401, { error: t("errors.login_required_rename_patient", renLang) }); return; }
+    var sRen = db.sessions[m[1]];
+    if (!sRen) { send(res, 404, { error: t("errors.surgery_not_found", renLang) }); return; }
+    if (sRen.ownerId !== renamer.id) { send(res, 403, { error: t("errors.surgery_not_yours", renLang) }); return; }
+    readBody(req).then(function (body) {
+      var novo = String(body.codigo || "").trim().slice(0, 60);
+      if (!novo) { send(res, 400, { error: t("errors.patient_code_required", renLang) }); return; }
+      sRen.codigo = novo;
+      sRen.updatedAt = Date.now();
+      saveForSession(sRen);
+      send(res, 200, withOwnerBranding(sRen));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", renLang) }); });
     return;
   }
 
