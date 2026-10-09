@@ -53,14 +53,14 @@ function baseSession(patientInfo){
     preincTimer:{accumulatedMs:0, running:false, startedAt:null},
     globalTimerStartedAt: null, globalTimerEndedAt: null,
     finalizedAt: null,
-    patientInfo: patientInfo || {idade:null, alturaCm:null, pesoKg:null, cabeloEspessura:null, cabeloTextura:null, raspagem:null}
+    patientInfo: patientInfo || {idade:null, alturaCm:null, pesoKg:null, cabeloEspessura:null, cabeloTextura:null, raspagem:null, punchMm:null}
   };
 }
 
 console.log('--- render() preenche a aba Paciente a partir de state.session.patientInfo ---');
 state.lang = 'pt';
 state.currentId = 'abc123';
-state.session = baseSession({ idade: 45, alturaCm: 175, pesoKg: 80, cabeloEspessura: 'fino', cabeloTextura: 'ondulado', raspagem: 'sim' });
+state.session = baseSession({ idade: 45, alturaCm: 175, pesoKg: 80, cabeloEspessura: 'fino', cabeloTextura: 'ondulado', raspagem: 'sim', punchMm: '0.95' });
 render();
 console.log('idade preenchida (45):', elements['patient-idade'].value === 45);
 console.log('altura preenchida (175):', elements['patient-altura'].value === 175);
@@ -72,6 +72,8 @@ console.log('botão textura "Liso" inativo:', elements['patient-textura-liso'].c
 console.log('botão textura "Crespo" inativo:', elements['patient-textura-crespo'].className === 'btn secondary');
 console.log('botão raspagem "Com raspagem" ativo:', elements['patient-raspagem-sim'].className === 'btn');
 console.log('botão raspagem "Sem raspagem" inativo:', elements['patient-raspagem-nao'].className === 'btn secondary');
+console.log('botão punch "0,95 mm" ativo:', elements['patient-punch-095'].className === 'btn');
+console.log('botão punch "1,0 mm" inativo:', elements['patient-punch-10'].className === 'btn secondary');
 
 console.log();
 console.log('--- Sessão com patientInfo todo vazio: campos ficam vazios, nenhum botão fica ativo ---');
@@ -113,3 +115,14 @@ state.newPatientInfo = { raspagem: 'nao' };
 document.getElementById('new-codigo').value = 'PAC-NOVO-2';
 App.createSession();
 console.log('payload de criação COM patientInfo quando algo foi preenchido:', JSON.stringify(lastApiCall.body.patientInfo) === JSON.stringify({raspagem:'nao'}));
+
+console.log();
+console.log('--- Formulário retrátil do cadastro: punch (App.setNewPatientField) ---');
+state.newPatientInfo = {};
+App.setNewPatientField('punchMm', '1.0');
+console.log('state.newPatientInfo atualizado:', state.newPatientInfo.punchMm === '1.0');
+console.log('botão "1,0 mm" do cadastro fica ativo:', elements['new-patient-punch-10'].className === 'btn');
+console.log('botão "0,95 mm" do cadastro fica inativo:', elements['new-patient-punch-095'].className === 'btn secondary');
+document.getElementById('new-codigo').value = 'PAC-NOVO-3';
+App.createSession();
+console.log('payload de criação inclui punchMm:', JSON.stringify(lastApiCall.body.patientInfo) === JSON.stringify({punchMm:'1.0'}));

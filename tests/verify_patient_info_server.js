@@ -84,12 +84,13 @@ function extractCookie(headers) {
     console.log('cabeloEspessura null:', pi1.cabeloEspessura === null);
     console.log('cabeloTextura null:', pi1.cabeloTextura === null);
     console.log('raspagem null:', pi1.raspagem === null);
+    console.log('punchMm null:', pi1.punchMm === null);
 
     console.log();
     console.log('--- Criação JÁ COM patientInfo válido (tela de cadastro) ---');
     const c2 = await req('POST', '/api/session', {
       codigo: 'PAC-COMDADOS', mode: 'completo',
-      patientInfo: { idade: 52, alturaCm: 178, pesoKg: 82.5, cabeloEspessura: 'grosso', cabeloTextura: 'crespo', raspagem: 'sim' }
+      patientInfo: { idade: 52, alturaCm: 178, pesoKg: 82.5, cabeloEspessura: 'grosso', cabeloTextura: 'crespo', raspagem: 'sim', punchMm: '0.95' }
     }, cookie);
     const id2 = c2.body.id;
     const pi2 = c2.body.patientInfo;
@@ -99,12 +100,13 @@ function extractCookie(headers) {
     console.log('cabeloEspessura grosso:', pi2.cabeloEspessura === 'grosso');
     console.log('cabeloTextura crespo:', pi2.cabeloTextura === 'crespo');
     console.log('raspagem sim:', pi2.raspagem === 'sim');
+    console.log('punchMm 0.95:', pi2.punchMm === '0.95');
 
     console.log();
     console.log('--- Criação com valores INVÁLIDOS: ignorados, sem derrubar a criação ---');
     const c3 = await req('POST', '/api/session', {
       codigo: 'PAC-INVALIDO', mode: 'completo',
-      patientInfo: { idade: 999, alturaCm: -5, pesoKg: 'abc', cabeloEspessura: 'afro', cabeloTextura: 'crespo', raspagem: 'talvez' }
+      patientInfo: { idade: 999, alturaCm: -5, pesoKg: 'abc', cabeloEspessura: 'afro', cabeloTextura: 'crespo', raspagem: 'talvez', punchMm: '1.2' }
     }, cookie);
     console.log('criação não falhou (status 200):', c3.status === 200);
     const pi3 = c3.body.patientInfo;
@@ -114,6 +116,15 @@ function extractCookie(headers) {
     console.log('cabeloEspessura inválido ("afro") ignorado, fica null:', pi3.cabeloEspessura === null);
     console.log('cabeloTextura válida (crespo) aplicada normalmente:', pi3.cabeloTextura === 'crespo');
     console.log('raspagem inválida ("talvez") ignorada, fica null:', pi3.raspagem === null);
+    console.log('punchMm inválido ("1.2", calibre que não existe) ignorado, fica null:', pi3.punchMm === null);
+
+    console.log();
+    console.log('--- Criação com punch VÁLIDO "1.0" (o outro calibre aceito) ---');
+    const c4 = await req('POST', '/api/session', {
+      codigo: 'PAC-PUNCH10', mode: 'completo',
+      patientInfo: { punchMm: '1.0' }
+    }, cookie);
+    console.log('punchMm 1.0 aceito:', c4.body.patientInfo.punchMm === '1.0');
 
     console.log();
     console.log('--- Atualização parcial pela aba Paciente (só idade, resto intocado) ---');
@@ -122,6 +133,12 @@ function extractCookie(headers) {
     console.log('idade atualizada pra 53:', piU1.idade === 53);
     console.log('alturaCm continua 178 (não foi tocado):', piU1.alturaCm === 178);
     console.log('cabeloTextura continua crespo (não foi tocado):', piU1.cabeloTextura === 'crespo');
+    console.log('punchMm continua 0.95 (não foi tocado):', piU1.punchMm === '0.95');
+
+    console.log();
+    console.log('--- Trocar o punch pela aba Paciente (0.95 -> 1.0) ---');
+    const uPunch = await req('POST', `/api/session/${id2}/patient-info`, { punchMm: '1.0' }, cookie);
+    console.log('punchMm agora 1.0:', uPunch.body.patientInfo.punchMm === '1.0');
 
     console.log();
     console.log('--- Limpar um campo mandando string vazia ---');
@@ -136,6 +153,7 @@ function extractCookie(headers) {
     console.log('GET reflete idade 53:', getS.body.patientInfo.idade === 53);
     console.log('GET reflete cabeloTextura null:', getS.body.patientInfo.cabeloTextura === null);
     console.log('GET reflete raspagem sim (nunca tocado, continua):', getS.body.patientInfo.raspagem === 'sim');
+    console.log('GET reflete punchMm 1.0:', getS.body.patientInfo.punchMm === '1.0');
 
     const allLines = [];
     console.log('\nOK');
