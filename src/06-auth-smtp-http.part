@@ -146,12 +146,34 @@ setInterval(function () {
   });
   if (changed) saveIndex();
 }, 60 * 60 * 1000);
-function setAuthCookie(res, token) {
-  var secure = SECURE_COOKIES ? "; Secure" : "";
+// Cookie/HSTS "Secure" quando a requisição veio por HTTPS (proxy envia x-forwarded-proto),
+// mesmo sem a variável SECURE_COOKIES. Em rede local (http://ip) continua sem Secure,
+// senão o login quebraria no celular do consultório.
+function isSecureRequest(req) {
+  if (SECURE_COOKIES) return true;
+  var xf = req && req.headers && req.headers["x-forwarded-proto"];
+  if (xf && String(xf).split(",")[0].trim() === "https") return true;
+  return !!(req && req.socket && req.socket.encrypted);
+}
+// Regras de senha: mínimo 10 caracteres, nada de senha da lista de senhas comuns,
+// e nada igual ao próprio e-mail. Quem já tem conta com senha antiga continua entrando
+// (a regra vale só para cadastrar e redefinir).
+var MIN_PASSWORD_LENGTH = 10;
+var COMMON_PASSWORDS = ["1234567890", "12345678910", "password", "password1", "password12", "senha1234", "senha12345", "senhasenha", "qwerty1234", "qwertyuiop", "abc123456", "11111111111", "00000000000", "iloveyou12", "bemvindo123", "graftis12345"];
+// Devolve a chave de tradução do erro, ou null se a senha passa.
+function passwordProblem(password, email) {
+  if (password.length < MIN_PASSWORD_LENGTH) return "toast.password_too_short";
+  var lower = password.toLowerCase();
+  if (COMMON_PASSWORDS.indexOf(lower) !== -1) return "toast.password_too_common";
+  if (email && lower === String(email).split("@")[0].toLowerCase()) return "toast.password_too_common";
+  return null;
+}
+function setAuthCookie(res, token, req) {
+  var secure = isSecureRequest(req) ? "; Secure" : "";
   res.setHeader("Set-Cookie", "fue_auth=" + token + "; HttpOnly; Path=/; Max-Age=2592000; SameSite=Lax" + secure);
 }
-function clearAuthCookie(res) {
-  var secure = SECURE_COOKIES ? "; Secure" : "";
+function clearAuthCookie(res, req) {
+  var secure = isSecureRequest(req) ? "; Secure" : "";
   res.setHeader("Set-Cookie", "fue_auth=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax" + secure);
 }
 

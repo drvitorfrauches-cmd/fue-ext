@@ -1274,3 +1274,11 @@ e `src/16-routes-sessions.part` (rotas). Testes: `verify_schedule_implant_server
 - O servidor roda em UTC, então o cliente manda `localTime` (HH:MM do aparelho). Cliente antigo (sem `localTime`) ou valor inválido: nada é preenchido, sem erro.
 - Qualquer horário automático pode ser corrigido à mão na aba Horários.
 - Testes: `verify_schedule_auto_server.js` e `verify_schedule_auto_client.js`.
+
+## Segurança (rodada de endurecimento)
+
+- **Id da cirurgia (e link de compartilhamento) com 128 bits** em cirurgias novas. Cirurgias antigas mantêm o id curto; não há troca automática de link.
+- **Senha mínima de 10 caracteres** no cadastro e na redefinição. Senhas da lista de comuns e senhas iguais ao próprio e-mail são recusadas. Quem já tem conta continua entrando com a senha atual.
+- **Cookie `Secure` e HSTS** também quando a requisição chega por HTTPS (proxy). Na rede local (http://ip) não muda nada, para o login não quebrar.
+- **Ainda não feito:** revogar/expirar link de cirurgia, 2FA, CSP sem `unsafe-inline`, criptografia dos dados em repouso.
+- Teste: `verify_security_hardening_server.js`.

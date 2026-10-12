@@ -345,9 +345,11 @@ console.log("");
 function newId(bytes) {
   return crypto.randomBytes(bytes || 4).toString("hex");
 }
+// Id da cirurgia é também o link de compartilhamento (quem tem o link entra sem login),
+// então precisa ser difícil de adivinhar: 16 bytes = 128 bits (antes eram 4 bytes).
 function newSessionId() {
   var id;
-  do { id = newId(4); } while (db.sessions[id]);
+  do { id = newId(16); } while (db.sessions[id]);
   return id;
 }
 

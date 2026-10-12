@@ -182,7 +182,8 @@ const STRINGS = {
     "toast.welcome": "Bem-vindo(a), {name}.",
     "toast.fill_all_fields": "Preencha todos os campos.",
     "toast.passwords_dont_match": "As senhas não coincidem.",
-    "toast.password_too_short": "A senha precisa ter pelo menos 6 caracteres.",
+    "toast.password_too_short": "A senha precisa ter pelo menos 10 caracteres.",
+    "toast.password_too_common": "Essa senha é muito comum. Escolha outra, mais difícil de adivinhar.",
     "toast.account_created_welcome": "Conta criada. Bem-vindo(a), {name}.",
     "toast.logged_out": "Você saiu.",
     "toast.logout_all_confirm": "Isso desconecta sua conta de TODOS os aparelhos onde você estiver logado (inclusive este). Vai precisar entrar de novo em cada um. Continuar?",
@@ -714,7 +715,8 @@ const STRINGS = {
     "toast.welcome": "Welcome, {name}.",
     "toast.fill_all_fields": "Fill in all fields.",
     "toast.passwords_dont_match": "Passwords don't match.",
-    "toast.password_too_short": "Password must be at least 6 characters.",
+    "toast.password_too_short": "Password must be at least 10 characters.",
+    "toast.password_too_common": "This password is too common. Choose a harder one to guess.",
     "toast.account_created_welcome": "Account created. Welcome, {name}.",
     "toast.logged_out": "You've logged out.",
     "toast.logout_all_confirm": "This logs your account out of ALL devices where you're currently logged in (including this one). You'll need to log in again on each one. Continue?",
@@ -1246,7 +1248,8 @@ const STRINGS = {
     "toast.welcome": "Bienvenido/a, {name}.",
     "toast.fill_all_fields": "Complete todos los campos.",
     "toast.passwords_dont_match": "Las contraseñas no coinciden.",
-    "toast.password_too_short": "La contraseña debe tener al menos 6 caracteres.",
+    "toast.password_too_short": "La contraseña debe tener al menos 10 caracteres.",
+    "toast.password_too_common": "Esa contraseña es muy común. Elija otra más difícil de adivinar.",
     "toast.account_created_welcome": "Cuenta creada. Bienvenido/a, {name}.",
     "toast.logged_out": "Cerraste sesión.",
     "toast.logout_all_confirm": "Esto cierra la sesión de tu cuenta en TODOS los dispositivos donde esté conectada (incluido este). Tendrás que iniciar sesión de nuevo en cada uno. ¿Continuar?",
@@ -2249,9 +2252,11 @@ console.log("");
 function newId(bytes) {
   return crypto.randomBytes(bytes || 4).toString("hex");
 }
+// Id da cirurgia é também o link de compartilhamento (quem tem o link entra sem login),
+// então precisa ser difícil de adivinhar: 16 bytes = 128 bits (antes eram 4 bytes).
 function newSessionId() {
   var id;
-  do { id = newId(4); } while (db.sessions[id]);
+  do { id = newId(16); } while (db.sessions[id]);
   return id;
 }
 
@@ -2403,12 +2408,34 @@ setInterval(function () {
   });
   if (changed) saveIndex();
 }, 60 * 60 * 1000);
-function setAuthCookie(res, token) {
-  var secure = SECURE_COOKIES ? "; Secure" : "";
+// Cookie/HSTS "Secure" quando a requisição veio por HTTPS (proxy envia x-forwarded-proto),
+// mesmo sem a variável SECURE_COOKIES. Em rede local (http://ip) continua sem Secure,
+// senão o login quebraria no celular do consultório.
+function isSecureRequest(req) {
+  if (SECURE_COOKIES) return true;
+  var xf = req && req.headers && req.headers["x-forwarded-proto"];
+  if (xf && String(xf).split(",")[0].trim() === "https") return true;
+  return !!(req && req.socket && req.socket.encrypted);
+}
+// Regras de senha: mínimo 10 caracteres, nada de senha da lista de senhas comuns,
+// e nada igual ao próprio e-mail. Quem já tem conta com senha antiga continua entrando
+// (a regra vale só para cadastrar e redefinir).
+var MIN_PASSWORD_LENGTH = 10;
+var COMMON_PASSWORDS = ["1234567890", "12345678910", "password", "password1", "password12", "senha1234", "senha12345", "senhasenha", "qwerty1234", "qwertyuiop", "abc123456", "11111111111", "00000000000", "iloveyou12", "bemvindo123", "graftis12345"];
+// Devolve a chave de tradução do erro, ou null se a senha passa.
+function passwordProblem(password, email) {
+  if (password.length < MIN_PASSWORD_LENGTH) return "toast.password_too_short";
+  var lower = password.toLowerCase();
+  if (COMMON_PASSWORDS.indexOf(lower) !== -1) return "toast.password_too_common";
+  if (email && lower === String(email).split("@")[0].toLowerCase()) return "toast.password_too_common";
+  return null;
+}
+function setAuthCookie(res, token, req) {
+  var secure = isSecureRequest(req) ? "; Secure" : "";
   res.setHeader("Set-Cookie", "fue_auth=" + token + "; HttpOnly; Path=/; Max-Age=2592000; SameSite=Lax" + secure);
 }
-function clearAuthCookie(res) {
-  var secure = SECURE_COOKIES ? "; Secure" : "";
+function clearAuthCookie(res, req) {
+  var secure = isSecureRequest(req) ? "; Secure" : "";
   res.setHeader("Set-Cookie", "fue_auth=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax" + secure);
 }
 
@@ -3816,7 +3843,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var password2 = document.getElementById('reg-password2').value;\n" +
 "  if (!nomeCompleto || !crm || !email || !telefone || !password){ toast(t('toast.fill_all_fields')); return; }\n" +
 "  if (password !== password2){ toast(t('toast.passwords_dont_match')); return; }\n" +
-"  if (password.length < 6){ toast(t('toast.password_too_short')); return; }\n" +
+"  if (password.length < 10){ toast(t('toast.password_too_short')); return; }\n" +
 "  api('/api/register','POST',{nomeCompleto:nomeCompleto, crm:crm, email:email, telefone:telefone, password:password, inviteToken: state.inviteToken || ''}).then(function(r){\n" +
 "    state.inviteToken = null;\n" +
 "    state.currentUser = r.user; applyBranding(r.user.branding); App.setLanguage(r.user.branding.language, true); renderUserBar(); showScreen('home'); loadSurgeryList(); App.maybeShowOnboarding();\n" +
@@ -3873,7 +3900,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  var password2 = document.getElementById('reset-password2').value;\n" +
 "  if (!password){ toast(t('toast.enter_new_password')); return; }\n" +
 "  if (password !== password2){ toast(t('toast.passwords_dont_match')); return; }\n" +
-"  if (password.length < 6){ toast(t('toast.password_too_short')); return; }\n" +
+"  if (password.length < 10){ toast(t('toast.password_too_short')); return; }\n" +
 "  api('/api/reset-password','POST',{token:state.resetToken, password:password}).then(function(){\n" +
 "    toast(t('toast.password_changed_login'), 3500);\n" +
 "    history.pushState({},'','/');\n" +
@@ -5713,7 +5740,7 @@ var server = http.createServer(function (req, res) {
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("Referrer-Policy", "same-origin");
   res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
-  if (SECURE_COOKIES) res.setHeader("Strict-Transport-Security", "max-age=15552000; includeSubDomains");
+  if (isSecureRequest(req)) res.setHeader("Strict-Transport-Security", "max-age=15552000; includeSubDomains");
 
   // Sem cabeçalhos de CORS aqui também, pelo mesmo motivo do comentário em
   // send() — app same-origin não precisa liberar chamadas cross-origin.
@@ -5735,7 +5762,8 @@ var server = http.createServer(function (req, res) {
       var inviteTokenRaw = String(body.inviteToken || "");
       if (!nomeCompleto || !crm || !email || !telefone || !password) { send(res, 400, { error: t("toast.fill_all_fields", registerLang) }); return; }
       if (email.indexOf("@") === -1) { send(res, 400, { error: t("errors.invalid_email", registerLang) }); return; }
-      if (password.length < 6) { send(res, 400, { error: t("toast.password_too_short", registerLang) }); return; }
+      var pwErrReg = passwordProblem(password, email);
+      if (pwErrReg) { send(res, 400, { error: t(pwErrReg, registerLang) }); return; }
       if (findUserByEmail(email)) { send(res, 409, { error: t("errors.email_already_registered", registerLang) }); return; }
       // Cadastro fechado por padrão: exige link de convite válido — exceto
       // pra conta do próprio Dr. Vitor (ADMIN_EMAIL), que precisa conseguir
@@ -5756,7 +5784,7 @@ var server = http.createServer(function (req, res) {
       var token = newId(24);
       db.authTokens[hashToken(token)] = { userId: id, createdAt: Date.now() };
       saveIndex();
-      setAuthCookie(res, token);
+      setAuthCookie(res, token, req);
       send(res, 200, { user: publicUser(user) });
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", registerLang) }); });
     return;
@@ -5773,7 +5801,7 @@ var server = http.createServer(function (req, res) {
       var token = newId(24);
       db.authTokens[hashToken(token)] = { userId: user.id, createdAt: Date.now() };
       saveIndex();
-      setAuthCookie(res, token);
+      setAuthCookie(res, token, req);
       send(res, 200, { user: publicUser(user) });
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", loginLang) }); });
     return;
@@ -5783,7 +5811,7 @@ var server = http.createServer(function (req, res) {
     var cookiesOut = parseCookies(req);
     var tokOut = cookiesOut["fue_auth"];
     if (tokOut && db.authTokens[hashToken(tokOut)]) { delete db.authTokens[hashToken(tokOut)]; saveIndex(); }
-    clearAuthCookie(res);
+    clearAuthCookie(res, req);
     send(res, 200, { ok: true });
     return;
   }
@@ -5797,7 +5825,7 @@ var server = http.createServer(function (req, res) {
       if (db.authTokens[tok].userId === logoutAllUser.id) delete db.authTokens[tok];
     });
     saveIndex();
-    clearAuthCookie(res);
+    clearAuthCookie(res, req);
     send(res, 200, { ok: true });
     return;
   }
@@ -5940,7 +5968,8 @@ var server = http.createServer(function (req, res) {
       var password = String(body.password || "");
       var entry = db.resetTokens[hashToken(token)];
       if (!entry || entry.expiresAt < Date.now()) { send(res, 400, { error: t("errors.reset_link_invalid", resetLang) }); return; }
-      if (password.length < 6) { send(res, 400, { error: t("toast.password_too_short", resetLang) }); return; }
+      var pwErrReset = passwordProblem(password, "");
+      if (pwErrReset) { send(res, 400, { error: t(pwErrReset, resetLang) }); return; }
       var user = db.users[entry.userId];
       if (!user) { send(res, 400, { error: t("errors.account_not_found", resetLang) }); return; }
       user.passwordHash = hashPassword(password);

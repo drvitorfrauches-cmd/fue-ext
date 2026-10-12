@@ -59,7 +59,7 @@ function waitForServer(port, timeoutMs) {
     let out = ''; child.stdout.on('data', d => out += d); child.stderr.on('data', d => out += d);
     await waitForServer(PORT, 10000);
 
-    const regA = await req(PORT, 'POST', '/api/register', { nomeCompleto: 'Dra. A', crm: 'CRM-A', email: 'drvitorfrauches@gmail.com', telefone: '1', password: 'senha123' });
+    const regA = await req(PORT, 'POST', '/api/register', { nomeCompleto: 'Dra. A', crm: 'CRM-A', email: 'drvitorfrauches@gmail.com', telefone: '1', password: 'senhaforte2026' });
     console.log('médico A cadastrado:', regA.status === 200);
     const cookieA = extractCookie(regA.headers);
 
@@ -67,7 +67,7 @@ function waitForServer(port, timeoutMs) {
     // bootstrap (é o e-mail do Dr. Vitor), então gera um convite pra B usar.
     const inviteForB = await req(PORT, 'POST', '/api/admin/invites', {}, cookieA);
     console.log('convite gerado por A pro médico B:', inviteForB.status === 200);
-    const regB = await req(PORT, 'POST', '/api/register', { nomeCompleto: 'Dr. B', crm: 'CRM-B', email: 'medB@teste.com', telefone: '1', password: 'senha123', inviteToken: inviteForB.body.token });
+    const regB = await req(PORT, 'POST', '/api/register', { nomeCompleto: 'Dr. B', crm: 'CRM-B', email: 'medB@teste.com', telefone: '1', password: 'senhaforte2026', inviteToken: inviteForB.body.token });
     console.log('médico B cadastrado:', regB.status === 200);
 
     // Médico B já precisa ter uma cirurgia própria pra ter um doctors/<id>.json

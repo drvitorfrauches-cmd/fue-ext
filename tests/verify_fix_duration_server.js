@@ -65,7 +65,7 @@ function check(label, ok) { allChecks.push(ok); console.log(label + ':', ok); }
     child.stdout.on('data', d => out += d); child.stderr.on('data', d => out += d);
     await waitForServer(PORT1, 10000);
 
-    const reg = await req(PORT1, 'POST', '/api/register', { nomeCompleto: 'Dr Vitor', crm: 'CRM-V', email: 'drvitorfrauches@gmail.com', telefone: '1', password: 'senha123' });
+    const reg = await req(PORT1, 'POST', '/api/register', { nomeCompleto: 'Dr Vitor', crm: 'CRM-V', email: 'drvitorfrauches@gmail.com', telefone: '1', password: 'senhaforte2026' });
     check('registro ok', reg.status === 200);
     const cookie = extractCookie(reg.headers);
     const ownerId = reg.body.user.id;

@@ -10,7 +10,7 @@ var server = http.createServer(function (req, res) {
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("Referrer-Policy", "same-origin");
   res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
-  if (SECURE_COOKIES) res.setHeader("Strict-Transport-Security", "max-age=15552000; includeSubDomains");
+  if (isSecureRequest(req)) res.setHeader("Strict-Transport-Security", "max-age=15552000; includeSubDomains");
 
   // Sem cabeçalhos de CORS aqui também, pelo mesmo motivo do comentário em
   // send() — app same-origin não precisa liberar chamadas cross-origin.
@@ -32,7 +32,8 @@ var server = http.createServer(function (req, res) {
       var inviteTokenRaw = String(body.inviteToken || "");
       if (!nomeCompleto || !crm || !email || !telefone || !password) { send(res, 400, { error: t("toast.fill_all_fields", registerLang) }); return; }
       if (email.indexOf("@") === -1) { send(res, 400, { error: t("errors.invalid_email", registerLang) }); return; }
-      if (password.length < 6) { send(res, 400, { error: t("toast.password_too_short", registerLang) }); return; }
+      var pwErrReg = passwordProblem(password, email);
+      if (pwErrReg) { send(res, 400, { error: t(pwErrReg, registerLang) }); return; }
       if (findUserByEmail(email)) { send(res, 409, { error: t("errors.email_already_registered", registerLang) }); return; }
       // Cadastro fechado por padrão: exige link de convite válido — exceto
       // pra conta do próprio Dr. Vitor (ADMIN_EMAIL), que precisa conseguir
@@ -53,7 +54,7 @@ var server = http.createServer(function (req, res) {
       var token = newId(24);
       db.authTokens[hashToken(token)] = { userId: id, createdAt: Date.now() };
       saveIndex();
-      setAuthCookie(res, token);
+      setAuthCookie(res, token, req);
       send(res, 200, { user: publicUser(user) });
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", registerLang) }); });
     return;
@@ -70,7 +71,7 @@ var server = http.createServer(function (req, res) {
       var token = newId(24);
       db.authTokens[hashToken(token)] = { userId: user.id, createdAt: Date.now() };
       saveIndex();
-      setAuthCookie(res, token);
+      setAuthCookie(res, token, req);
       send(res, 200, { user: publicUser(user) });
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", loginLang) }); });
     return;
@@ -80,7 +81,7 @@ var server = http.createServer(function (req, res) {
     var cookiesOut = parseCookies(req);
     var tokOut = cookiesOut["fue_auth"];
     if (tokOut && db.authTokens[hashToken(tokOut)]) { delete db.authTokens[hashToken(tokOut)]; saveIndex(); }
-    clearAuthCookie(res);
+    clearAuthCookie(res, req);
     send(res, 200, { ok: true });
     return;
   }
@@ -94,7 +95,7 @@ var server = http.createServer(function (req, res) {
       if (db.authTokens[tok].userId === logoutAllUser.id) delete db.authTokens[tok];
     });
     saveIndex();
-    clearAuthCookie(res);
+    clearAuthCookie(res, req);
     send(res, 200, { ok: true });
     return;
   }
@@ -237,7 +238,8 @@ var server = http.createServer(function (req, res) {
       var password = String(body.password || "");
       var entry = db.resetTokens[hashToken(token)];
       if (!entry || entry.expiresAt < Date.now()) { send(res, 400, { error: t("errors.reset_link_invalid", resetLang) }); return; }
-      if (password.length < 6) { send(res, 400, { error: t("toast.password_too_short", resetLang) }); return; }
+      var pwErrReset = passwordProblem(password, "");
+      if (pwErrReset) { send(res, 400, { error: t(pwErrReset, resetLang) }); return; }
       var user = db.users[entry.userId];
       if (!user) { send(res, 400, { error: t("errors.account_not_found", resetLang) }); return; }
       user.passwordHash = hashPassword(password);

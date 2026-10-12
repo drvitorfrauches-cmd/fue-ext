@@ -70,18 +70,18 @@ function check(label, ok) { allChecks.push(ok); console.log(label + ':', ok); }
     await waitForServer(PORT1, 10000);
 
     console.log('--- Cadastro do Dr. Vitor (ADMIN_EMAIL) funciona SEM convite ---');
-    const regAdmin = await req(PORT1, 'POST', '/api/register', { nomeCompleto: 'Dr Vitor', crm: 'CRM-V', email: 'drvitorfrauches@gmail.com', telefone: '1', password: 'senha123' });
+    const regAdmin = await req(PORT1, 'POST', '/api/register', { nomeCompleto: 'Dr Vitor', crm: 'CRM-V', email: 'drvitorfrauches@gmail.com', telefone: '1', password: 'senhaforte2026' });
     check('status 200', regAdmin.status === 200);
     check('isAdmin true', regAdmin.body.user && regAdmin.body.user.isAdmin === true);
 
     console.log();
     console.log('--- Cadastro de outro médico SEM inviteToken é recusado ---');
-    const regNoToken = await req(PORT1, 'POST', '/api/register', { nomeCompleto: 'Dr Outro', crm: 'CRM-O', email: 'outro1@teste.com', telefone: '1', password: 'senha123' });
+    const regNoToken = await req(PORT1, 'POST', '/api/register', { nomeCompleto: 'Dr Outro', crm: 'CRM-O', email: 'outro1@teste.com', telefone: '1', password: 'senhaforte2026' });
     check('status 400', regNoToken.status === 400);
 
     console.log();
     console.log('--- Cadastro com inviteToken INVENTADO (não existe) é recusado ---');
-    const regBadToken = await req(PORT1, 'POST', '/api/register', { nomeCompleto: 'Dr Outro', crm: 'CRM-O', email: 'outro2@teste.com', telefone: '1', password: 'senha123', inviteToken: 'tokenquenaoexiste' });
+    const regBadToken = await req(PORT1, 'POST', '/api/register', { nomeCompleto: 'Dr Outro', crm: 'CRM-O', email: 'outro2@teste.com', telefone: '1', password: 'senhaforte2026', inviteToken: 'tokenquenaoexiste' });
     check('status 400', regBadToken.status === 400);
 
     // O servidor só lê data/index.json no boot — pra seedar um convite
@@ -107,13 +107,13 @@ function check(label, ok) { allChecks.push(ok); console.log(label + ':', ok); }
 
     console.log();
     console.log('--- Cadastro com inviteToken VÁLIDO (seedado direto no índice, servidor reiniciado) funciona ---');
-    const regGoodToken = await req(PORT2, 'POST', '/api/register', { nomeCompleto: 'Dr Outro', crm: 'CRM-O', email: 'outro3@teste.com', telefone: '1', password: 'senha123', inviteToken: rawToken });
+    const regGoodToken = await req(PORT2, 'POST', '/api/register', { nomeCompleto: 'Dr Outro', crm: 'CRM-O', email: 'outro3@teste.com', telefone: '1', password: 'senhaforte2026', inviteToken: rawToken });
     check('status 200', regGoodToken.status === 200);
     check('isAdmin false (não é o e-mail do Dr. Vitor)', regGoodToken.body.user && regGoodToken.body.user.isAdmin === false);
 
     console.log();
     console.log('--- Reusar o MESMO token uma segunda vez é recusado (uso único) ---');
-    const regReuse = await req(PORT2, 'POST', '/api/register', { nomeCompleto: 'Dr Quarto', crm: 'CRM-Q', email: 'outro4@teste.com', telefone: '1', password: 'senha123', inviteToken: rawToken });
+    const regReuse = await req(PORT2, 'POST', '/api/register', { nomeCompleto: 'Dr Quarto', crm: 'CRM-Q', email: 'outro4@teste.com', telefone: '1', password: 'senhaforte2026', inviteToken: rawToken });
     check('status 400', regReuse.status === 400);
 
     console.log();

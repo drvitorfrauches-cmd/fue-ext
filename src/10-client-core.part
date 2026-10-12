@@ -73,7 +73,7 @@
 "  var password2 = document.getElementById('reg-password2').value;\n" +
 "  if (!nomeCompleto || !crm || !email || !telefone || !password){ toast(t('toast.fill_all_fields')); return; }\n" +
 "  if (password !== password2){ toast(t('toast.passwords_dont_match')); return; }\n" +
-"  if (password.length < 6){ toast(t('toast.password_too_short')); return; }\n" +
+"  if (password.length < 10){ toast(t('toast.password_too_short')); return; }\n" +
 "  api('/api/register','POST',{nomeCompleto:nomeCompleto, crm:crm, email:email, telefone:telefone, password:password, inviteToken: state.inviteToken || ''}).then(function(r){\n" +
 "    state.inviteToken = null;\n" +
 "    state.currentUser = r.user; applyBranding(r.user.branding); App.setLanguage(r.user.branding.language, true); renderUserBar(); showScreen('home'); loadSurgeryList(); App.maybeShowOnboarding();\n" +
@@ -130,7 +130,7 @@
 "  var password2 = document.getElementById('reset-password2').value;\n" +
 "  if (!password){ toast(t('toast.enter_new_password')); return; }\n" +
 "  if (password !== password2){ toast(t('toast.passwords_dont_match')); return; }\n" +
-"  if (password.length < 6){ toast(t('toast.password_too_short')); return; }\n" +
+"  if (password.length < 10){ toast(t('toast.password_too_short')); return; }\n" +
 "  api('/api/reset-password','POST',{token:state.resetToken, password:password}).then(function(){\n" +
 "    toast(t('toast.password_changed_login'), 3500);\n" +
 "    history.pushState({},'','/');\n" +

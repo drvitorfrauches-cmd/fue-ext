@@ -61,7 +61,7 @@ function check(label, ok) { allChecks.push(ok); console.log(label + ':', ok); }
     child.stdout.on('data', d => out += d); child.stderr.on('data', d => out += d);
     await waitForServer(PORT, 10000);
 
-    const regAdmin = await req(PORT, 'POST', '/api/register', { nomeCompleto: 'Dr Vitor', crm: 'CRM-V', email: 'drvitorfrauches@gmail.com', telefone: '1', password: 'senha123' });
+    const regAdmin = await req(PORT, 'POST', '/api/register', { nomeCompleto: 'Dr Vitor', crm: 'CRM-V', email: 'drvitorfrauches@gmail.com', telefone: '1', password: 'senhaforte2026' });
     const cookieAdmin = extractCookie(regAdmin.headers);
     check('admin cadastrado', regAdmin.status === 200 && regAdmin.body.user.isAdmin === true);
 
@@ -80,7 +80,7 @@ function check(label, ok) { allChecks.push(ok); console.log(label + ':', ok); }
 
     console.log();
     console.log('--- Cadastro de um segundo médico com esse token funciona ---');
-    const regB = await req(PORT, 'POST', '/api/register', { nomeCompleto: 'Dr. B', crm: 'CRM-B', email: 'medB@teste.com', telefone: '1', password: 'senha123', inviteToken: gen.body.token });
+    const regB = await req(PORT, 'POST', '/api/register', { nomeCompleto: 'Dr. B', crm: 'CRM-B', email: 'medB@teste.com', telefone: '1', password: 'senhaforte2026', inviteToken: gen.body.token });
     check('status 200', regB.status === 200);
     check('isAdmin false', regB.body.user.isAdmin === false);
 
@@ -91,7 +91,7 @@ function check(label, ok) { allChecks.push(ok); console.log(label + ':', ok); }
 
     console.log();
     console.log('--- Reusar o token falha ---');
-    const regReuse = await req(PORT, 'POST', '/api/register', { nomeCompleto: 'Dr. C', crm: 'CRM-C', email: 'medC@teste.com', telefone: '1', password: 'senha123', inviteToken: gen.body.token });
+    const regReuse = await req(PORT, 'POST', '/api/register', { nomeCompleto: 'Dr. C', crm: 'CRM-C', email: 'medC@teste.com', telefone: '1', password: 'senhaforte2026', inviteToken: gen.body.token });
     check('status 400', regReuse.status === 400);
 
     console.log();
