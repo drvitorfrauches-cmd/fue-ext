@@ -933,6 +933,43 @@ digite o caminho completo `.github/workflows/tests.yml` — o GitHub cria as
 pastas sozinho ao ver as barras "/". Cole o conteúdo do arquivo `tests.yml`
 que eu te entreguei e comite.
 
+## Guarda automática de tradução — novo (08/10/2026)
+
+Um teste novo (`verify_i18n_parity.js`) roda a cada push e falha se: algum
+idioma (PT/EN/ES) tiver chave a menos, uma tradução ficar vazia ou com
+`{placeholders}` diferentes, o código usar uma chave que não existe, ou alguém
+escrever texto direto em `toast()`/`speak()`/`alert()` em vez de usar o
+dicionário. Na primeira varredura, 11 textos que estavam fixos em português
+foram movidos pro dicionário: faixa "sem conexão", aviso do modal de
+compartilhar, resumo do card de cirurgia, erro de leitura de foto, mensagem do
+convite por WhatsApp e as frases de voz dos áudios/alarmes (agora falam no
+idioma escolhido).
+
+## Punch utilizado — novo (22/09/2026)
+
+Na aba "Paciente" (tanto no formulário de nova cirurgia quanto numa cirurgia já
+criada) tem um novo campo "Punch utilizado", com dois botões: 0,95 mm e 1,0 mm
+— os dois calibres que você usa hoje. Opcional, igual aos outros dados do
+paciente, e aparece no relatório impresso interno (não entra no Relatório para
+o paciente, que já era mais enxuto de propósito). A ideia é essa informação
+alimentar futuras comparações no Dashboard entre cirurgias com o mesmo punch.
+
+## Corrigir duração da cirurgia — novo (21/08/2026)
+
+Se esquecer de apertar "Finalizar cirurgia" na hora certa (por exemplo, só
+perceber no dia seguinte), a duração ficava travada com a hora errada — tipo
+24h — sem jeito de arrumar, nem reabrindo e finalizando de novo.
+
+Agora, na tela "Resumo Final" de uma cirurgia já finalizada, aparece um botão
+"Corrigir duração" ao lado de "Reabrir". Ele pergunta quantos minutos a
+cirurgia durou de verdade (ex: digite 200 para 3h20) e recalcula o horário de
+término a partir do horário real de início — sem precisar reabrir nada. Esse
+mesmo horário corrigido também é o que passa a valer para o prazo de acesso às
+fotos por link (90 dias contados a partir dali).
+
+Não guarda um histórico de "antes e depois" — o valor antigo simplesmente é
+substituído pelo corrigido, então só use quando tiver certeza da duração real.
+
 ## Cadastro só por link de convite — novo (31/07/2026)
 
 Antes, qualquer pessoa que chegasse na tela de login podia clicar em "Criar
@@ -1117,3 +1154,123 @@ médico cadastrado no mesmo app.
 Recomendação prática: ative o backup automático do Railway (item 2, é o que
 protege de verdade contra acidente) e, de vez em quando, use o botão "Baixar
 backup" (item 3) como uma segunda camada bem mais simples.
+
+---
+
+## Guia de boas-vindas para médico novo (09/10/2026)
+
+Quem se cadastra por **link de convite** vê, ao entrar pela primeira vez, um
+guia de 4 passos (criar a cirurgia, compartilhar o link com a auxiliar,
+contar, finalizar/Dashboard), com Próximo / Voltar / Pular guia. Em PT, EN e ES.
+
+- O admin (você) e os médicos que já existiam **não** veem o guia sozinho.
+- Ao concluir ou pular, o servidor grava `onboardingPending = false` na conta
+  (`POST /api/onboarding/complete`) e ele não volta a abrir sozinho.
+- Qualquer médico pode rever em **Configurações → Segurança da conta →
+  "Rever guia de boas-vindas"** (não altera nada no servidor).
+- Testes: `verify_onboarding_server.js` e `verify_onboarding_client.js`.
+
+---
+
+## Editar nome do paciente (09/10/2026)
+
+Na tela da cirurgia, ao lado do nome do paciente, aparece um botão ✏️ **só pro
+médico dono da cirurgia** (logado). Quem entra só pelo link (auxiliar) e outros
+médicos não veem o botão, e o servidor também recusa (`POST
+/api/session/:id/rename` → 401 sem login, 403 se não for o dono). Nome vazio é
+rejeitado; limite de 60 caracteres. Testes: `verify_rename_patient.js` e
+`verify_rename_patient_client.js`.
+
+---
+
+## Backup automático, monitor de queda e Dashboard novo (09/10/2026)
+
+### Backup automático a cada 10 dias
+O servidor copia a pasta de dados para `backups/<data-hora>` (no volume do Railway),
+**releitura completa da cópia** (todo arquivo abre? nº de médicos e de cirurgias bate
+com a memória? nomes batem?) e manda e-mail pra drvitorfrauches@gmail.com com **OK**
+ou **FALHOU** (o e-mail só leva contagens, nunca dado de paciente). Guarda as últimas
+6 cópias; se uma cópia falha na verificação ela é descartada e as boas ficam.
+- Primeiro teste ~2 min depois do deploy; depois a cada 10 dias (checa de 6 em 6 h).
+- Configurações → Convites/Backup automático (só admin): mostra o último teste e
+  tem o botão **"Rodar agora"**.
+- Variáveis opcionais no Railway: `BACKUP_INTERVAL_DAYS` (padrão 10), `BACKUP_KEEP` (padrão 6).
+- **Limite honesto:** a cópia fica no MESMO volume. Protege de arquivo corrompido,
+  apagado por engano ou deploy ruim; **não** protege se o volume inteiro for perdido.
+  Pra isso continuam valendo o backup de volume do Railway e o botão "Baixar backup".
+
+### Alerta de queda por e-mail (UptimeRobot)
+O servidor não consegue avisar que caiu — precisa de um monitor de fora.
+1. Crie conta grátis em uptimerobot.com e confirme seu e-mail.
+2. Add New Monitor → tipo **HTTP(s)** → URL `https://www.graftis.app/api/health` →
+   intervalo 5 min → em "Alert contacts" marque seu e-mail → Create.
+3. Teste: Railway → serviço → pausar por 1–2 min; chega e-mail "DOWN" e depois "UP".
+`/api/health` devolve 200 `{ok:true}` quando o app e os dados estão carregados (sem dado de paciente).
+
+### Dashboard novo
+Três abas: **Visão geral** (totais, gráficos, taxa de transecção, quadrantes, tipos de UF),
+**Comparar** (agrupa por punch, espessura, textura, raspagem ou faixa de idade, com barras,
+★ no melhor valor e ⚠ quando o grupo tem menos de 5 cirurgias; mais comparação lado a lado
+de duas cirurgias A × B com a diferença) e **Cirurgias** (lista com punch, espessura, textura,
+raspagem, idade e fol./min; toque no título da coluna pra ordenar). O seletor
+Completo/Reduzido/Todos vale pra tudo: taxas de transecção nunca misturam os dois modos.
+Testes: `verify_backup_auto.js`, `verify_dashboard_compare.js`.
+
+---
+
+## Código dividido em src/ (11/10/2026)
+
+O `server.js` (6.155 linhas) agora é **gerado** a partir de 16 pedaços em `src/`
+(`01-config`, `02..04-i18n-pt/en/es`, `05-storage`, `06-auth-smtp-http`, `07-html-css`,
+`08-html-body`, `09..11-client-*`, `12-html-end`, `13-backup`, `14-routes-main`,
+`15-routes-sessions`, `16-listen`). O resultado é **idêntico byte a byte** ao arquivo de antes
+(conferido com `cmp`), então o comportamento não mudou e o Railway continua executando só o `server.js`.
+
+Fluxo de trabalho daqui pra frente:
+1. Edite o pedaço certo em `src/` (ex.: texto de tela → `02-i18n-pt.part`; rota nova → `15-routes-sessions.part`).
+2. Rode `node build.js` (regrava o `server.js`).
+3. Suba pro GitHub o `server.js` **e** a pasta `src/`.
+
+Rede de segurança: o teste `verify_build_in_sync.js` falha no CI se o `server.js` não for exatamente o que
+`src/` gera (alguém editou o `server.js` direto, ou editou `src/` e esqueceu de rodar o build).
+Limite honesto: isto organiza os arquivos, mas tudo continua no mesmo escopo global — não é módulos isolados.
+Se editar só o `server.js` direto por pressa, a edição se perde no próximo build.
+
+---
+
+## Horários, Implantação (chiller) e menu recolhível (11/10/2026)
+
+**Menu (☰):** as abas da cirurgia agora ficam numa gaveta que abre por cima da tela e fecha sozinha ao
+escolher uma aba (ou tocar fora / Esc). O nome da aba atual fica sempre no topo. Ordem: Extração,
+Pré-incisões, Horários, Implantação, Fotos, Paciente, Resumo Final.
+
+**Aba Horários** (como na lousa da sala): Entrada e Finalização são um horário só; Bloqueio, Anestesia
+doadora, Pré-incisão frontal, Pré-incisão coroa, Extração, Implantação coroa e Implantação frente têm
+início e fim. Botão "Agora" carimba a hora; também dá pra digitar/corrigir e limpar (✕). Mostra a duração
+de cada etapa e, havendo Entrada e Finalização, o tempo total. Se o fim for menor que o início aparece ⚠
+(entende que virou o dia). Na Extração, se o início/fim estiver vazio e o cronômetro tiver rodado, sugere
+"Usar cronômetro (HH:MM)". Qualquer pessoa com o link da cirurgia pode preencher (como a aba Paciente).
+Os horários são guardados como texto HH:MM (sem fuso).
+
+**Aba Implantação:** saldo do chiller = folículos extraídos (mesma conta do Resumo, sem os transeccionados)
+− soma das retiradas. Botões −100/−200/−300 e campo livre. Histórico com hora, quantidade e quanto restava,
+com ✕ pra apagar uma retirada errada. Bloqueia retirada maior que o saldo. **Só o médico dono da cirurgia,
+logado, registra/apaga** (o servidor confere: 401 sem login, 403 se não for o dono); quem entra pelo link só vê.
+Funciona também com a extração já finalizada. Se a contagem for reaberta e o total ficar menor que o já
+retirado, aparece um aviso. O saldo é sempre calculado, nunca guardado.
+
+Cirurgias antigas ganham `schedule` e `implant` vazios automaticamente (migração no boot).
+Código novo em `src/11-client-schedule-implant.part` (cliente) e `src/04-i18n-es.part` (helpers do servidor)
+e `src/16-routes-sessions.part` (rotas). Testes: `verify_schedule_implant_server.js`,
+`verify_schedule_implant_client.js`.
+
+## Horários automáticos (aba Horários)
+
+- **Entrada do paciente**: sempre manual.
+- **Início da extração**: preenchido sozinho no 1º clique em "iniciar" do cronômetro de extração (retomar depois de pausar NÃO sobrescreve).
+- **Pré-incisão frontal (início)**: preenchido no 1º clique em "iniciar" do cronômetro de pré-incisões. Pré-incisão coroa continua manual.
+- **Finalização**: preenchida ao clicar "Finalizar cirurgia" (sempre atualiza), ajustada por "Corrigir duração" e **apagada ao reabrir** a cirurgia (edição manual feita antes se perde).
+- Fim da extração e demais etapas: manuais.
+- O servidor roda em UTC, então o cliente manda `localTime` (HH:MM do aparelho). Cliente antigo (sem `localTime`) ou valor inválido: nada é preenchido, sem erro.
+- Qualquer horário automático pode ser corrigido à mão na aba Horários.
+- Testes: `verify_schedule_auto_server.js` e `verify_schedule_auto_client.js`.

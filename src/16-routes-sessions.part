@@ -1,0 +1,539 @@
+  // Horários das etapas da cirurgia — como patient-info, qualquer pessoa com o link
+  // da cirurgia (equipe) pode preencher. Atualização parcial; vazio limpa o campo.
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/schedule$/);
+  if (m && req.method === "POST") {
+    var sSch = db.sessions[m[1]];
+    var sSchLang = requestLang(req);
+    if (!sSch) { send(res, 404, { error: t("errors.surgery_not_found", sSchLang) }); return; }
+    readBody(req).then(function (body) {
+      var parsed = sanitizeScheduleFields(body || {});
+      if (parsed.invalid) { send(res, 400, { error: t("errors.invalid_time", sSchLang) }); return; }
+      if (!sSch.schedule) sSch.schedule = emptySchedule();
+      Object.assign(sSch.schedule, parsed.fields);
+      sSch.updatedAt = Date.now();
+      saveForSession(sSch);
+      send(res, 200, withOwnerBranding(sSch));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sSchLang) }); });
+    return;
+  }
+
+  // Implantação: registrar / apagar retirada do chiller — SÓ o médico dono, logado.
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/implant\/(withdraw|remove)$/);
+  if (m && req.method === "POST") {
+    var implAction = m[2];
+    var implLang = requestLang(req);
+    var implUser = getAuthedUser(req);
+    if (!implUser) { send(res, 401, { error: t("errors.login_required_implant", implLang) }); return; }
+    var sImpl = db.sessions[m[1]];
+    if (!sImpl) { send(res, 404, { error: t("errors.surgery_not_found", implLang) }); return; }
+    if (sImpl.ownerId !== implUser.id) { send(res, 403, { error: t("errors.surgery_not_yours", implLang) }); return; }
+    readBody(req).then(function (body) {
+      body = body || {};
+      if (!sImpl.implant || !Array.isArray(sImpl.implant.withdrawals)) sImpl.implant = emptyImplant();
+      if (implAction === "withdraw") {
+        var qty = Number(body.qty);
+        if (!Number.isInteger(qty) || qty < 1 || qty > 100000 || sImpl.implant.withdrawals.length >= 2000) { send(res, 400, { error: t("errors.invalid_withdrawal", implLang) }); return; }
+        sImpl.implant.withdrawals.push({ id: newId(6), qty: qty, at: Date.now() });
+      } else {
+        var before = sImpl.implant.withdrawals.length;
+        sImpl.implant.withdrawals = sImpl.implant.withdrawals.filter(function (w) { return w.id !== String(body.id || ""); });
+        if (sImpl.implant.withdrawals.length === before) { send(res, 404, { error: t("errors.withdrawal_not_found", implLang) }); return; }
+      }
+      sImpl.updatedAt = Date.now();
+      saveForSession(sImpl);
+      send(res, 200, withOwnerBranding(sImpl));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", implLang) }); });
+    return;
+  }
+
+  if (p === "/api/sessions" && req.method === "GET") {
+    var lister = getAuthedUser(req);
+    if (!lister) { send(res, 401, { error: t("errors.not_authenticated", requestLang(req)) }); return; }
+    var list = Object.keys(db.sessions).map(function (k) { return db.sessions[k]; })
+      .filter(function (s) { return s.ownerId === lister.id; })
+      .sort(function (a, b) { return b.createdAt - a.createdAt; });
+    send(res, 200, list);
+    return;
+  }
+
+  // Backup manual pro próprio médico: baixa um arquivo com o cadastro da conta e
+  // TODAS as cirurgias dele (contagens, tempos, pré-incisões — tudo que fica em
+  // data.json), pra guardar uma cópia fora do Railway (computador, Drive, etc.).
+  // Só cobre os dados numéricos/cadastrais, não as fotos — essas continuam
+  // dependendo só do backup de volume do próprio Railway (ver LEIA-ME.md). Só
+  // funciona logado, e só devolve os dados do médico autenticado, nunca de
+  // outra conta.
+  if (p === "/api/backup" && req.method === "GET") {
+    var backupUser = getAuthedUser(req);
+    if (!backupUser) { send(res, 401, { error: t("errors.not_authenticated", requestLang(req)) }); return; }
+    var backupSessions = Object.keys(db.sessions).map(function (k) { return db.sessions[k]; })
+      .filter(function (s) { return s.ownerId === backupUser.id; })
+      .sort(function (a, b) { return b.createdAt - a.createdAt; });
+    var backupPayload = {
+      geradoEm: new Date().toISOString(),
+      app: "Graftis",
+      medico: publicUser(backupUser),
+      cirurgias: backupSessions
+    };
+    var backupJson = JSON.stringify(backupPayload, null, 2);
+    var backupDate = new Date().toISOString().slice(0, 10);
+    var backupFilename = "graftis-backup-" + backupDate + ".json";
+    res.writeHead(200, {
+      "Content-Type": "application/json; charset=utf-8",
+      "Content-Disposition": "attachment; filename=\"" + backupFilename + "\""
+    });
+    res.end(backupJson);
+    return;
+  }
+
+  var m;
+
+  // Freia varredura de IDs de cirurgia (o ID tem só 8 caracteres — alguém tentando
+  // adivinhar IDs ao acaso vai bater várias vezes em "não encontrada" rapidamente,
+  // o que uma auxiliar com o link certo nunca faz). Verifica ANTES de cada rota
+  // específica de sessão, cobrindo todos os sub-caminhos (/adjust, /mamba, /photos etc).
+  var sessionScanMatch = p.match(/^\/api\/session\/([a-f0-9]+)/);
+  if (sessionScanMatch && !db.sessions[sessionScanMatch[1]]) {
+    if (rateLimited("session-miss", clientIp(req), 20, 5 * 60 * 1000)) {
+      send(res, 429, { error: t("errors.too_many_missing_session_attempts", requestLang(req)) });
+      return;
+    }
+  }
+
+  m = p.match(/^\/api\/session\/([a-f0-9]+)$/);
+  if (m && req.method === "GET") {
+    var s = db.sessions[m[1]];
+    if (!s) { send(res, 404, { error: t("errors.surgery_not_found_server", requestLang(req)) }); return; }
+    send(res, 200, withOwnerBranding(s));
+    return;
+  }
+
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/adjust$/);
+  if (m && req.method === "POST") {
+    var s2 = db.sessions[m[1]];
+    var s2Lang = requestLang(req);
+    if (!s2) { send(res, 404, { error: t("errors.surgery_not_found", s2Lang) }); return; }
+    if (s2.status === "finalizada") { send(res, 409, { error: t("errors.surgery_already_finalized", s2Lang) }); return; }
+    readBody(req).then(function (body) {
+      var quadId = body.quadrant;
+      var catId = body.category;
+      var delta = Number(body.delta);
+      if (!QUAD_IDS.has(quadId) || !CAT_IDS.has(catId) || !Number.isFinite(delta)) { send(res, 400, { error: t("errors.invalid_parameters", s2Lang) }); return; }
+      if (s2.quadrants[quadId].locked) { send(res, 409, { error: t("errors.quadrant_locked", s2Lang) }); return; }
+      var counts = s2.quadrants[quadId].counts;
+      var current = counts[catId] || 0;
+      var next = current + delta;
+      if (next < 0) next = 0;
+      counts[catId] = next;
+      s2.updatedAt = Date.now();
+      saveForSession(s2);
+      send(res, 200, withOwnerBranding(s2));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", s2Lang) }); });
+    return;
+  }
+
+  // Contagem em cadeia: "Contagem finalizada" trava o quadrante atual e liga o
+  // PRÓXIMO (ordem padrão da lista QUADRANTS, que já é a ordem real de extração) a
+  // ele, só se esse próximo ainda não tiver um link definido nem estiver travado —
+  // assim o fluxo comum (extrair na ordem padrão) fica em 1 toque, sem sobrescrever
+  // um link que já tenha sido escolhido manualmente.
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/quadrant-finish$/);
+  if (m && req.method === "POST") {
+    var sQF = db.sessions[m[1]];
+    var sQFLang = requestLang(req);
+    if (!sQF) { send(res, 404, { error: t("errors.surgery_not_found", sQFLang) }); return; }
+    if (sQF.status === "finalizada") { send(res, 409, { error: t("errors.surgery_already_finalized", sQFLang) }); return; }
+    readBody(req).then(function (body) {
+      var quadId = body.quadrant;
+      if (!QUAD_IDS.has(quadId)) { send(res, 400, { error: t("errors.invalid_quadrant", sQFLang) }); return; }
+      sQF.quadrants[quadId].locked = true;
+      var idx = -1;
+      for (var i = 0; i < QUADRANTS.length; i++) { if (QUADRANTS[i].id === quadId) { idx = i; break; } }
+      var nextQuad = (idx !== -1 && idx + 1 < QUADRANTS.length) ? QUADRANTS[idx + 1] : null;
+      if (nextQuad && !sQF.quadrants[nextQuad.id].carryFromId && !sQF.quadrants[nextQuad.id].locked) {
+        sQF.quadrants[nextQuad.id].carryFromId = quadId;
+      }
+      sQF.updatedAt = Date.now();
+      saveForSession(sQF);
+      send(res, 200, withOwnerBranding(sQF));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sQFLang) }); });
+    return;
+  }
+
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/quadrant-reopen$/);
+  if (m && req.method === "POST") {
+    var sQR = db.sessions[m[1]];
+    var sQRLang = requestLang(req);
+    if (!sQR) { send(res, 404, { error: t("errors.surgery_not_found", sQRLang) }); return; }
+    if (sQR.status === "finalizada") { send(res, 409, { error: t("errors.surgery_already_finalized", sQRLang) }); return; }
+    readBody(req).then(function (body) {
+      var quadId = body.quadrant;
+      if (!QUAD_IDS.has(quadId)) { send(res, 400, { error: t("errors.invalid_quadrant", sQRLang) }); return; }
+      sQR.quadrants[quadId].locked = false;
+      sQR.updatedAt = Date.now();
+      saveForSession(sQR);
+      send(res, 200, withOwnerBranding(sQR));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sQRLang) }); });
+    return;
+  }
+
+  // Liga (ou desliga, com carryFromId null/vazio) manualmente um quadrante a outro
+  // como predecessor da cadeia — usado quando a ordem real de extração foge do padrão.
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/quadrant-link$/);
+  if (m && req.method === "POST") {
+    var sQL = db.sessions[m[1]];
+    var sQLLang = requestLang(req);
+    if (!sQL) { send(res, 404, { error: t("errors.surgery_not_found", sQLLang) }); return; }
+    if (sQL.status === "finalizada") { send(res, 409, { error: t("errors.surgery_already_finalized", sQLLang) }); return; }
+    readBody(req).then(function (body) {
+      var quadId = body.quadrant;
+      var carryFromId = body.carryFromId;
+      if (!QUAD_IDS.has(quadId)) { send(res, 400, { error: t("errors.invalid_quadrant", sQLLang) }); return; }
+      if (sQL.quadrants[quadId].locked) { send(res, 409, { error: t("errors.quadrant_locked", sQLLang) }); return; }
+      if (carryFromId === null || carryFromId === undefined || carryFromId === "") {
+        sQL.quadrants[quadId].carryFromId = null;
+      } else {
+        if (!QUAD_IDS.has(carryFromId)) { send(res, 400, { error: t("errors.invalid_quadrant", sQLLang) }); return; }
+        if (wouldCreateCarryCycle(sQL, quadId, carryFromId)) { send(res, 400, { error: t("errors.invalid_carry_link", sQLLang) }); return; }
+        sQL.quadrants[quadId].carryFromId = carryFromId;
+      }
+      sQL.updatedAt = Date.now();
+      saveForSession(sQL);
+      send(res, 200, withOwnerBranding(sQL));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sQLLang) }); });
+    return;
+  }
+
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/mamba$/);
+  if (m && req.method === "POST") {
+    var sM = db.sessions[m[1]];
+    var sMLang = requestLang(req);
+    if (!sM) { send(res, 404, { error: t("errors.surgery_not_found", sMLang) }); return; }
+    readBody(req).then(function (body) {
+      var quadId = body.quadrant;
+      if (!QUAD_IDS.has(quadId)) { send(res, 400, { error: t("errors.invalid_quadrant", sMLang) }); return; }
+      if (body.value === null || body.value === undefined || body.value === "") {
+        sM.quadrants[quadId].mambaCumulativo = null;
+        sM.quadrants[quadId].mambaMarkTimeMs = null;
+        sM.quadrants[quadId].mambaMarkedAtMs = null;
+      } else {
+        var v = Number(body.value);
+        if (!Number.isFinite(v) || v < 0) { send(res, 400, { error: t("errors.invalid_value", sMLang) }); return; }
+        sM.quadrants[quadId].mambaCumulativo = v;
+        // Marca, no exato momento em que o Mamba é preenchido, quanto tempo de cirurgia
+        // já tinha decorrido — é isso que permite calcular o ritmo de extração por
+        // quadrante baseado no Mamba (em vez da contagem manual de bancada). Esse valor
+        // FICA PARADO enquanto o cronômetro estiver pausado (de propósito — não conta
+        // tempo de pausa como tempo de extração do quadrante).
+        sM.quadrants[quadId].mambaMarkTimeMs = serverElapsedMs(sM.timer);
+        // Marca também o relógio real (nunca pausa, nunca empata entre quadrantes
+        // diferentes) — é isso que garante a ORDEM verdadeira de preenchimento entre
+        // quadrantes, mesmo que dois deles sejam marcados com o cronômetro de extração
+        // pausado (o que fazia o cálculo acima empatar e o sistema cair, por engano,
+        // no quadrante mais antigo em vez do mais recente).
+        sM.quadrants[quadId].mambaMarkedAtMs = Date.now();
+      }
+      sM.updatedAt = Date.now();
+      saveForSession(sM);
+      send(res, 200, withOwnerBranding(sM));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sMLang) }); });
+    return;
+  }
+
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/preinc$/);
+  if (m && req.method === "POST") {
+    var sP = db.sessions[m[1]];
+    var sPLang = requestLang(req);
+    if (!sP) { send(res, 404, { error: t("errors.surgery_not_found", sPLang) }); return; }
+    if (sP.status === "finalizada") { send(res, 409, { error: t("errors.surgery_already_finalized", sPLang) }); return; }
+    readBody(req).then(function (body) {
+      var area = body.area;
+      var value = Number(body.value);
+      if (!PREINC_IDS.has(area) || !Number.isFinite(value) || value < 0) { send(res, 400, { error: t("errors.invalid_parameters", sPLang) }); return; }
+      sP.preincCounts[area] = Math.floor(value);
+      sP.updatedAt = Date.now();
+      saveForSession(sP);
+      send(res, 200, withOwnerBranding(sP));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sPLang) }); });
+    return;
+  }
+
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/preinc-dist$/);
+  if (m && req.method === "POST") {
+    var sPD = db.sessions[m[1]];
+    var sPDLang = requestLang(req);
+    if (!sPD) { send(res, 404, { error: t("errors.surgery_not_found", sPDLang) }); return; }
+    if (sPD.status === "finalizada") { send(res, 409, { error: t("errors.surgery_already_finalized", sPDLang) }); return; }
+    readBody(req).then(function (body) {
+      var area = body.area;
+      var fio = body.fio;
+      var value = Number(body.value);
+      if (!PREINC_IDS.has(area) || !DIST_FIO_IDS.has(fio) || !Number.isFinite(value) || value < 0) { send(res, 400, { error: t("errors.invalid_parameters", sPDLang) }); return; }
+      if (!sPD.preincDist) sPD.preincDist = emptyPreincDist();
+      sPD.preincDist[area][fio] = Math.floor(value);
+      sPD.updatedAt = Date.now();
+      saveForSession(sPD);
+      send(res, 200, withOwnerBranding(sPD));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sPDLang) }); });
+    return;
+  }
+
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/photos$/);
+  if (m && req.method === "POST") {
+    var sPh = db.sessions[m[1]];
+    var sPhLang = requestLang(req);
+    if (!sPh) { send(res, 404, { error: t("errors.surgery_not_found", sPhLang) }); return; }
+    readBody(req).then(function (body) {
+      var category = body.category;
+      var dataUrl = String(body.dataUrl || "");
+      if (PHOTO_CATS.indexOf(category) === -1) { send(res, 400, { error: t("errors.invalid_category", sPhLang) }); return; }
+      var match = dataUrl.match(/^data:image\/(png|jpeg|jpg);base64,(.+)$/);
+      if (!match) { send(res, 400, { error: t("errors.invalid_image", sPhLang) }); return; }
+      var buffer = Buffer.from(match[2], "base64");
+      var photoId = newId(6);
+      var sessionDir = path.join(UPLOADS_DIR, sPh.id);
+      if (!fs.existsSync(sessionDir)) fs.mkdirSync(sessionDir, { recursive: true });
+      var filename = photoId + ".jpg";
+      fs.writeFileSync(path.join(sessionDir, filename), buffer);
+      sPh.photos[category].push({ id: photoId, filename: filename, createdAt: Date.now() });
+      sPh.updatedAt = Date.now();
+      saveForSession(sPh);
+      send(res, 200, withOwnerBranding(sPh));
+    }).catch(function (err) { send(res, 400, { error: t("errors.photo_processing_error_prefix", sPhLang) + err.message }); });
+    return;
+  }
+
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/photos\/([a-f0-9]+)$/);
+  if (m && req.method === "GET") {
+    var sPhG = db.sessions[m[1]];
+    if (!sPhG) { res.writeHead(404); res.end(); return; }
+    var found = findPhotoCategory(sPhG, m[2]);
+    if (!found) { res.writeHead(404); res.end(); return; }
+    // Prazo de acesso às fotos por link sem login (ver PHOTO_LINK_TTL_MS): depois
+    // de finalizada a cirurgia, passado o prazo, só o médico dono autenticado
+    // continua vendo as fotos — quem só tem o link (ex: recebeu por WhatsApp)
+    // passa a precisar que o médico faça login pra reabrir o acesso.
+    if (sPhG.finalizedAt && (Date.now() - sPhG.finalizedAt > PHOTO_LINK_TTL_MS)) {
+      var photoAuthUser = getAuthedUser(req);
+      if (!photoAuthUser || photoAuthUser.id !== sPhG.ownerId) {
+        send(res, 403, { error: t("errors.photo_link_expired", requestLang(req)) });
+        return;
+      }
+    }
+    var filePath = path.join(UPLOADS_DIR, sPhG.id, found.photo.filename);
+    fs.readFile(filePath, function (err, content) {
+      if (err) { res.writeHead(404); res.end(); return; }
+      res.writeHead(200, { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=86400" });
+      res.end(content);
+    });
+    return;
+  }
+
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/photos\/([a-f0-9]+)\/delete$/);
+  if (m && req.method === "POST") {
+    var sPhD = db.sessions[m[1]];
+    var sPhDLang = requestLang(req);
+    if (!sPhD) { send(res, 404, { error: t("errors.surgery_not_found", sPhDLang) }); return; }
+    var foundD = findPhotoCategory(sPhD, m[2]);
+    if (!foundD) { send(res, 404, { error: t("errors.photo_not_found", sPhDLang) }); return; }
+    sPhD.photos[foundD.cat].splice(foundD.idx, 1);
+    sPhD.updatedAt = Date.now();
+    saveForSession(sPhD);
+    var filePath2 = path.join(UPLOADS_DIR, sPhD.id, foundD.photo.filename);
+    fs.unlink(filePath2, function () {});
+    send(res, 200, withOwnerBranding(sPhD));
+    return;
+  }
+
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/timer$/);
+  if (m && req.method === "POST") {
+    var s4 = db.sessions[m[1]];
+    var s4Lang = requestLang(req);
+    if (!s4) { send(res, 404, { error: t("errors.surgery_not_found", s4Lang) }); return; }
+    if (s4.status === "finalizada") { send(res, 409, { error: t("errors.surgery_finalized_reopen_timer", s4Lang) }); return; }
+    readBody(req).then(function (body) {
+      var action = body.action;
+      if (action === "start" && !s4.timer.running) {
+        s4.timer.running = true; s4.timer.startedAt = Date.now();
+        if (!s4.globalTimerStartedAt) s4.globalTimerStartedAt = s4.timer.startedAt;
+        stampSchedule(s4, "extracaoIni", body.localTime, false); // 1º início da extração vira o horário da etapa
+      }
+      else if (action === "pause" && s4.timer.running) { s4.timer.accumulatedMs += Date.now() - s4.timer.startedAt; s4.timer.running = false; s4.timer.startedAt = null; }
+      else if (action === "reset") { s4.timer.accumulatedMs = 0; s4.timer.running = false; s4.timer.startedAt = null; }
+      s4.updatedAt = Date.now();
+      saveForSession(s4);
+      send(res, 200, withOwnerBranding(s4));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", s4Lang) }); });
+    return;
+  }
+
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/preinc-timer$/);
+  if (m && req.method === "POST") {
+    var s4b = db.sessions[m[1]];
+    var s4bLang = requestLang(req);
+    if (!s4b) { send(res, 404, { error: t("errors.surgery_not_found", s4bLang) }); return; }
+    if (s4b.status === "finalizada") { send(res, 409, { error: t("errors.surgery_finalized_reopen_timer", s4bLang) }); return; }
+    readBody(req).then(function (body) {
+      var action = body.action;
+      var ptTimer = s4b.preincTimer;
+      if (action === "start" && !ptTimer.running) {
+        ptTimer.running = true; ptTimer.startedAt = Date.now();
+        if (!s4b.globalTimerStartedAt) s4b.globalTimerStartedAt = ptTimer.startedAt;
+        stampSchedule(s4b, "preFrontalIni", body.localTime, false); // 1º início das pré-incisões = início da pré-incisão frontal
+      }
+      else if (action === "pause" && ptTimer.running) { ptTimer.accumulatedMs += Date.now() - ptTimer.startedAt; ptTimer.running = false; ptTimer.startedAt = null; }
+      else if (action === "reset") { ptTimer.accumulatedMs = 0; ptTimer.running = false; ptTimer.startedAt = null; }
+      s4b.updatedAt = Date.now();
+      saveForSession(s4b);
+      send(res, 200, withOwnerBranding(s4b));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", s4bLang) }); });
+    return;
+  }
+
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/(finalize|reopen)$/);
+  if (m && req.method === "POST") {
+    var s5 = db.sessions[m[1]];
+    var s5Lang = requestLang(req);
+    var s5Action = m[2];
+    if (!s5) { send(res, 404, { error: t("errors.surgery_not_found", s5Lang) }); return; }
+    readBody(req).then(function (body5) {
+      body5 = body5 || {};
+      s5.status = (s5Action === "finalize") ? "finalizada" : "andamento";
+      if (s5.status === "finalizada") {
+        if (s5.timer.running) { s5.timer.accumulatedMs += Date.now() - s5.timer.startedAt; s5.timer.running = false; s5.timer.startedAt = null; }
+        if (s5.preincTimer.running) { s5.preincTimer.accumulatedMs += Date.now() - s5.preincTimer.startedAt; s5.preincTimer.running = false; s5.preincTimer.startedAt = null; }
+        // Congela o tempo global no instante da finalização — só na primeira vez (se
+        // reabrir e finalizar de novo, não estica o relógio do meio, só continua dele).
+        if (s5.globalTimerStartedAt && !s5.globalTimerEndedAt) s5.globalTimerEndedAt = Date.now();
+        // Marca o instante de finalização — é a partir daqui que o prazo de acesso
+        // às fotos via link (PHOTO_LINK_TTL_MS) começa a contar.
+        s5.finalizedAt = Date.now();
+        // Horário da aba Horários > Finalização: automático ao finalizar (sempre atualiza).
+        stampSchedule(s5, "finalizacao", body5.localTime, true);
+      } else {
+        // Reabriu: o caso volta a estar "em andamento", o tempo global volta a contar,
+        // e o prazo de acesso às fotos via link é cancelado até finalizar de novo.
+        s5.globalTimerEndedAt = null;
+        s5.finalizedAt = null;
+        // O horário de finalização era automático e deixa de valer enquanto reaberta.
+        if (s5.schedule) s5.schedule.finalizacao = null;
+      }
+      s5.updatedAt = Date.now();
+      saveForSession(s5);
+      send(res, 200, withOwnerBranding(s5));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", s5Lang) }); });
+    return;
+  }
+
+  // Corrigir duração: cobre o caso de esquecer de clicar em "Finalizar cirurgia"
+  // no dia — o tempo global fica contando ao vivo até alguém perceber (podendo
+  // chegar a 24h+), e reabrir/finalizar de novo só carimba a hora ATUAL (ainda
+  // errada), sem jeito de voltar pro horário real. Aqui o médico informa quantos
+  // minutos a cirurgia durou de verdade, e recalculamos o horário de término (e o
+  // finalizedAt, que é o mesmo instante — mantém consistente o prazo de acesso às
+  // fotos por link) a partir do horário de início real (globalTimerStartedAt).
+  // Só funciona com a cirurgia já finalizada — não faz sentido corrigir duração de
+  // algo que ainda está em andamento.
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/fix-duration$/);
+  if (m && req.method === "POST") {
+    var sFix = db.sessions[m[1]];
+    var sFixLang = requestLang(req);
+    if (!sFix) { send(res, 404, { error: t("errors.surgery_not_found", sFixLang) }); return; }
+    if (sFix.status !== "finalizada") { send(res, 409, { error: t("errors.fix_duration_needs_finalized", sFixLang) }); return; }
+    if (!sFix.globalTimerStartedAt) { send(res, 409, { error: t("errors.fix_duration_no_start", sFixLang) }); return; }
+    readBody(req).then(function (body) {
+      var minutes = Number(body.minutes);
+      if (!Number.isFinite(minutes) || minutes <= 0 || minutes > 24 * 60) { send(res, 400, { error: t("errors.fix_duration_invalid", sFixLang) }); return; }
+      var newEnd = sFix.globalTimerStartedAt + Math.round(minutes * 60000);
+      if (newEnd > Date.now()) { send(res, 400, { error: t("errors.fix_duration_future", sFixLang) }); return; }
+      sFix.globalTimerEndedAt = newEnd;
+      sFix.finalizedAt = newEnd;
+      // O horário de Finalização acompanha a correção (o cliente manda o HH:MM local do novo término).
+      stampSchedule(sFix, "finalizacao", body.localTime, true);
+      sFix.updatedAt = Date.now();
+      saveForSession(sFix);
+      send(res, 200, withOwnerBranding(sFix));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sFixLang) }); });
+    return;
+  }
+
+  // Renomear paciente (campo "codigo") — exige login E ser o médico dono da cirurgia.
+  // Quem só tem o link (auxiliar) não consegue, de propósito.
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/rename$/);
+  if (m && req.method === "POST") {
+    var renamer = getAuthedUser(req);
+    var renLang = requestLang(req);
+    if (!renamer) { send(res, 401, { error: t("errors.login_required_rename_patient", renLang) }); return; }
+    var sRen = db.sessions[m[1]];
+    if (!sRen) { send(res, 404, { error: t("errors.surgery_not_found", renLang) }); return; }
+    if (sRen.ownerId !== renamer.id) { send(res, 403, { error: t("errors.surgery_not_yours", renLang) }); return; }
+    readBody(req).then(function (body) {
+      var novo = String(body.codigo || "").trim().slice(0, 60);
+      if (!novo) { send(res, 400, { error: t("errors.patient_code_required", renLang) }); return; }
+      sRen.codigo = novo;
+      sRen.updatedAt = Date.now();
+      saveForSession(sRen);
+      send(res, 200, withOwnerBranding(sRen));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", renLang) }); });
+    return;
+  }
+
+  // Apagar cirurgia — diferente dos endpoints acima, esta ação exige login E ser o
+  // dono da cirurgia (não é acessível por quem só tem o link, de propósito: apagar
+  // é destrutivo e permanente, deve ficar restrito a quem criou a lista).
+  m = p.match(/^\/api\/session\/([a-f0-9]+)$/);
+  if (m && req.method === "DELETE") {
+    var deleter = getAuthedUser(req);
+    var delLang = requestLang(req);
+    if (!deleter) { send(res, 401, { error: t("errors.login_required_delete_surgery", delLang) }); return; }
+    var sDel = db.sessions[m[1]];
+    if (!sDel) { send(res, 404, { error: t("errors.surgery_not_found", delLang) }); return; }
+    if (sDel.ownerId !== deleter.id) { send(res, 403, { error: t("errors.surgery_not_yours", delLang) }); return; }
+    // Captura o dono ANTES de apagar — depois de removida de db.sessions, não
+    // teria mais como saber qual arquivo (doctors/<id>.json ou orfaos.json)
+    // precisa ser regravado sem ela.
+    var delOwnerId = sDel.ownerId;
+    delete db.sessions[m[1]];
+    if (delOwnerId) saveDoctorFile(delOwnerId); else saveOrfaos();
+    var delDir = path.join(UPLOADS_DIR, m[1]);
+    if (fs.existsSync(delDir)) {
+      try { fs.rmSync(delDir, { recursive: true, force: true }); } catch (e) { console.error("Não consegui apagar fotos da cirurgia " + m[1] + ":", e.message); }
+    }
+    send(res, 200, { ok: true });
+    return;
+  }
+
+  if (p === "/api/ping" && req.method === "GET") { send(res, 200, { ok: true, now: Date.now() }); return; }
+  // Saúde pro monitor externo (UptimeRobot etc.): confirma que o servidor responde E
+  // que os dados em memória estão carregados. Não expõe nenhum dado de paciente.
+  if ((p === "/api/health" || p === "/health") && (req.method === "GET" || req.method === "HEAD")) {
+    var healthy = !!db && !!db.sessions && !!db.users;
+    res.writeHead(healthy ? 200 : 503, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
+    res.end(req.method === "HEAD" ? undefined : JSON.stringify({ ok: healthy, now: Date.now() }));
+    return;
+  }
+
+  if (p === "/api/network-info" && req.method === "GET") {
+    var ips = [];
+    var nets2 = os.networkInterfaces();
+    Object.keys(nets2).forEach(function (name) {
+      (nets2[name] || []).forEach(function (net) {
+        if (net.family === "IPv4" && !net.internal) ips.push(net.address);
+      });
+    });
+    send(res, 200, { ips: ips, port: PORT });
+    return;
+  }
+
+  // Qualquer outra rota (/ , /s/<id>, etc.) devolve a página única — o roteamento é feito no navegador.
+  // Cache-Control: no-store evita que o celular guarde uma versão antiga da página em cache
+  // e continue mostrando um bug já corrigido depois que o servidor for atualizado.
+  if (req.method === "GET") {
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+    res.end(INDEX_HTML_RENDERED);
+    return;
+  }
+
+  res.writeHead(404); res.end("Não encontrado");
+});
+

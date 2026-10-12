@@ -1,0 +1,155 @@
+"// ---------- menu recolhível (gaveta) ----------\n" +
+"var TAB_TITLE_KEYS = {extracao:'cnt.tab_extracao', preincisoes:'cnt.tab_preinc', horarios:'cnt.tab_horarios', implantacao:'cnt.tab_implantacao', fotos:'cnt.tab_fotos', paciente:'cnt.tab_paciente', resumofinal:'cnt.tab_resumo'};\n" +
+"App.openNav = function(){ document.getElementById('nav-drawer-overlay').classList.add('show'); };\n" +
+"App.closeNav = function(){ document.getElementById('nav-drawer-overlay').classList.remove('show'); };\n" +
+"document.addEventListener('keydown', function(ev){ if (ev && ev.key==='Escape') App.closeNav(); });\n" +
+"\n" +
+"// ---------- aba Horários (etapas da cirurgia, como na lousa da sala) ----------\n" +
+"// Horários são guardados como texto HH:MM (sem data/fuso): é exatamente o que a lousa\n" +
+"// mostra, e não depende do fuso do aparelho. Duração = fim − início; se o fim for\n" +
+"// menor que o início, entende-se que virou a meia-noite e avisa pra conferir.\n" +
+"var SCHED_STAGES = [\n" +
+"  {id:'bloqueio',     key:'sched.stage_bloqueio'},\n" +
+"  {id:'preFrontal',   key:'sched.stage_pre_frontal'},\n" +
+"  {id:'anestDoadora', key:'sched.stage_anest_doadora'},\n" +
+"  {id:'preCoroa',     key:'sched.stage_pre_coroa'},\n" +
+"  {id:'extracao',     key:'sched.stage_extracao'},\n" +
+"  {id:'impCoroa',     key:'sched.stage_imp_coroa'},\n" +
+"  {id:'impFrente',    key:'sched.stage_imp_frente'}\n" +
+"];\n" +
+"function schedToMin(hhmm){\n" +
+"  if (!hhmm || !/^([01]\\d|2[0-3]):[0-5]\\d$/.test(hhmm)) return null;\n" +
+"  return parseInt(hhmm.slice(0,2),10)*60 + parseInt(hhmm.slice(3,5),10);\n" +
+"}\n" +
+"function schedDuration(ini, fim){\n" +
+"  var a = schedToMin(ini), b = schedToMin(fim);\n" +
+"  if (a===null || b===null) return null;\n" +
+"  return { minutes: (b - a + 1440) % 1440, wrapped: b < a };\n" +
+"}\n" +
+"function schedFmtMinutes(m){\n" +
+"  var h = Math.floor(m/60), r = m % 60;\n" +
+"  return h>0 ? (h+'h'+String(r).padStart(2,'0')) : (r+' min');\n" +
+"}\n" +
+"function schedFromTs(ts){\n" +
+"  var d = new Date(ts);\n" +
+"  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');\n" +
+"}\n" +
+"App.setSchedule = function(field, value){\n" +
+"  var payload = {}; payload[field] = value;\n" +
+"  api('/api/session/'+state.currentId+'/schedule','POST',payload).then(function(s){\n" +
+"    state.session = s; state.schedSig = null; render();\n" +
+"  }).catch(function(err){\n" +
+"    toast(t('toast.generic_error',{msg:err.message})); state.schedSig = null; render();\n" +
+"  });\n" +
+"};\n" +
+"App.schedNow = function(field){ App.setSchedule(field, schedFromTs(Date.now())); };\n" +
+"App.schedClear = function(field){ App.setSchedule(field, ''); };\n" +
+"function schedTimeCell(field, val, hintTs){\n" +
+"  var hint = '';\n" +
+"  if (!val && hintTs){\n" +
+"    var hhmm = schedFromTs(hintTs);\n" +
+"    hint = '<button type=\"button\" class=\"btn secondary\" style=\"padding:4px 8px;font-size:11px;\" onclick=\"App.setSchedule(\\''+field+'\\',\\''+hhmm+'\\')\">'+escapeHtml(t('sched.use_timer',{time:hhmm}))+'</button>';\n" +
+"  }\n" +
+"  return '<div style=\"display:flex;gap:6px;align-items:center;flex-wrap:wrap;\">'+\n" +
+"    '<input type=\"time\" id=\"sched-'+field+'\" value=\"'+escapeHtml(val||'')+'\" style=\"width:120px;\" onchange=\"App.setSchedule(\\''+field+'\\', this.value)\">'+\n" +
+"    '<button type=\"button\" class=\"btn secondary\" style=\"padding:6px 10px;font-size:12px;\" onclick=\"App.schedNow(\\''+field+'\\')\">'+escapeHtml(t('sched.now'))+'</button>'+\n" +
+"    (val ? '<button type=\"button\" class=\"icon-btn\" style=\"background:var(--c-surface2);color:var(--c-text);\" title=\"'+escapeHtml(t('sched.clear'))+'\" onclick=\"App.schedClear(\\''+field+'\\')\">✕</button>' : '')+\n" +
+"    hint+'</div>';\n" +
+"}\n" +
+"function renderSchedule(s){\n" +
+"  var box = document.getElementById('sched-rows'); if (!box) return;\n" +
+"  var sch = s.schedule || {};\n" +
+"  var sig = JSON.stringify(sch)+'|'+state.lang+'|'+(s.globalTimerStartedAt||'')+'|'+(s.globalTimerEndedAt||'');\n" +
+"  var ae = document.activeElement;\n" +
+"  if (state.schedSig === sig) return;\n" +
+"  if (ae && ae.id && String(ae.id).indexOf('sched-')===0) return; // não mexe enquanto alguém digita\n" +
+"  state.schedSig = sig;\n" +
+"  var html = '<div class=\"field\"><label>'+escapeHtml(t('sched.stage_entrada'))+'</label>'+schedTimeCell('entrada', sch.entrada, null)+'</div>';\n" +
+"  SCHED_STAGES.forEach(function(st){\n" +
+"    var ini = sch[st.id+'Ini'], fim = sch[st.id+'Fim'];\n" +
+"    var dur = schedDuration(ini, fim);\n" +
+"    var durTxt = dur ? ('<div class=\"hint\" style=\"margin-top:4px;\">'+escapeHtml(t('sched.duration'))+': <b>'+escapeHtml(schedFmtMinutes(dur.minutes))+'</b>'+(dur.wrapped ? ' ⚠ '+escapeHtml(t('sched.wrap_warning')) : '')+'</div>') : '';\n" +
+"    var hintIni = null, hintFim = null;\n" +
+"    if (st.id==='extracao'){ hintIni = s.globalTimerStartedAt || null; hintFim = s.globalTimerEndedAt || null; }\n" +
+"    html += '<div class=\"field\"><label>'+escapeHtml(t(st.key))+'</label>'+\n" +
+"      '<div class=\"row\" style=\"gap:14px;flex-wrap:wrap;\">'+\n" +
+"        '<div><div class=\"hint\" style=\"margin:0 0 2px;\">'+escapeHtml(t('sched.start'))+'</div>'+schedTimeCell(st.id+'Ini', ini, hintIni)+'</div>'+\n" +
+"        '<div><div class=\"hint\" style=\"margin:0 0 2px;\">'+escapeHtml(t('sched.end'))+'</div>'+schedTimeCell(st.id+'Fim', fim, hintFim)+'</div>'+\n" +
+"      '</div>'+durTxt+'</div>';\n" +
+"  });\n" +
+"  html += '<div class=\"field\"><label>'+escapeHtml(t('sched.stage_finalizacao'))+'</label>'+schedTimeCell('finalizacao', sch.finalizacao, s.globalTimerEndedAt || null)+'</div>';\n" +
+"  var total = schedDuration(sch.entrada, sch.finalizacao);\n" +
+"  if (total){\n" +
+"    html += '<div class=\"summary-bar static\" style=\"margin-top:6px;\"><div class=\"summary-item\"><div class=\"val\">'+escapeHtml(schedFmtMinutes(total.minutes))+(total.wrapped?' ⚠':'')+'</div><div class=\"lbl\">'+escapeHtml(t('sched.total_stay'))+'</div></div></div>';\n" +
+"  }\n" +
+"  box.innerHTML = html;\n" +
+"}\n" +
+"\n" +
+"// ---------- aba Implantação (estoque de folículos no chiller) ----------\n" +
+"// Saldo = folículos íntegros extraídos (mesma conta do Resumo) − soma das retiradas.\n" +
+"// Só o médico dono da cirurgia, logado, registra/apaga retirada (servidor confere).\n" +
+"function implantIsOwner(s){\n" +
+"  return !!(state.currentUser && s && s.ownerBranding && s.ownerBranding.ownerId === state.currentUser.id);\n" +
+"}\n" +
+"function implantStats(s){\n" +
+"  var total = computeSummary(combinedExtractionCounts(s), s.mode||'completo').foliculosExtraidos;\n" +
+"  var list = (s.implant && s.implant.withdrawals) || [];\n" +
+"  var withdrawn = 0; list.forEach(function(w){ withdrawn += w.qty; });\n" +
+"  return { total: total, withdrawn: withdrawn, remaining: Math.max(0, total - withdrawn), over: withdrawn > total, list: list };\n" +
+"}\n" +
+"App.implWithdraw = function(qty){\n" +
+"  var s = state.session; if (!s) return;\n" +
+"  if (!state.currentUser){ toast(t('impl.login_needed')); return; }\n" +
+"  if (!implantIsOwner(s)){ toast(t('impl.owner_only_hint')); return; }\n" +
+"  qty = Math.round(Number(qty));\n" +
+"  if (!isFinite(qty) || qty <= 0){ toast(t('impl.invalid_qty')); return; }\n" +
+"  var st = implantStats(s);\n" +
+"  if (qty > st.remaining){ toast(t('impl.over_balance',{n:fmtBig(st.remaining)})); return; }\n" +
+"  api('/api/session/'+state.currentId+'/implant/withdraw','POST',{qty:qty}).then(function(r){\n" +
+"    state.session = r; render();\n" +
+"    toast(t('impl.withdrawn_toast',{n:fmtBig(qty), left:fmtBig(implantStats(r).remaining)}));\n" +
+"  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.implWithdrawCustom = function(){\n" +
+"  var el = document.getElementById('impl-custom');\n" +
+"  var v = el ? el.value : '';\n" +
+"  App.implWithdraw(v);\n" +
+"  if (el) el.value = '';\n" +
+"};\n" +
+"App.implRemove = function(id){\n" +
+"  var w = (((state.session||{}).implant||{}).withdrawals||[]).filter(function(x){ return x.id===id; })[0];\n" +
+"  confirmDialog(t('impl.remove_confirm',{n:w ? fmtBig(w.qty) : ''})).then(function(ok){\n" +
+"    if (!ok) return;\n" +
+"    api('/api/session/'+state.currentId+'/implant/remove','POST',{id:id}).then(function(r){\n" +
+"      state.session = r; render(); toast(t('impl.removed_toast'));\n" +
+"    }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
+"};\n" +
+"function renderImplant(s){\n" +
+"  var st = implantStats(s);\n" +
+"  var owner = implantIsOwner(s);\n" +
+"  document.getElementById('impl-total').textContent = fmtBig(st.total);\n" +
+"  document.getElementById('impl-withdrawn').textContent = fmtBig(st.withdrawn);\n" +
+"  document.getElementById('impl-remaining').textContent = fmtBig(st.remaining);\n" +
+"  var pct = st.total>0 ? Math.min(100, st.withdrawn/st.total*100) : 0;\n" +
+"  document.getElementById('impl-progress').style.width = pct.toFixed(1)+'%';\n" +
+"  var warn = document.getElementById('impl-warning');\n" +
+"  if (st.over){ warn.style.display = 'block'; warn.textContent = t('impl.count_changed_warning',{w:fmtBig(st.withdrawn), total:fmtBig(st.total)}); }\n" +
+"  else if (st.total>0 && st.remaining===0){ warn.style.display = 'block'; warn.textContent = t('impl.done'); }\n" +
+"  else { warn.style.display = 'none'; }\n" +
+"  document.getElementById('impl-controls').style.display = owner ? 'block' : 'none';\n" +
+"  document.getElementById('impl-readonly-hint').style.display = owner ? 'none' : 'block';\n" +
+"  var running = 0;\n" +
+"  var rows = st.list.map(function(w){\n" +
+"    running += w.qty;\n" +
+"    return {w:w, left: Math.max(0, st.total - running)};\n" +
+"  }).reverse();\n" +
+"  var hist = document.getElementById('impl-history');\n" +
+"  if (!rows.length){ hist.innerHTML = '<p class=\"hint\">'+escapeHtml(t('impl.history_empty'))+'</p>'; return; }\n" +
+"  hist.innerHTML = '<div class=\"dash-table-wrap\"><table class=\"dash-table\">'+\n" +
+"    '<tr><th>'+escapeHtml(t('impl.col_time'))+'</th><th>'+escapeHtml(t('impl.col_qty'))+'</th><th>'+escapeHtml(t('impl.col_left'))+'</th>'+(owner?'<th></th>':'')+'</tr>'+\n" +
+"    rows.map(function(r){\n" +
+"      return '<tr><td>'+escapeHtml(schedFromTs(r.w.at))+'</td><td>'+fmtBig(r.w.qty)+'</td><td>'+fmtBig(r.left)+'</td>'+\n" +
+"        (owner ? '<td><button type=\"button\" class=\"icon-btn\" style=\"background:var(--c-surface2);color:var(--c-text);\" title=\"'+escapeHtml(t('impl.remove_btn'))+'\" onclick=\"App.implRemove(\\''+escapeHtml(r.w.id)+'\\')\">✕</button></td>' : '')+'</tr>';\n" +
+"    }).join('')+'</table></div>';\n" +
+"}\n" +

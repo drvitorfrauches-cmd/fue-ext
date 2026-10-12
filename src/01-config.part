@@ -1,0 +1,145 @@
+// Servidor local de contagem de extração folicular — sem nuvem, sem dependências externas,
+// UM ARQUIVO SÓ (server.js). Cria sozinho os arquivos/pastas que precisa (data.json, uploads/).
+// Versão com paridade completa em relação ao app v1 (offline): 4 quadrantes de extração,
+// Mamba por quadrante (leitura acumulada + delta automático), pré-incisões com cronômetro
+// próprio, fotos e relatório de impressão/PDF — tudo sincronizado ao vivo entre os aparelhos.
+//
+// Como usar:
+//   node server.js
+// O terminal vai mostrar o endereço (ex: http://192.168.1.23:3000) para compartilhar
+// com os celulares conectados na MESMA rede wifi.
+
+"use strict";
+
+const http = require("http");
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
+const os = require("os");
+const tls = require("tls");
+
+// DATA_DIR: onde ficam data.json e a pasta uploads/. Por padrão, do lado do server.js
+// (uso local/rede local). Em nuvem (Railway, etc.), aponte pra um volume persistente
+// definindo a variável de ambiente DATA_DIR (ex: DATA_DIR=/data), senão os dados somem
+// a cada novo deploy/reinício.
+const DATA_DIR = process.env.DATA_DIR ? process.env.DATA_DIR : __dirname;
+const DATA_FILE = path.join(DATA_DIR, "data.json");
+const UPLOADS_DIR = path.join(DATA_DIR, "uploads");
+const LOGOS_DIR = path.join(UPLOADS_DIR, "logos");
+const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
+const MAX_BODY_BYTES = 15 * 1024 * 1024; // 15MB — folga generosa pra fotos comprimidas
+const RESET_TOKEN_TTL_MS = 30 * 60 * 1000; // link de redefinição de senha expira em 30 minutos
+const AUTH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000; // token de login expira em 30 dias (mesmo prazo do cookie)
+const INVITE_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // link de convite de cadastro expira em 7 dias
+const ADMIN_EMAIL = "drvitorfrauches@gmail.com"; // única conta com acesso à seção de Convites
+// Depois desse prazo contado a partir da finalização da cirurgia, o link (sem
+// login) para de servir as FOTOS do paciente — só o médico dono, autenticado,
+// continua vendo. Escolhido pra cobrir o acompanhamento pós-operatório usual
+// de transplante capilar sem deixar a foto exposta por um link vazado pra sempre.
+const PHOTO_LINK_TTL_MS = 90 * 24 * 60 * 60 * 1000;
+// SECURE_COOKIES: marca o cookie de login como "Secure" (só trafega em HTTPS). Deixe
+// desligado (padrão) pra uso na rede local, que roda em HTTP puro. Ligue definindo a
+// variável de ambiente SECURE_COOKIES=true quando estiver atrás de HTTPS (nuvem).
+const SECURE_COOKIES = process.env.SECURE_COOKIES === "true";
+
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+
+// ================== CONFIGURAÇÃO DE E-MAIL (recuperação de senha) ==================
+// Duas formas de configurar, escolha uma:
+//  (a) Uso local/rede local: preencha os valores AQUI embaixo direto no arquivo.
+//  (b) Nuvem (recomendado): defina as variáveis de ambiente SMTP_ENABLED=true,
+//      SMTP_USER e SMTP_PASS no painel do serviço de hospedagem, em vez de deixar a
+//      senha escrita dentro do arquivo — mais seguro se este arquivo for pra um
+//      repositório Git. Variáveis de ambiente, se definidas, sempre têm prioridade
+//      sobre os valores escritos aqui.
+//
+// Passo a passo pra gerar uma "senha de app" do Gmail (não é a senha normal da conta):
+//   1. Ative a verificação em duas etapas em https://myaccount.google.com/security
+//   2. Acesse https://myaccount.google.com/apppasswords
+//   3. Crie uma senha de app com qualquer nome (ex: "Graftis")
+//   4. Copie a senha de 16 letras gerada e use como SMTP_PASS (ou cole em "pass" abaixo)
+//   5. "enabled" já vem true por padrão (só desliga se definir SMTP_ENABLED=false)
+//      — reinicie o servidor depois de preencher user/pass pra valer
+// Sem senha no código: e-mail só liga se SMTP_ENABLED=true E SMTP_PASS estiver no ambiente.
+const SMTP_CONFIG = {
+  enabled: process.env.SMTP_ENABLED === "true" && !!process.env.SMTP_PASS,
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
+  port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 465,
+  user: process.env.SMTP_USER || "drvitorfrauches@gmail.com",
+  pass: process.env.SMTP_PASS || "",
+  fromName: process.env.SMTP_FROM_NAME || "Graftis"
+};
+
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+if (!fs.existsSync(LOGOS_DIR)) fs.mkdirSync(LOGOS_DIR, { recursive: true });
+
+// Mesmas 13 categorias do app v1 (íntegros / transecção parcial / transecção total).
+const CATS = [
+  { id: "f1",     label: "1 fio",           hairs: 1, group: "integro" },
+  { id: "f2",     label: "2 fios",          hairs: 2, group: "integro" },
+  { id: "f3",     label: "3 fios",          hairs: 3, group: "integro" },
+  { id: "f4",     label: "4 fios",          hairs: 4, group: "integro" },
+  { id: "f1fino", label: "1 fio especial",  hairs: 1, group: "integro" },
+  { id: "f2fino", label: "2 fios especial", hairs: 2, group: "integro" },
+  { id: "t2_1", label: "2 → 1 fio",  hairs: 1, group: "parcial" },
+  { id: "t3_2", label: "3 → 2 fios", hairs: 2, group: "parcial" },
+  { id: "t3_1", label: "3 → 1 fio",  hairs: 1, group: "parcial" },
+  { id: "t4_3", label: "4 → 3 fios", hairs: 3, group: "parcial" },
+  { id: "t4_2", label: "4 → 2 fios", hairs: 2, group: "parcial" },
+  { id: "t4_1", label: "4 → 1 fio",  hairs: 1, group: "parcial" },
+  { id: "parcial_geral", label: "Transecção parcial", hairs: 0, group: "parcial_reduzida" },
+  { id: "ttotal", label: "Transecção total (folículo perdido)", hairs: 0, group: "total" },
+  { id: "mini", label: "Mini (miniaturizado)", hairs: 0, group: "mini" }
+];
+const CAT_IDS = new Set(CATS.map(function (c) { return c.id; }));
+const SESSION_MODES = new Set(["completo", "reduzido"]);
+
+// Mesmos 4 quadrantes de extração do app v1, na ordem real em que o Dr. Vitor
+// extrai (occipital dir → occipital esq → temporal esq → temporal dir) — é a
+// ordem dos botões/abas de quadrante e a ordem no relatório impresso. NÃO
+// determina mais o cálculo do Mamba: desde a correção de julho/2026, o delta de
+// cada quadrante usa o horário real de preenchimento (mambaMarkedAtMs), então
+// funciona em qualquer ordem que a extração aconteça de verdade. Esta lista só
+// entra como último recurso pra cirurgias muito antigas, sem esse horário salvo.
+const QUADRANTS = [
+  { id: "occipital_dir", label: "Occipital direito" },
+  { id: "occipital_esq", label: "Occipital esquerdo" },
+  { id: "temporal_esq",  label: "Temporal esquerdo" },
+  { id: "temporal_dir",  label: "Temporal direito" }
+];
+const QUAD_IDS = new Set(QUADRANTS.map(function (q) { return q.id; }));
+
+// Mesmas 12 áreas de pré-incisão do app v1.
+const PREINC_AREAS = [
+  { id: "recesso_dir",  label: "Recesso direito" },
+  { id: "recesso_esq",  label: "Recesso esquerdo" },
+  { id: "linha",        label: "Linha" },
+  { id: "sublinha",     label: "Sublinha" },
+  { id: "entrada_dir1", label: "Entrada direita 1" },
+  { id: "entrada_dir2", label: "Entrada direita 2" },
+  { id: "entrada_esq1", label: "Entrada esquerda 1" },
+  { id: "entrada_esq2", label: "Entrada esquerda 2" },
+  { id: "topete1",      label: "Topete 1" },
+  { id: "topete2",      label: "Topete 2" },
+  { id: "scalp",        label: "Scalp" },
+  { id: "coroa",        label: "Coroa" }
+];
+const PREINC_IDS = new Set(PREINC_AREAS.map(function (a) { return a.id; }));
+const PHOTO_CATS = ["marcacao", "posop"];
+
+// Distribuição planejada de unidades foliculares (por número de fios) em cada área de pré-incisão.
+const DIST_FIOS = [
+  { id: "f1", label: "1 fio" },
+  { id: "f2", label: "2 fios" },
+  { id: "f3", label: "3 fios" }
+];
+const DIST_FIO_IDS = new Set(DIST_FIOS.map(function (d) { return d.id; }));
+
+// Identidade visual por médico — presets de cor (as cores clínicas das categorias
+// NÃO entram aqui de propósito: ficam sempre fixas, iguais pra todo mundo, porque
+// têm significado clínico consistente entre toda a equipe).
+const THEME_IDS = new Set(["padrao", "azul", "roxo", "grafite", "marinho"]);
+function emptyBranding() {
+  return { logoFilename: null, theme: "padrao", darkMode: false, language: "pt" };
+}
+

@@ -1,0 +1,808 @@
+"var App = {};\n" +
+"App.goHome = function(){\n" +
+"  if (!state.currentUser && state.currentId){\n" +
+"    // Auxiliar sem login, só com o link de uma cirurgia — não existe uma lista pra\n" +
+"    // mostrar pra ela, então \"Início\" (e o botão \"Voltar\" da tela de Config) volta\n" +
+"    // pra própria cirurgia em vez de forçar login.\n" +
+"    history.pushState({},'','/s/'+state.currentId);\n" +
+"    showScreen('counting');\n" +
+"    return;\n" +
+"  }\n" +
+"  stopPolling(); state.currentId=null; history.pushState({},'','/'); App.checkAuthAndShowHome();\n" +
+"};\n" +
+"function renderUserBar(){\n" +
+"  var el = document.getElementById('user-bar');\n" +
+"  if (state.currentUser){\n" +
+"    el.innerHTML = escapeHtml(state.currentUser.nomeCompleto.split(' ')[0])+' <button class=\"icon-btn\" onclick=\"App.logout()\">'+escapeHtml(t('nav.exit'))+'</button>';\n" +
+"  } else {\n" +
+"    el.innerHTML = '';\n" +
+"  }\n" +
+"  document.getElementById('dashboard-btn').style.display = state.currentUser ? 'inline-block' : 'none';\n" +
+"}\n" +
+"App.checkAuthAndShowHome = function(){\n" +
+"  api('/api/me').then(function(r){\n" +
+"    state.currentUser = r.user; applyBranding(r.user.branding); App.setLanguage(r.user.branding.language, true); renderUserBar(); showScreen('home'); loadSurgeryList(); App.maybeShowOnboarding();\n" +
+"  }).catch(function(){\n" +
+"    state.currentUser = null; applyBranding(null); renderUserBar(); showScreen('auth'); App.switchAuthTab('login');\n" +
+"  });\n" +
+"};\n" +
+"App.switchAuthTab = function(tab){\n" +
+"  document.getElementById('authpanel-login').style.display = tab==='login' ? '' : 'none';\n" +
+"  document.getElementById('authpanel-cadastro').style.display = tab==='cadastro' ? '' : 'none';\n" +
+"  document.getElementById('authtab-login-btn').className = tab==='login' ? 'btn' : 'btn secondary';\n" +
+"  var cadastroTabBtn = document.getElementById('authtab-cadastro-btn');\n" +
+"  if (cadastroTabBtn) cadastroTabBtn.className = tab==='cadastro' ? 'btn' : 'btn secondary';\n" +
+"};\n" +
+"App.checkInviteAndShowScreen = function(token){\n" +
+"  state.inviteToken = token;\n" +
+"  return api('/api/invites/'+token+'/check').then(function(r){\n" +
+"    document.getElementById('auth-tabs-row').style.display = 'none';\n" +
+"    if (r.valid){\n" +
+"      document.getElementById('invite-invalid-msg').style.display = 'none';\n" +
+"      showScreen('auth');\n" +
+"      App.switchAuthTab('cadastro');\n" +
+"    } else {\n" +
+"      document.getElementById('authpanel-login').style.display = 'none';\n" +
+"      document.getElementById('authpanel-cadastro').style.display = 'none';\n" +
+"      document.getElementById('invite-invalid-msg').style.display = 'block';\n" +
+"      showScreen('auth');\n" +
+"    }\n" +
+"  }).catch(function(){\n" +
+"    document.getElementById('auth-tabs-row').style.display = 'none';\n" +
+"    document.getElementById('authpanel-login').style.display = 'none';\n" +
+"    document.getElementById('authpanel-cadastro').style.display = 'none';\n" +
+"    document.getElementById('invite-invalid-msg').style.display = 'block';\n" +
+"    showScreen('auth');\n" +
+"  });\n" +
+"};\n" +
+"App.doLogin = function(){\n" +
+"  var email = document.getElementById('login-email').value.trim();\n" +
+"  var password = document.getElementById('login-password').value;\n" +
+"  if (!email || !password){ toast(t('toast.fill_email_password')); return; }\n" +
+"  api('/api/login','POST',{email:email, password:password}).then(function(r){\n" +
+"    state.currentUser = r.user; applyBranding(r.user.branding); App.setLanguage(r.user.branding.language, true); renderUserBar(); showScreen('home'); loadSurgeryList(); App.maybeShowOnboarding();\n" +
+"    toast(t('toast.welcome',{name:r.user.nomeCompleto.split(' ')[0]}));\n" +
+"  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.doRegister = function(){\n" +
+"  var nomeCompleto = document.getElementById('reg-nome').value.trim();\n" +
+"  var crm = document.getElementById('reg-crm').value.trim();\n" +
+"  var email = document.getElementById('reg-email').value.trim();\n" +
+"  var telefone = document.getElementById('reg-telefone').value.trim();\n" +
+"  var password = document.getElementById('reg-password').value;\n" +
+"  var password2 = document.getElementById('reg-password2').value;\n" +
+"  if (!nomeCompleto || !crm || !email || !telefone || !password){ toast(t('toast.fill_all_fields')); return; }\n" +
+"  if (password !== password2){ toast(t('toast.passwords_dont_match')); return; }\n" +
+"  if (password.length < 6){ toast(t('toast.password_too_short')); return; }\n" +
+"  api('/api/register','POST',{nomeCompleto:nomeCompleto, crm:crm, email:email, telefone:telefone, password:password, inviteToken: state.inviteToken || ''}).then(function(r){\n" +
+"    state.inviteToken = null;\n" +
+"    state.currentUser = r.user; applyBranding(r.user.branding); App.setLanguage(r.user.branding.language, true); renderUserBar(); showScreen('home'); loadSurgeryList(); App.maybeShowOnboarding();\n" +
+"    toast(t('toast.account_created_welcome',{name:r.user.nomeCompleto.split(' ')[0]}));\n" +
+"  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.logout = function(){\n" +
+"  api('/api/logout','POST',{}).then(function(){\n" +
+"    state.currentUser = null; applyBranding(null); renderUserBar(); showScreen('auth'); App.switchAuthTab('login');\n" +
+"    toast(t('toast.logged_out'));\n" +
+"  }).catch(function(){});\n" +
+"};\n" +
+"App.logoutAllDevices = function(){\n" +
+"  confirmDialog(t('toast.logout_all_confirm')).then(function(ok){\n" +
+"    if (!ok) return;\n" +
+"    api('/api/logout-all','POST',{}).then(function(){\n" +
+"      state.currentUser = null; applyBranding(null); renderUserBar(); showScreen('auth'); App.switchAuthTab('login');\n" +
+"      toast(t('toast.logged_out_all'));\n" +
+"    }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
+"};\n" +
+"// Baixa o backup manual (cadastro + cirurgias do próprio médico). Navegação\n" +
+"// direta em vez de fetch: o servidor manda Content-Disposition:attachment, que\n" +
+"// faz o navegador baixar o arquivo em vez de sair da página — o cookie de\n" +
+"// login já vai junto automaticamente, igual qualquer outra requisição.\n" +
+"App.downloadBackup = function(){ window.location.href = '/api/backup'; };\n" +
+"// Troca o idioma da interface. skipSync evita regravar no servidor quando o\n" +
+"// idioma acabou de VIR de lá (login/cadastro) — só grava quando é uma escolha\n" +
+"// manual da pessoa (seletor na tela de login ou em Configurações).\n" +
+"App.setLanguage = function(lang, skipSync){\n" +
+"  if (!STRINGS[lang]) return;\n" +
+"  state.lang = lang;\n" +
+"  document.cookie = 'fue_lang='+lang+'; path=/; max-age=31536000; SameSite=Lax';\n" +
+"  try{ localStorage.setItem('fue_lang', lang); }catch(e){}\n" +
+"  applyI18n();\n" +
+"  if (typeof renderUserBar === 'function' && state.currentUser) renderUserBar();\n" +
+"  if (!skipSync && state.currentUser){\n" +
+"    api('/api/me/branding','POST',{language:lang}).catch(function(){});\n" +
+"  }\n" +
+"};\n" +
+"App.toggleForgotPassword = function(){\n" +
+"  var el = document.getElementById('forgot-password-panel');\n" +
+"  el.style.display = (el.style.display==='none') ? '' : 'none';\n" +
+"};\n" +
+"App.doForgotPassword = function(){\n" +
+"  var email = document.getElementById('forgot-email').value.trim();\n" +
+"  if (!email){ toast(t('toast.enter_your_email')); return; }\n" +
+"  api('/api/forgot-password','POST',{email:email}).then(function(){\n" +
+"    toast(t('toast.reset_link_sent_generic'), 4500);\n" +
+"  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.doResetPassword = function(){\n" +
+"  var password = document.getElementById('reset-password').value;\n" +
+"  var password2 = document.getElementById('reset-password2').value;\n" +
+"  if (!password){ toast(t('toast.enter_new_password')); return; }\n" +
+"  if (password !== password2){ toast(t('toast.passwords_dont_match')); return; }\n" +
+"  if (password.length < 6){ toast(t('toast.password_too_short')); return; }\n" +
+"  api('/api/reset-password','POST',{token:state.resetToken, password:password}).then(function(){\n" +
+"    toast(t('toast.password_changed_login'), 3500);\n" +
+"    history.pushState({},'','/');\n" +
+"    App.checkAuthAndShowHome();\n" +
+"  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.showSettings = function(){\n" +
+"  renderSettingsScreen();\n" +
+"  document.getElementById('settings-back-footer').style.display = state.currentId ? 'flex' : 'none';\n" +
+"  document.getElementById('settings-audio-card').style.display = state.currentId ? 'block' : 'none';\n" +
+"  showScreen('settings');\n" +
+"};\n" +
+"App.backToSurgery = function(){\n" +
+"  if (!state.currentId){ App.goHome(); return; }\n" +
+"  history.pushState({},'','/s/'+state.currentId);\n" +
+"  showScreen('counting');\n" +
+"};\n" +
+"App.showDashboard = function(){\n" +
+"  if (!state.currentUser){ toast(t('toast.login_required_dashboard')); return; }\n" +
+"  document.getElementById('dashboard-back-footer').style.display = state.currentId ? 'flex' : 'none';\n" +
+"  showScreen('dashboard');\n" +
+"  api('/api/sessions').then(function(list){\n" +
+"    state.dashboardSessions = list.filter(function(s){ return s.status==='finalizada'; });\n" +
+"    state.dashboardMode = state.dashboardMode || 'completo';\n" +
+"    renderDashboardScreen();\n" +
+"  }).catch(function(){ toast(t('toast.server_unreachable')); });\n" +
+"};\n" +
+"App.switchDashboardMode = function(mode){ state.dashboardMode = mode; renderDashboardScreen(); };\n" +
+"function computeDashboardData(sessions){\n" +
+"  var sorted = sessions.slice().sort(function(a,b){ return a.createdAt-b.createdAt; });\n" +
+"  var catTotals = {}; CATS.forEach(function(c){ catTotals[c.id]=0; });\n" +
+"  var quadStats = {}; QUADRANTS.forEach(function(q){ quadStats[q.id] = { completo:[], reduzido:[], mambaDiffs:{completo:[],reduzido:[]} }; });\n" +
+"  var rows = sorted.map(function(s){\n" +
+"    var combined = combinedExtractionCounts(s);\n" +
+"    var sum = computeSummary(combined, s.mode||'completo');\n" +
+"    var m = s.mode||'completo';\n" +
+"    CATS.forEach(function(c){ catTotals[c.id] += (combined[c.id]||0); });\n" +
+"    QUADRANTS.forEach(function(q){\n" +
+"      var qc = s.quadrants[q.id].counts;\n" +
+"      var qsum = computeSummary(qc, m);\n" +
+"      if (qsum.foliculosManipulados>0){ quadStats[q.id][m].push({indice:qsum.indice, taxaParcial:qsum.taxaParcial, taxaTotal:qsum.taxaTotal}); }\n" +
+"      var mc = s.quadrants[q.id].mambaCumulativo;\n" +
+"      if (mc!==null && mc!==undefined && mc!==''){\n" +
+"        var prev = mambaPrevCumulativo(s, q.id);\n" +
+"        var delta = Number(mc) - prev;\n" +
+"        var qmdiff = computeMambaDiff(delta, qsum.foliculosExtraidos);\n" +
+"        if (qmdiff) quadStats[q.id].mambaDiffs[m].push(qmdiff.diffPct);\n" +
+"      }\n" +
+"    });\n" +
+"    var pinfo = s.patientInfo || {};\n" +
+"    var tms = elapsedMs(s.timer);\n" +
+"    return {\n" +
+"      punchMm: pinfo.punchMm || null, espessura: pinfo.cabeloEspessura || null, textura: pinfo.cabeloTextura || null, raspagem: pinfo.raspagem || null,\n" +
+"      idade: (pinfo.idade===undefined || pinfo.idade===null) ? null : pinfo.idade,\n" +
+"      folPerMin: (tms>0 && sum.foliculosExtraidos>0) ? sum.foliculosExtraidos/(tms/60000) : null,\n" +
+"      minisPorMil: sum.foliculosExtraidos>0 ? sum.miniTotal/sum.foliculosExtraidos*1000 : null,\n" +
+"      id: s.id, codigo: s.codigo, mode: m, createdAt: s.createdAt,\n" +
+"      extraidos: sum.foliculosExtraidos, totalFios: sum.totalFios, indice: sum.indice,\n" +
+"      taxaParcial: sum.taxaParcial, taxaTotal: sum.taxaTotal, miniTotal: sum.miniTotal,\n" +
+"      tempoMs: elapsedMs(s.timer),\n" +
+"      preincTotalVal: preincTotal(s.preincCounts)\n" +
+"    };\n" +
+"  });\n" +
+"  var withData = rows.filter(function(r){ return r.extraidos>0; });\n" +
+"  var mean = function(arr, key){ if (!arr.length) return 0; var sum=0; arr.forEach(function(r){ sum+=r[key]; }); return sum/arr.length; };\n" +
+"  var meanArr = function(arr){ if (!arr.length) return null; var t=0; arr.forEach(function(v){ t+=v; }); return t/arr.length; };\n" +
+"  var sumOf = function(arr, key){ var t=0; arr.forEach(function(r){ t+=r[key]; }); return t; };\n" +
+"  var byMode = { completo: withData.filter(function(r){ return r.mode==='completo'; }), reduzido: withData.filter(function(r){ return r.mode==='reduzido'; }) };\n" +
+"  var preincTotals = rows.map(function(r){ return r.preincTotalVal; });\n" +
+"  var preincSum = preincTotals.reduce(function(a,b){ return a+b; }, 0);\n" +
+"  var foliculosExtraidosGeral = sumOf(rows, 'extraidos');\n" +
+"  var tempoTotalMs = sumOf(rows, 'tempoMs');\n" +
+"  var miniTotalGeral = sumOf(rows, 'miniTotal');\n" +
+"  var integrosTotal = catTotals.f1+catTotals.f2+catTotals.f3+catTotals.f4+catTotals.f1fino+catTotals.f2fino;\n" +
+"  var pctUF = ['f1','f2','f3','f4','f1fino','f2fino'].map(function(id){\n" +
+"    var c = CATS.filter(function(x){ return x.id===id; })[0];\n" +
+"    return { id:id, label:c.label, qtd:catTotals[id], pct: integrosTotal>0 ? catTotals[id]/integrosTotal*100 : 0 };\n" +
+"  });\n" +
+"  var quadranteMedias = QUADRANTS.map(function(q){\n" +
+"    var qc = quadStats[q.id];\n" +
+"    var build = function(arr, mambaArr){ return { n:arr.length, indice:mean(arr,'indice'), taxaParcial:mean(arr,'taxaParcial'), taxaTotal:mean(arr,'taxaTotal'), mambaDiffPct:meanArr(mambaArr) }; };\n" +
+"    return { id:q.id, label:quadrantById(q.id).label, completo:build(qc.completo,qc.mambaDiffs.completo), reduzido:build(qc.reduzido,qc.mambaDiffs.reduzido) };\n" +
+"  });\n" +
+"  return {\n" +
+"    rows: rows,\n" +
+"    withData: withData,\n" +
+"    totalCirurgias: rows.length,\n" +
+"    indiceMedio: mean(withData, 'indice'),\n" +
+"    preincMedia: rows.length ? preincSum/rows.length : 0,\n" +
+"    preincTotal: preincSum,\n" +
+"    foliculosExtraidosGeral: foliculosExtraidosGeral,\n" +
+"    fiosGeral: sumOf(rows, 'totalFios'),\n" +
+"    byMode: byMode,\n" +
+"    taxaParcialMedia: { completo: mean(byMode.completo,'taxaParcial'), reduzido: mean(byMode.reduzido,'taxaParcial') },\n" +
+"    taxaTotalMedia: { completo: mean(byMode.completo,'taxaTotal'), reduzido: mean(byMode.reduzido,'taxaTotal') },\n" +
+"    tempoTotalMs: tempoTotalMs,\n" +
+"    folPerMin: tempoTotalMs>0 ? foliculosExtraidosGeral/(tempoTotalMs/60000) : 0,\n" +
+"    tempoPorMilMs: foliculosExtraidosGeral>0 ? (tempoTotalMs/foliculosExtraidosGeral*1000) : 0,\n" +
+"    miniTotalGeral: miniTotalGeral,\n" +
+"    minisPorMil: foliculosExtraidosGeral>0 ? (miniTotalGeral/foliculosExtraidosGeral*1000) : 0,\n" +
+"    pctUF: pctUF,\n" +
+"    quadranteMedias: quadranteMedias\n" +
+"  };\n" +
+"}\n" +
+"function localeForLang(){ return {pt:'pt-BR', en:'en-US', es:'es-ES'}[state.lang] || 'pt-BR'; }\n" +
+"function fmtBig(n){ return n.toLocaleString(localeForLang()); }\n" +
+"function shortDate(ts){ var d=new Date(ts); return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0'); }\n" +
+"function buildBarChartSvg(items, color, valueFmt){\n" +
+"  if (!items.length) return '<p class=\"hint\">'+escapeHtml(t('dash.no_data_yet'))+'</p>';\n" +
+"  var h=170, barW=26, gap=14, padTop=20, padBottom=32, plotH=h-padTop-padBottom;\n" +
+"  var w = Math.max(220, items.length*(barW+gap)+gap);\n" +
+"  var maxVal = 0; items.forEach(function(it){ if (it.value>maxVal) maxVal=it.value; });\n" +
+"  if (maxVal<=0) maxVal=1;\n" +
+"  var bars = items.map(function(it,i){\n" +
+"    var barH = Math.max(2,(it.value/maxVal)*plotH);\n" +
+"    var x = gap+i*(barW+gap);\n" +
+"    var y = padTop+(plotH-barH);\n" +
+"    var lbl = escapeHtml(it.label);\n" +
+"    var val = valueFmt ? valueFmt(it.value) : it.value;\n" +
+"    return '<g><rect x=\"'+x+'\" y=\"'+y+'\" width=\"'+barW+'\" height=\"'+barH+'\" rx=\"3\" fill=\"'+color+'\"><title>'+lbl+': '+val+'</title></rect>'+\n" +
+"      '<text x=\"'+(x+barW/2)+'\" y=\"'+(y-5)+'\" font-size=\"10\" text-anchor=\"middle\" fill=\"var(--c-text)\">'+val+'</text>'+\n" +
+"      '<text x=\"'+(x+barW/2)+'\" y=\"'+(h-padBottom+13)+'\" font-size=\"9\" text-anchor=\"middle\" fill=\"var(--c-muted)\">'+lbl+'</text></g>';\n" +
+"  }).join('');\n" +
+"  return '<svg viewBox=\"0 0 '+w+' '+h+'\" width=\"'+w+'\" height=\"'+h+'\">'+\n" +
+"    '<line x1=\"0\" y1=\"'+(padTop+plotH)+'\" x2=\"'+w+'\" y2=\"'+(padTop+plotH)+'\" stroke=\"var(--c-border)\"/>'+bars+'</svg>';\n" +
+"}\n" +
+"function buildRateChartSvg(items){\n" +
+"  if (!items.length) return '';\n" +
+"  var h=170, barW=11, pairGap=3, groupGap=16, padTop=20, padBottom=32, plotH=h-padTop-padBottom;\n" +
+"  var groupW = barW*2+pairGap;\n" +
+"  var w = Math.max(240, items.length*(groupW+groupGap)+groupGap);\n" +
+"  var maxVal=0; items.forEach(function(it){ maxVal=Math.max(maxVal,it.parcial,it.total); });\n" +
+"  maxVal = Math.max(5, maxVal*1.15);\n" +
+"  var groups = items.map(function(it,i){\n" +
+"    var gx = groupGap+i*(groupW+groupGap);\n" +
+"    var hP = Math.max(1,(it.parcial/maxVal)*plotH), hT = Math.max(1,(it.total/maxVal)*plotH);\n" +
+"    var yP = padTop+(plotH-hP), yT = padTop+(plotH-hT);\n" +
+"    var lbl = escapeHtml(it.label);\n" +
+"    return '<g><rect x=\"'+gx+'\" y=\"'+yP+'\" width=\"'+barW+'\" height=\"'+hP+'\" rx=\"2\" fill=\"var(--c-parcial)\"><title>'+lbl+' — parcial: '+it.parcial.toFixed(1)+'%</title></rect>'+\n" +
+"      '<rect x=\"'+(gx+barW+pairGap)+'\" y=\"'+yT+'\" width=\"'+barW+'\" height=\"'+hT+'\" rx=\"2\" fill=\"var(--c-total)\"><title>'+lbl+' — total: '+it.total.toFixed(1)+'%</title></rect>'+\n" +
+"      '<text x=\"'+(gx+groupW/2)+'\" y=\"'+(h-padBottom+13)+'\" font-size=\"9\" text-anchor=\"middle\" fill=\"var(--c-muted)\">'+lbl+'</text></g>';\n" +
+"  }).join('');\n" +
+"  return '<svg viewBox=\"0 0 '+w+' '+h+'\" width=\"'+w+'\" height=\"'+h+'\">'+\n" +
+"    '<line x1=\"0\" y1=\"'+(padTop+plotH)+'\" x2=\"'+w+'\" y2=\"'+(padTop+plotH)+'\" stroke=\"var(--c-border)\"/>'+groups+\n" +
+"    '<g><rect x=\"0\" y=\"0\" width=\"9\" height=\"9\" fill=\"var(--c-parcial)\"/><text x=\"13\" y=\"9\" font-size=\"9\" fill=\"var(--c-muted)\">parcial</text>'+\n" +
+"    '<rect x=\"58\" y=\"0\" width=\"9\" height=\"9\" fill=\"var(--c-total)\"/><text x=\"71\" y=\"9\" font-size=\"9\" fill=\"var(--c-muted)\">total</text></g>'+\n" +
+"    '</svg>';\n" +
+"}\n" +
+"function dashAgeBucket(age){\n" +
+"  if (age===null || age===undefined || age==='' || isNaN(Number(age))) return 'na';\n" +
+"  var a = Number(age);\n" +
+"  if (a < 40) return 'u40';\n" +
+"  if (a < 50) return 'a40';\n" +
+"  if (a < 60) return 'a50';\n" +
+"  return 'a60';\n" +
+"}\n" +
+"var DASH_DIMS = {\n" +
+"  punch:     { labelKey:'patient.punch_label',          order:['0.95','1.0'],                   get:function(r){ return r.punchMm || 'na'; },       name:function(k){ return k==='0.95' ? t('patient.punch_095') : t('patient.punch_10'); } },\n" +
+"  espessura: { labelKey:'patient.hair_thickness_label', order:['fino','grosso'],                get:function(r){ return r.espessura || 'na'; },     name:function(k){ return k==='fino' ? t('patient.hair_thin') : t('patient.hair_thick'); } },\n" +
+"  textura:   { labelKey:'patient.hair_texture_label',   order:['liso','ondulado','crespo'],     get:function(r){ return r.textura || 'na'; },       name:function(k){ return {liso:t('patient.hair_straight'), ondulado:t('patient.hair_wavy'), crespo:t('patient.hair_curly')}[k]; } },\n" +
+"  raspagem:  { labelKey:'patient.surgery_type_label',   order:['sim','nao'],                    get:function(r){ return r.raspagem || 'na'; },      name:function(k){ return k==='sim' ? t('patient.with_shaving') : t('patient.without_shaving'); } },\n" +
+"  idade:     { labelKey:'patient.age_label',            order:['u40','a40','a50','a60'],        get:function(r){ return dashAgeBucket(r.idade); },  name:function(k){ return {u40:t('dash.age_under40'), a40:t('dash.age_40_49'), a50:t('dash.age_50_59'), a60:t('dash.age_60plus')}[k]; } }\n" +
+"};\n" +
+"function dashMeanOf(arr, key){\n" +
+"  var vals = arr.map(function(r){ return r[key]; }).filter(function(v){ return v!==null && v!==undefined && isFinite(v); });\n" +
+"  if (!vals.length) return null;\n" +
+"  var sum = 0; vals.forEach(function(v){ sum += v; });\n" +
+"  return sum / vals.length;\n" +
+"}\n" +
+"// rows: cirurgias finalizadas COM dados. mode: 'completo' | 'reduzido' | 'todos'.\n" +
+"// Taxas de transecção só são calculadas quando o modo é único (completo e reduzido não são comparáveis).\n" +
+"function groupDashboardRows(rows, dim, mode){\n" +
+"  var def = DASH_DIMS[dim];\n" +
+"  var src = mode==='todos' ? rows : rows.filter(function(r){ return r.mode===mode; });\n" +
+"  var buckets = {};\n" +
+"  src.forEach(function(r){ var k = def.get(r); (buckets[k] = buckets[k] || []).push(r); });\n" +
+"  var keys = def.order.concat(['na']).filter(function(k){ return buckets[k] && buckets[k].length; });\n" +
+"  var ratesOk = mode!=='todos';\n" +
+"  return keys.map(function(k){\n" +
+"    var arr = buckets[k];\n" +
+"    return {\n" +
+"      key:k, label: k==='na' ? t('dash.group_unknown') : def.name(k), n: arr.length,\n" +
+"      extraidos: dashMeanOf(arr,'extraidos'), indice: dashMeanOf(arr,'indice'),\n" +
+"      taxaParcial: ratesOk ? dashMeanOf(arr,'taxaParcial') : null,\n" +
+"      taxaTotal: ratesOk ? dashMeanOf(arr,'taxaTotal') : null,\n" +
+"      folPerMin: dashMeanOf(arr,'folPerMin'), minisPorMil: dashMeanOf(arr,'minisPorMil')\n" +
+"    };\n" +
+"  });\n" +
+"}\n" +
+"function dashBestIdx(groups, key, lowerIsBetter){\n" +
+"  var cand = groups.map(function(g,i){ return {v:g[key], i:i}; }).filter(function(x){ return x.v!==null && x.v!==undefined && isFinite(x.v); });\n" +
+"  if (cand.length < 2) return -1;\n" +
+"  var best = cand[0];\n" +
+"  cand.forEach(function(x){ if (lowerIsBetter ? x.v < best.v : x.v > best.v) best = x; });\n" +
+"  return best.i;\n" +
+"}\n" +
+"function dashMetricCell(groups, gi, key, digits, suffix, bestIdx){\n" +
+"  var v = groups[gi][key];\n" +
+"  if (v===null || v===undefined || !isFinite(v)) return '<td>—</td>';\n" +
+"  var max = 0; groups.forEach(function(g){ if (g[key]!==null && g[key]!==undefined && g[key]>max) max = g[key]; });\n" +
+"  var pct = max>0 ? Math.max(3, v/max*100) : 0;\n" +
+"  var txt = digits===0 ? fmtBig(Math.round(v)) : v.toFixed(digits);\n" +
+"  return '<td class=\"'+(bestIdx===gi?'best':'')+'\"><div>'+(bestIdx===gi?'★ ':'')+txt+(suffix||'')+'</div><div class=\"mbar\"><i style=\"width:'+pct.toFixed(0)+'%\"></i></div></td>';\n" +
+"}\n" +
+"function renderDashCompare(data, mode){\n" +
+"  var dim = state.dashDim || 'punch';\n" +
+"  Object.keys(DASH_DIMS).forEach(function(d){\n" +
+"    document.getElementById('dash-dim-'+d).className = 'btn'+(d===dim?'':' secondary');\n" +
+"    document.getElementById('dash-dim-'+d).textContent = t(DASH_DIMS[d].labelKey);\n" +
+"  });\n" +
+"  document.getElementById('dash-compare-rates-hint').style.display = mode==='todos' ? 'block' : 'none';\n" +
+"  var groups = groupDashboardRows(data.withData, dim, mode);\n" +
+"  var box = document.getElementById('dash-compare-table');\n" +
+"  if (!groups.length){ box.innerHTML = '<p class=\"hint\">'+escapeHtml(t('dash.rate_empty'))+'</p>'; }\n" +
+"  else {\n" +
+"    var bT = dashBestIdx(groups,'taxaTotal',true), bP = dashBestIdx(groups,'taxaParcial',true), bF = dashBestIdx(groups,'folPerMin',false);\n" +
+"    var anySmall = false;\n" +
+"    var body = groups.map(function(g,i){\n" +
+"      var small = g.n < 5; if (small) anySmall = true;\n" +
+"      return '<tr><td>'+escapeHtml(g.label)+'</td><td>'+g.n+(small?' ⚠':'')+'</td>'+\n" +
+"        dashMetricCell(groups,i,'extraidos',0,'',-1)+dashMetricCell(groups,i,'indice',2,'',-1)+\n" +
+"        dashMetricCell(groups,i,'taxaParcial',1,'%',bP)+dashMetricCell(groups,i,'taxaTotal',1,'%',bT)+\n" +
+"        dashMetricCell(groups,i,'folPerMin',1,'',bF)+dashMetricCell(groups,i,'minisPorMil',1,'',-1)+'</tr>';\n" +
+"    }).join('');\n" +
+"    box.innerHTML = '<div class=\"dash-table-wrap\"><table class=\"dash-table\">'+\n" +
+"      '<tr><th>'+escapeHtml(t(DASH_DIMS[dim].labelKey))+'</th><th>'+escapeHtml(t('dash.col_n'))+'</th><th>'+escapeHtml(t('dash.col_extracted_avg'))+'</th><th>'+escapeHtml(t('dash.col_index'))+'</th><th>'+escapeHtml(t('dash.col_partial'))+'</th><th>'+escapeHtml(t('dash.col_total'))+'</th><th>'+escapeHtml(t('dash.col_fpm'))+'</th><th>'+escapeHtml(t('dash.col_minis'))+'</th></tr>'+\n" +
+"      body+'</table></div>'+(anySmall?'<p class=\"hint\">⚠ '+escapeHtml(t('dash.small_sample'))+'</p>':'');\n" +
+"  }\n" +
+"  renderDashPair(data);\n" +
+"}\n" +
+"function dashPairLabel(r){ return r.codigo+' · '+shortDate(r.createdAt)+' ('+(r.mode==='reduzido'?'R':'C')+')'; }\n" +
+"function renderDashPair(data){\n" +
+"  var rows = data.withData;\n" +
+"  var box = document.getElementById('dash-pair-box');\n" +
+"  if (rows.length < 2){ box.innerHTML = '<p class=\"hint\">'+escapeHtml(t('dash.pair_need_two'))+'</p>'; return; }\n" +
+"  var ids = rows.map(function(r){ return r.id; });\n" +
+"  if (ids.indexOf(state.dashPairA) === -1) state.dashPairA = rows[rows.length-2].id;\n" +
+"  if (ids.indexOf(state.dashPairB) === -1) state.dashPairB = rows[rows.length-1].id;\n" +
+"  var opts = function(sel){ return rows.map(function(r){ return '<option value=\"'+escapeHtml(r.id)+'\"'+(r.id===sel?' selected':'')+'>'+escapeHtml(dashPairLabel(r))+'</option>'; }).join(''); };\n" +
+"  var A = rows.filter(function(r){ return r.id===state.dashPairA; })[0], B = rows.filter(function(r){ return r.id===state.dashPairB; })[0];\n" +
+"  var unk = t('dash.group_unknown');\n" +
+"  var info = function(r){ return {\n" +
+"    date: new Date(r.createdAt).toLocaleDateString(localeForLang()),\n" +
+"    mode: r.mode==='reduzido' ? t('common.mode_reduced') : t('common.mode_complete'),\n" +
+"    punch: r.punchMm ? DASH_DIMS.punch.name(r.punchMm) : unk,\n" +
+"    esp: r.espessura ? DASH_DIMS.espessura.name(r.espessura) : unk,\n" +
+"    tex: r.textura ? DASH_DIMS.textura.name(r.textura) : unk,\n" +
+"    ras: r.raspagem ? DASH_DIMS.raspagem.name(r.raspagem) : unk,\n" +
+"    age: (r.idade!==null && r.idade!==undefined) ? String(r.idade) : unk\n" +
+"  }; };\n" +
+"  var ia = info(A), ib = info(B);\n" +
+"  var sameMode = A.mode === B.mode;\n" +
+"  var textRow = function(lbl, a, b){ return '<tr><td>'+escapeHtml(lbl)+'</td><td>'+escapeHtml(a)+'</td><td>'+escapeHtml(b)+'</td><td></td></tr>'; };\n" +
+"  var numRow = function(lbl, a, b, digits, suffix, skipDiff){\n" +
+"    var f = function(v){ return (v===null||v===undefined||!isFinite(v)) ? '—' : (digits===0 ? fmtBig(Math.round(v)) : v.toFixed(digits))+(suffix||''); };\n" +
+"    var diff = '—';\n" +
+"    if (!skipDiff && a!==null && b!==null && isFinite(a) && isFinite(b)){\n" +
+"      var d = b - a; diff = (d>0?'+':d<0?'−':'')+(digits===0 ? fmtBig(Math.abs(Math.round(d))) : Math.abs(d).toFixed(digits))+(suffix ? (suffix==='%' ? ' pp' : suffix) : '');\n" +
+"    }\n" +
+"    return '<tr><td>'+escapeHtml(lbl)+'</td><td>'+f(a)+'</td><td>'+f(b)+'</td><td>'+diff+'</td></tr>';\n" +
+"  };\n" +
+"  box.innerHTML =\n" +
+"    '<div class=\"row\" style=\"gap:10px;flex-wrap:wrap;\">'+\n" +
+"      '<div class=\"field\" style=\"flex:1;min-width:150px;margin:0;\"><label>'+escapeHtml(t('dash.pair_a'))+'</label><select id=\"dash-pair-a\" onchange=\"App.setDashPair(\\'a\\',this.value)\">'+opts(state.dashPairA)+'</select></div>'+\n" +
+"      '<div class=\"field\" style=\"flex:1;min-width:150px;margin:0;\"><label>'+escapeHtml(t('dash.pair_b'))+'</label><select id=\"dash-pair-b\" onchange=\"App.setDashPair(\\'b\\',this.value)\">'+opts(state.dashPairB)+'</select></div>'+\n" +
+"    '</div>'+\n" +
+"    (sameMode ? '' : '<p class=\"hint\" style=\"margin-top:8px;\">⚠ '+escapeHtml(t('dash.pair_mode_warning'))+'</p>')+\n" +
+"    '<div class=\"dash-table-wrap\" style=\"margin-top:8px;\"><table class=\"dash-table\">'+\n" +
+"      '<tr><th>'+escapeHtml(t('dash.pair_metric'))+'</th><th>A</th><th>B</th><th>'+escapeHtml(t('dash.pair_diff'))+'</th></tr>'+\n" +
+"      textRow(t('dash.table_date'), ia.date, ib.date)+textRow(t('dash.table_mode'), ia.mode, ib.mode)+\n" +
+"      textRow(t('patient.punch_label'), ia.punch, ib.punch)+textRow(t('patient.hair_thickness_label'), ia.esp, ib.esp)+\n" +
+"      textRow(t('patient.hair_texture_label'), ia.tex, ib.tex)+textRow(t('patient.surgery_type_label'), ia.ras, ib.ras)+\n" +
+"      textRow(t('patient.age_label'), ia.age, ib.age)+\n" +
+"      numRow(t('dash.table_extracted'), A.extraidos, B.extraidos, 0, '')+\n" +
+"      numRow(t('dash.table_index'), A.indice, B.indice, 2, '')+\n" +
+"      numRow(t('dash.col_partial'), A.taxaParcial, B.taxaParcial, 1, '%', !sameMode)+\n" +
+"      numRow(t('dash.col_total'), A.taxaTotal, B.taxaTotal, 1, '%', !sameMode)+\n" +
+"      numRow(t('dash.col_fpm'), A.folPerMin, B.folPerMin, 1, '')+\n" +
+"      numRow(t('dash.col_minis'), A.minisPorMil, B.minisPorMil, 1, '')+\n" +
+"      numRow(t('dash.table_preinc'), A.preincTotalVal, B.preincTotalVal, 0, '')+\n" +
+"      '<tr><td>'+escapeHtml(t('dash.metric_time'))+'</td><td>'+fmtHMS(A.tempoMs)+'</td><td>'+fmtHMS(B.tempoMs)+'</td><td></td></tr>'+\n" +
+"    '</table></div>';\n" +
+"}\n" +
+"App.setDashPair = function(which, id){ if (which==='a') state.dashPairA = id; else state.dashPairB = id; renderDashPair(computeDashboardData(state.dashboardSessions||[])); };\n" +
+"App.switchDashTab = function(tab){ state.dashTab = tab; renderDashboardScreen(); };\n" +
+"App.switchDashDim = function(dim){ state.dashDim = dim; renderDashboardScreen(); };\n" +
+"App.sortDashboard = function(key){\n" +
+"  var cur = state.dashSort || {key:'createdAt', dir:-1};\n" +
+"  state.dashSort = { key:key, dir: cur.key===key ? -cur.dir : -1 };\n" +
+"  renderDashboardScreen();\n" +
+"};\n" +
+"function renderDashList(data){\n" +
+"  var sort = state.dashSort || {key:'createdAt', dir:-1};\n" +
+"  var rows = data.rows.slice().sort(function(a,b){\n" +
+"    var va = a[sort.key], vb = b[sort.key];\n" +
+"    var na = (va===null||va===undefined||(typeof va==='number' && !isFinite(va))), nb = (vb===null||vb===undefined||(typeof vb==='number' && !isFinite(vb)));\n" +
+"    if (na && nb) return 0; if (na) return 1; if (nb) return -1;\n" +
+"    if (typeof va === 'string') return va.localeCompare(vb) * sort.dir;\n" +
+"    return (va - vb) * sort.dir;\n" +
+"  });\n" +
+"  var unk = '—';\n" +
+"  var th = function(key, label){ return '<th style=\"cursor:pointer;\" onclick=\"App.sortDashboard(\\''+key+'\\')\">'+escapeHtml(label)+(sort.key===key ? (sort.dir>0?' ▲':' ▼') : '')+'</th>'; };\n" +
+"  var body = rows.map(function(r){\n" +
+"    return '<tr><td>'+escapeHtml(r.codigo)+'</td><td>'+shortDate(r.createdAt)+'</td><td>'+(r.mode==='reduzido'?t('common.mode_reduced'):t('common.mode_complete'))+'</td>'+\n" +
+"      '<td>'+(r.punchMm?DASH_DIMS.punch.name(r.punchMm):unk)+'</td><td>'+(r.espessura?DASH_DIMS.espessura.name(r.espessura):unk)+'</td><td>'+(r.textura?DASH_DIMS.textura.name(r.textura):unk)+'</td>'+\n" +
+"      '<td>'+(r.raspagem?DASH_DIMS.raspagem.name(r.raspagem):unk)+'</td><td>'+((r.idade!==null&&r.idade!==undefined)?r.idade:unk)+'</td>'+\n" +
+"      '<td>'+r.extraidos+'</td><td>'+r.indice.toFixed(2)+'</td><td>'+r.taxaParcial.toFixed(1)+'%</td><td>'+r.taxaTotal.toFixed(1)+'%</td>'+\n" +
+"      '<td>'+((r.folPerMin!==null&&isFinite(r.folPerMin))?r.folPerMin.toFixed(1):unk)+'</td><td>'+r.preincTotalVal+'</td></tr>';\n" +
+"  }).join('');\n" +
+"  document.getElementById('dash-table').innerHTML = '<div class=\"dash-table-wrap\"><table class=\"dash-table\"><tr>'+\n" +
+"    th('codigo',t('dash.table_surgery'))+th('createdAt',t('dash.table_date'))+th('mode',t('dash.table_mode'))+\n" +
+"    th('punchMm',t('dash.col_punch'))+th('espessura',t('dash.col_thickness'))+th('textura',t('dash.col_texture'))+th('raspagem',t('dash.col_shaving'))+th('idade',t('dash.col_age'))+\n" +
+"    th('extraidos',t('dash.table_extracted'))+th('indice',t('dash.table_index'))+th('taxaParcial',t('dash.table_partial_rate'))+th('taxaTotal',t('dash.table_total_rate'))+\n" +
+"    th('folPerMin',t('dash.col_fpm'))+th('preincTotalVal',t('dash.table_preinc'))+'</tr>'+body+'</table></div>';\n" +
+"}\n" +
+"function renderDashboardScreen(){\n" +
+"  var data = computeDashboardData(state.dashboardSessions||[]);\n" +
+"  document.getElementById('dash-empty').style.display = data.totalCirurgias===0 ? 'block' : 'none';\n" +
+"  document.getElementById('dash-content').style.display = data.totalCirurgias===0 ? 'none' : 'block';\n" +
+"  if (data.totalCirurgias===0) return;\n" +
+"  var tab = state.dashTab || 'geral';\n" +
+"  ['geral','comparar','lista'].forEach(function(k){\n" +
+"    document.getElementById('dash-tab-'+k).className = 'btn'+(k===tab?'':' secondary');\n" +
+"    document.getElementById('dash-panel-'+k).style.display = k===tab ? 'block' : 'none';\n" +
+"  });\n" +
+"  var mode = state.dashboardMode||'completo';\n" +
+"  document.getElementById('dash-mode-completo').className = 'btn'+(mode==='completo'?'':' secondary');\n" +
+"  document.getElementById('dash-mode-reduzido').className = 'btn'+(mode==='reduzido'?'':' secondary');\n" +
+"  document.getElementById('dash-mode-todos').className = 'btn'+(mode==='todos'?'':' secondary');\n" +
+"  document.getElementById('dash-mode-row').style.display = tab==='lista' ? 'none' : 'flex';\n" +
+"  if (tab==='geral') renderDashOverview(data, mode);\n" +
+"  else if (tab==='comparar') renderDashCompare(data, mode);\n" +
+"  else renderDashList(data);\n" +
+"}\n" +
+"function renderDashOverview(data, mode){\n" +
+"  document.getElementById('dash-summary').innerHTML =\n" +
+"    '<div class=\"summary-item\"><div class=\"val\">'+data.totalCirurgias+'</div><div class=\"lbl\">'+escapeHtml(t('dash.finalized_surgeries_title'))+'</div></div>'+\n" +
+"    '<div class=\"summary-item\"><div class=\"val\">'+fmtBig(data.foliculosExtraidosGeral)+'</div><div class=\"lbl\">'+escapeHtml(t('dash.stat_extracted_total'))+'</div></div>'+\n" +
+"    '<div class=\"summary-item\"><div class=\"val\">'+fmtBig(data.fiosGeral)+'</div><div class=\"lbl\">'+escapeHtml(t('dash.stat_hairs_total'))+'</div></div>'+\n" +
+"    '<div class=\"summary-item\"><div class=\"val\">'+data.indiceMedio.toFixed(2)+'</div><div class=\"lbl\">'+escapeHtml(t('dash.stat_avg_index'))+'</div></div>'+\n" +
+"    '<div class=\"summary-item\"><div class=\"val\">'+data.preincMedia.toFixed(0)+'</div><div class=\"lbl\">'+escapeHtml(t('dash.stat_preinc_avg'))+'</div></div>'+\n" +
+"    '<div class=\"summary-item\"><div class=\"val\">'+data.preincTotal+'</div><div class=\"lbl\">'+escapeHtml(t('dash.stat_preinc_total'))+'</div></div>'+\n" +
+"    '<div class=\"summary-item\"><div class=\"val\">'+data.folPerMin.toFixed(1)+'</div><div class=\"lbl\">'+escapeHtml(t('dash.stat_follicles_per_min'))+'</div></div>'+\n" +
+"    '<div class=\"summary-item\"><div class=\"val\">'+fmtHMS(data.tempoPorMilMs)+'</div><div class=\"lbl\">'+escapeHtml(t('dash.stat_avg_time_per_1000'))+'</div></div>'+\n" +
+"    '<div class=\"summary-item\"><div class=\"val\">'+data.minisPorMil.toFixed(1)+'</div><div class=\"lbl\">'+escapeHtml(t('dash.stat_minis_per_1000'))+'</div></div>';\n" +
+"  var extItems = data.withData.map(function(r){ return {label:shortDate(r.createdAt), value:r.extraidos}; });\n" +
+"  document.getElementById('dash-extraidos-chart').innerHTML = buildBarChartSvg(extItems, 'var(--c-integro)', function(v){ return fmtBig(v); });\n" +
+"  var idxItems = data.withData.map(function(r){ return {label:shortDate(r.createdAt), value:r.indice}; });\n" +
+"  document.getElementById('dash-index-chart').innerHTML = buildBarChartSvg(idxItems, 'var(--c-primary)', function(v){ return v.toFixed(2); });\n" +
+"  var isTodos = mode==='todos';\n" +
+"  var modeRows = isTodos ? data.withData : data.byMode[mode];\n" +
+"  document.getElementById('dash-rate-todos-hint').style.display = (isTodos && modeRows.length) ? 'block' : 'none';\n" +
+"  document.getElementById('dash-rate-empty').style.display = modeRows.length ? 'none' : 'block';\n" +
+"  document.getElementById('dash-rate-summary').style.display = modeRows.length ? 'grid' : 'none';\n" +
+"  document.getElementById('dash-rate-chart').style.display = modeRows.length ? 'block' : 'none';\n" +
+"  if (modeRows.length){\n" +
+"    if (isTodos){\n" +
+"      document.getElementById('dash-rate-summary').innerHTML =\n" +
+"        '<div class=\"summary-item\"><div class=\"val\">'+modeRows.length+'</div><div class=\"lbl\">'+escapeHtml(t('dash.stat_surgeries_all_modes'))+'</div></div>'+\n" +
+"        '<div class=\"summary-item\"><div class=\"val\">'+data.byMode.completo.length+'</div><div class=\"lbl\">'+escapeHtml(t('dash.stat_in_complete_mode'))+'</div></div>'+\n" +
+"        '<div class=\"summary-item\"><div class=\"val\">'+data.byMode.reduzido.length+'</div><div class=\"lbl\">'+escapeHtml(t('dash.stat_in_reduced_mode'))+'</div></div>';\n" +
+"    } else {\n" +
+"      document.getElementById('dash-rate-summary').innerHTML =\n" +
+"        '<div class=\"summary-item\"><div class=\"val\">'+modeRows.length+'</div><div class=\"lbl\">'+escapeHtml(mode==='completo'?t('dash.stat_surgeries_mode_complete'):t('dash.stat_surgeries_mode_reduced'))+'</div></div>'+\n" +
+"        '<div class=\"summary-item\"><div class=\"val\">'+data.taxaParcialMedia[mode].toFixed(1)+'%</div><div class=\"lbl\">'+escapeHtml(t('dash.stat_partial_rate_avg'))+'</div></div>'+\n" +
+"        '<div class=\"summary-item\"><div class=\"val\">'+data.taxaTotalMedia[mode].toFixed(1)+'%</div><div class=\"lbl\">'+escapeHtml(t('dash.stat_total_rate_avg'))+'</div></div>';\n" +
+"    }\n" +
+"    var rateItems = modeRows.map(function(r){ return {label:shortDate(r.createdAt)+(isTodos?(r.mode==='reduzido'?' (R)':' (C)'):''), parcial:r.taxaParcial, total:r.taxaTotal}; });\n" +
+"    document.getElementById('dash-rate-chart').innerHTML = buildRateChartSvg(rateItems);\n" +
+"  }\n" +
+"  document.getElementById('dash-quad-todos-hint').style.display = isTodos ? 'block' : 'none';\n" +
+"  document.getElementById('dash-quad-table').style.display = isTodos ? 'none' : 'block';\n" +
+"  if (!isTodos){\n" +
+"    var fmtOrDash = function(v, suffix){ return v===null ? '—' : v.toFixed(1)+(suffix||''); };\n" +
+"    var quadRows = data.quadranteMedias.map(function(q){\n" +
+"      var qm = q[mode];\n" +
+"      return '<tr><td>'+escapeHtml(q.label)+'</td><td>'+qm.n+'</td><td>'+(qm.n?qm.indice.toFixed(2):'—')+'</td>'+\n" +
+"        '<td>'+(qm.n?qm.taxaParcial.toFixed(1)+'%':'—')+'</td><td>'+(qm.n?qm.taxaTotal.toFixed(1)+'%':'—')+'</td>'+\n" +
+"        '<td>'+fmtOrDash(qm.mambaDiffPct,'%')+'</td></tr>';\n" +
+"    }).join('');\n" +
+"    document.getElementById('dash-quad-table').innerHTML = '<div class=\"dash-table-wrap\"><table class=\"dash-table\">'+\n" +
+"      '<tr><th>'+escapeHtml(t('dash.table_quadrant'))+'</th><th>'+escapeHtml(t('dash.table_surgeries'))+'</th><th>'+escapeHtml(t('dash.table_avg_index'))+'</th><th>'+escapeHtml(t('dash.table_partial_rate_avg'))+'</th><th>'+escapeHtml(t('dash.table_total_rate_avg'))+'</th><th>'+escapeHtml(t('dash.table_mamba_vs_bench'))+'</th></tr>'+\n" +
+"      quadRows+'</table></div>';\n" +
+"  }\n" +
+"  var ufRows = data.pctUF.map(function(u){\n" +
+"    return '<tr><td>'+escapeHtml(u.label)+'</td><td>'+fmtBig(u.qtd)+'</td><td>'+u.pct.toFixed(1)+'%</td></tr>';\n" +
+"  }).join('');\n" +
+"  document.getElementById('dash-uf-table').innerHTML = '<div class=\"dash-table-wrap\"><table class=\"dash-table\">'+\n" +
+"    '<tr><th>'+escapeHtml(t('dash.table_category'))+'</th><th>'+escapeHtml(t('dash.table_quantity'))+'</th><th>'+escapeHtml(t('dash.table_pct_intact'))+'</th></tr>'+\n" +
+"    ufRows+'</table></div>';\n" +
+"}\n" +
+"App.addIncrementField = function(){ state.increments.push(1); renderSettingsScreen(); };\n" +
+"App.updateIncrementField = function(inputEl){\n" +
+"  var idx = parseInt(inputEl.getAttribute('data-idx'),10);\n" +
+"  var val = parseInt(inputEl.value,10);\n" +
+"  if (isNaN(val) || val<1) val = 1;\n" +
+"  state.increments[idx] = val;\n" +
+"};\n" +
+"App.removeIncrementField = function(idx){ state.increments.splice(idx,1); renderSettingsScreen(); };\n" +
+"App.saveSettings = function(){\n" +
+"  if (!state.increments.length){ toast(t('toast.add_at_least_one_value')); return; }\n" +
+"  saveIncrementSettings();\n" +
+"  toast(t('toast.settings_saved'));\n" +
+"  if (state.session) render();\n" +
+"};\n" +
+"App.resetSettings = function(){\n" +
+"  state.increments = DEFAULT_INCREMENTS.slice();\n" +
+"  saveIncrementSettings();\n" +
+"  renderSettingsScreen();\n" +
+"  toast(t('toast.defaults_restored'));\n" +
+"  if (state.session) render();\n" +
+"};\n" +
+"function loadSurgeryList(){\n" +
+"  api('/api/sessions').then(function(list){\n" +
+"    state.surgeryList = list;\n" +
+"    var el = document.getElementById('surgery-list');\n" +
+"    if (!list.length){ el.innerHTML = '<div class=\"empty-state\">'+escapeHtml(t('home.no_surgeries_yet'))+'</div>'; return; }\n" +
+"    el.innerHTML = list.map(function(s){\n" +
+"      var sum = computeSummary(combinedExtractionCounts(s), s.mode||'completo');\n" +
+"      var badgeClass = s.status==='finalizada'?'finalizada':'andamento';\n" +
+"      return '<div class=\"surgery-card\"><div><b>'+escapeHtml(s.codigo)+'</b><div class=\"hint\">'+escapeHtml(t('home.card_summary',{n:String(sum.foliculosExtraidos),idx:sum.indice.toFixed(2)}))+'</div></div>'+\n" +
+"        '<div style=\"text-align:right;\"><span class=\"badge '+badgeClass+'\">'+(s.status==='finalizada'?t('common.status_finalized'):t('common.status_in_progress'))+'</span><br>'+\n" +
+"        '<div class=\"row\" style=\"gap:6px;margin-top:8px;justify-content:flex-end;\">'+\n" +
+"        '<button class=\"btn secondary\" onclick=\"App.openSession(\\''+s.id+'\\')\">'+escapeHtml(t('common.open'))+'</button>'+\n" +
+"        '<button class=\"btn danger\" onclick=\"App.deleteSession(\\''+s.id+'\\')\">'+escapeHtml(t('common.delete'))+'</button>'+\n" +
+"        '</div></div></div>';\n" +
+"    }).join('');\n" +
+"  }).catch(function(){ toast(t('toast.server_unreachable')); });\n" +
+"}\n" +
+"App.deleteSession = function(id){\n" +
+"  var found = (state.surgeryList||[]).filter(function(s){ return s.id===id; })[0];\n" +
+"  var codigo = found ? found.codigo : id;\n" +
+"  var confirmText = t('confirm.delete_surgery',{code:codigo});\n" +
+"  confirmDialog(confirmText).then(function(ok){\n" +
+"    if (!ok) return;\n" +
+"    api('/api/session/'+id, 'DELETE').then(function(){ toast(t('toast.surgery_deleted')); loadSurgeryList(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
+"};\n" +
+"App.setNewMode = function(mode){\n" +
+"  state.newSessionMode = mode;\n" +
+"  document.getElementById('new-mode-completo').className = 'btn' + (mode==='completo' ? '' : ' secondary');\n" +
+"  document.getElementById('new-mode-reduzido').className = 'btn' + (mode==='reduzido' ? '' : ' secondary');\n" +
+"};\n" +
+"App.createSession = function(){\n" +
+"  var codigo = document.getElementById('new-codigo').value.trim();\n" +
+"  if (!codigo){ toast(t('toast.enter_patient_code')); return; }\n" +
+"  var mode = state.newSessionMode||'reduzido';\n" +
+"  var payload = {codigo:codigo, mode:mode};\n" +
+"  if (Object.keys(state.newPatientInfo||{}).length) payload.patientInfo = state.newPatientInfo;\n" +
+"  api('/api/session','POST',payload).then(function(s){\n" +
+"    document.getElementById('new-codigo').value='';\n" +
+"    App.setNewMode('reduzido');\n" +
+"    state.newPatientInfo = {};\n" +
+"    ['new-patient-idade','new-patient-altura','new-patient-peso'].forEach(function(id){ var el=document.getElementById(id); if (el) el.value=''; });\n" +
+"    App.refreshNewPatientButtons();\n" +
+"    App.openSession(s.id);\n" +
+"  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.openSession = function(id){ state.currentId=id; state.activeQuadrant=QUADRANTS[0].id; history.pushState({},'','/s/'+id); loadAudioPrefs(id); showScreen('counting'); App.switchTab('extracao'); fetchAndRender().then(function(){ startPolling(); }); };\n" +
+"function fetchAndRender(){ return api('/api/session/'+state.currentId).then(function(s){ state.session=s; render(); }).catch(function(){ toast(t('errors.surgery_not_found_server')); }); }\n" +
+"function startPolling(){ stopPolling(); state.pollHandle = setInterval(function(){ fetchAndRender(); }, 1500); }\n" +
+"function stopPolling(){ if (state.pollHandle){ clearInterval(state.pollHandle); state.pollHandle=null; } }\n" +
+"App.switchTab = function(tab){\n" +
+"  state.activeTab = tab;\n" +
+"  var panels = {extracao:'panel-extracao', preincisoes:'panel-preincisoes', horarios:'panel-horarios', implantacao:'panel-implantacao', fotos:'panel-fotos', paciente:'panel-paciente', resumofinal:'panel-resumofinal'};\n" +
+"  var btns = {extracao:'tab-extracao-btn', preincisoes:'tab-preinc-btn', horarios:'tab-horarios-btn', implantacao:'tab-implantacao-btn', fotos:'tab-fotos-btn', paciente:'tab-paciente-btn', resumofinal:'tab-resumo-btn'};\n" +
+"  Object.keys(panels).forEach(function(key){\n" +
+"    document.getElementById(panels[key]).style.display = (key===tab) ? '' : 'none';\n" +
+"    document.getElementById(btns[key]).className = (key===tab) ? 'btn' : 'btn secondary';\n" +
+"  });\n" +
+"  document.getElementById('cnt-tab-title').textContent = t(TAB_TITLE_KEYS[tab] || 'cnt.tab_extracao');\n" +
+"  App.closeNav();\n" +
+"};\n" +
+"App.switchQuadrant = function(quadId){ state.activeQuadrant = quadId; render(); };\n" +
+"function render(){\n" +
+"  var s = state.session; if (!s) return;\n" +
+"  applyBranding(s.ownerBranding);\n" +
+"  document.getElementById('cnt-codigo').textContent = s.codigo;\n" +
+"  document.getElementById('btn-rename-patient').style.display = (state.currentUser && s.ownerBranding && s.ownerBranding.ownerId === state.currentUser.id) ? 'inline-block' : 'none';\n" +
+"  document.getElementById('cnt-meta').textContent = new Date(s.createdAt).toLocaleString(localeForLang());\n" +
+"  var gMs = globalElapsedMs(s);\n" +
+"  var gEl = document.getElementById('cnt-global-timer');\n" +
+"  if (gMs===null){ gEl.textContent = t('cnt.global_not_started'); }\n" +
+"  else { gEl.textContent = t('cnt.global_timer_prefix')+fmtHMS(gMs)+(s.globalTimerEndedAt ? t('cnt.global_finalized_suffix') : t('cnt.global_in_progress_suffix')); }\n" +
+"  var badge = document.getElementById('cnt-status');\n" +
+"  badge.textContent = s.status==='finalizada'?t('common.status_finalized'):t('common.status_in_progress');\n" +
+"  badge.className = 'badge ' + (s.status==='finalizada'?'finalizada':'andamento');\n" +
+"  document.getElementById('cnt-mode').textContent = (s.mode==='reduzido') ? t('cnt.mode_reduced') : t('cnt.mode_full');\n" +
+"  document.getElementById('btn-finalizar').style.display = s.status==='finalizada'?'none':'inline-block';\n" +
+"  document.getElementById('btn-reabrir').style.display = s.status==='finalizada'?'inline-block':'none';\n" +
+"  document.getElementById('btn-fix-duration').style.display = s.status==='finalizada'?'inline-block':'none';\n" +
+"  document.getElementById('share-url').textContent = shareUrlFor(s.id);\n" +
+"  var readonly = s.status==='finalizada';\n" +
+"\n" +
+"  var combined = combinedExtractionCounts(s);\n" +
+"  var sum = computeSummary(combined, s.mode||'completo');\n" +
+"  document.getElementById('cnt-tab-title').textContent = t(TAB_TITLE_KEYS[state.activeTab||'extracao'] || 'cnt.tab_extracao');\n" +
+"  renderSchedule(s);\n" +
+"  renderImplant(s);\n" +
+"  document.getElementById('geral-extraidos').textContent = sum.foliculosExtraidos;\n" +
+"  document.getElementById('geral-fios').textContent = sum.totalFios;\n" +
+"  document.getElementById('geral-indice').textContent = sum.indice.toFixed(2);\n" +
+"  document.getElementById('geral-transec-parcial').textContent = sum.taxaParcial.toFixed(1)+'%';\n" +
+"  document.getElementById('geral-transec-total').textContent = sum.taxaTotal.toFixed(1)+'%';\n" +
+"  document.getElementById('geral-mini').textContent = sum.miniTotal;\n" +
+"  var finalMamba = mambaFinalCumulativo(s);\n" +
+"  var mdiffGeral = computeMambaDiff(finalMamba, sum.foliculosExtraidos);\n" +
+"  var geralBox = document.getElementById('geral-mamba-summary');\n" +
+"  if (mdiffGeral){\n" +
+"    geralBox.style.display='grid';\n" +
+"    document.getElementById('geral-mamba-val').textContent = mdiffGeral.mamba;\n" +
+"    document.getElementById('geral-mamba-manip').textContent = mdiffGeral.base;\n" +
+"    document.getElementById('geral-mamba-diff').textContent = (mdiffGeral.diff>0?'+':'')+mdiffGeral.diff;\n" +
+"    document.getElementById('geral-mamba-diffpct').textContent = (mdiffGeral.diffPct>0?'+':'')+mdiffGeral.diffPct.toFixed(1)+'%';\n" +
+"    var geralElapsed = elapsedMs(s.timer);\n" +
+"    var geralMambaRate = mambaRatePerHour(mdiffGeral.mamba, geralElapsed>0?geralElapsed:null);\n" +
+"    document.getElementById('geral-mamba-rate').textContent = geralMambaRate===null ? '—' : geralMambaRate.toFixed(0);\n" +
+"  } else { geralBox.style.display='none'; }\n" +
+"\n" +
+"  // ---- aba Resumo Final: reaproveita combined/sum/finalMamba/mdiffGeral já\n" +
+"  // calculados acima (mesmos números do Resumo geral), só acrescenta tempos,\n" +
+"  // o total por categoria e a diferença pré-incisões x folículos extraídos.\n" +
+"  document.getElementById('final-tempo-extracao').textContent = fmtHMS(elapsedMs(s.timer));\n" +
+"  document.getElementById('final-tempo-preinc').textContent = fmtHMS(elapsedMs(s.preincTimer));\n" +
+"  var gMsFinal = globalElapsedMs(s);\n" +
+"  document.getElementById('final-tempo-total').textContent = gMsFinal===null ? '—' : fmtHMS(gMsFinal);\n" +
+"  document.getElementById('final-extraidos').textContent = sum.foliculosExtraidos;\n" +
+"  document.getElementById('final-fios').textContent = sum.totalFios;\n" +
+"  document.getElementById('final-indice').textContent = sum.indice.toFixed(2);\n" +
+"  document.getElementById('final-transec-parcial').textContent = sum.taxaParcial.toFixed(1)+'%';\n" +
+"  document.getElementById('final-transec-total').textContent = sum.taxaTotal.toFixed(1)+'%';\n" +
+"  document.getElementById('final-mini').textContent = sum.miniTotal;\n" +
+"  var finalMambaBox = document.getElementById('final-mamba-summary');\n" +
+"  // A aba Resumo Final compara o Mamba direto com os folículos EXTRAÍDOS — mesma\n" +
+"  // base usada em todo o app (computeMambaDiff), calculada aqui separadamente\n" +
+"  // só porque esta aba usa seus próprios elementos de HTML.\n" +
+"  if (finalMamba!==null && finalMamba!==undefined && finalMamba!==''){\n" +
+"    finalMambaBox.style.display='grid';\n" +
+"    var diffExtraidos = finalMamba - sum.foliculosExtraidos;\n" +
+"    var diffExtraidosPct = finalMamba>0 ? diffExtraidos/finalMamba*100 : 0;\n" +
+"    document.getElementById('final-mamba-val').textContent = finalMamba;\n" +
+"    document.getElementById('final-mamba-diff').textContent = (diffExtraidos>0?'+':'')+diffExtraidos;\n" +
+"    document.getElementById('final-mamba-diffpct-extraidos').textContent = (diffExtraidosPct>0?'+':'')+diffExtraidosPct.toFixed(1)+'%';\n" +
+"    // Ritmo de extração pelo Mamba (fol./h) — mesma conta já usada no Resumo\n" +
+"    // geral da aba Extração: leitura final do Mamba dividida pelo tempo de\n" +
+"    // extração corrido.\n" +
+"    var finalExtElapsed = elapsedMs(s.timer);\n" +
+"    var finalMambaRate = mambaRatePerHour(finalMamba, finalExtElapsed>0?finalExtElapsed:null);\n" +
+"    document.getElementById('final-mamba-rate').textContent = finalMambaRate===null ? '—' : finalMambaRate.toFixed(0);\n" +
+"  } else { finalMambaBox.style.display='none'; }\n" +
+"  var modeParaCategorias = s.mode||'completo';\n" +
+"  var catRows = [\n" +
+"    {label:t('cat.f1'), val: combined.f1||0},\n" +
+"    {label:t('cat.f2'), val: combined.f2||0},\n" +
+"    {label:t('cat.f3'), val: combined.f3||0},\n" +
+"    {label:t('cat.f4'), val: combined.f4||0},\n" +
+"    {label:t('cat.f1fino'), val: combined.f1fino||0},\n" +
+"    {label:t('cat.f2fino'), val: combined.f2fino||0},\n" +
+"    {label:t('cat.parcial_geral'), val: modeParaCategorias==='reduzido' ? sum.parcialGeral : sum.parciais},\n" +
+"    {label:t('cat.ttotal'), val: sum.totalPerdidos},\n" +
+"    {label:t('cat.mini'), val: sum.miniTotal}\n" +
+"  ];\n" +
+"  document.getElementById('final-categorias').innerHTML = catRows.map(function(r){\n" +
+"    return '<div class=\"summary-item\"><div class=\"val\">'+r.val+'</div><div class=\"lbl\">'+escapeHtml(r.label)+'</div></div>';\n" +
+"  }).join('');\n" +
+"  var pTotalFinal = preincTotal(s.preincCounts);\n" +
+"  // Diferença entre folículos extraídos e total de pré-incisões: cada pré-incisão\n" +
+"  // deveria idealmente receber um folículo — uma diferença grande sinaliza\n" +
+"  // pré-incisões feitas a mais (ou a menos) em relação ao que foi de fato\n" +
+"  // extraído.\n" +
+"  var preincDiff = sum.foliculosExtraidos - pTotalFinal;\n" +
+"  document.getElementById('final-preinc-total').textContent = pTotalFinal;\n" +
+"  document.getElementById('final-preinc-diff').textContent = (preincDiff>0?'+':'')+preincDiff;\n" +
+"\n" +
+"  var tabsEl = document.getElementById('quadrant-tabs');\n" +
+"  tabsEl.innerHTML = QUADRANTS.map(function(q){\n" +
+"    var cls = (q.id===state.activeQuadrant) ? 'btn' : 'btn secondary';\n" +
+"    return '<button class=\"'+cls+'\" onclick=\"App.switchQuadrant(\\''+q.id+'\\')\">'+escapeHtml(q.label)+'</button>';\n" +
+"  }).join('');\n" +
+"  var quad = s.quadrants[state.activeQuadrant];\n" +
+"  document.getElementById('quad-title').textContent = quadrantById(state.activeQuadrant).label;\n" +
+"  document.getElementById('quad-summary-title').textContent = quadrantById(state.activeQuadrant).label;\n" +
+"  var qsum = computeSummary(quad.counts, s.mode||'completo');\n" +
+"  document.getElementById('quad-extraidos').textContent = qsum.foliculosExtraidos;\n" +
+"  document.getElementById('quad-fios').textContent = qsum.totalFios;\n" +
+"  document.getElementById('quad-indice').textContent = qsum.indice.toFixed(2);\n" +
+"  document.getElementById('quad-transec-parcial').textContent = qsum.taxaParcial.toFixed(1)+'%';\n" +
+"  document.getElementById('quad-transec-total').textContent = qsum.taxaTotal.toFixed(1)+'%';\n" +
+"  document.getElementById('quad-mini').textContent = qsum.miniTotal;\n" +
+"  var quadInput = document.getElementById('quad-mamba-input');\n" +
+"  if (document.activeElement !== quadInput) quadInput.value = (quad.mambaCumulativo===null||quad.mambaCumulativo===undefined) ? '' : quad.mambaCumulativo;\n" +
+"  var quadBox = document.getElementById('quad-mamba-summary');\n" +
+"  if (quad.mambaCumulativo===null||quad.mambaCumulativo===undefined||quad.mambaCumulativo===''){\n" +
+"    quadBox.style.display='none';\n" +
+"  } else {\n" +
+"    var prev = mambaPrevCumulativo(s, state.activeQuadrant);\n" +
+"    var delta = Number(quad.mambaCumulativo) - prev;\n" +
+"    var qmdiff = computeMambaDiff(delta, qsum.foliculosExtraidos);\n" +
+"    if (qmdiff){\n" +
+"      quadBox.style.display='grid';\n" +
+"      document.getElementById('quad-mamba-val').textContent = qmdiff.mamba;\n" +
+"      document.getElementById('quad-mamba-manip').textContent = qmdiff.base;\n" +
+"      document.getElementById('quad-mamba-diff').textContent = (qmdiff.diff>0?'+':'')+qmdiff.diff;\n" +
+"      document.getElementById('quad-mamba-diffpct').textContent = (qmdiff.diffPct>0?'+':'')+qmdiff.diffPct.toFixed(1)+'%';\n" +
+"      var quadDur = quadrantDurationMs(s, state.activeQuadrant);\n" +
+"      var quadMambaRate = mambaRatePerHour(delta, quadDur);\n" +
+"      document.getElementById('quad-mamba-duracao').textContent = quadDur===null ? '—' : fmtHMS(quadDur);\n" +
+"      document.getElementById('quad-mamba-rate').textContent = quadMambaRate===null ? '—' : quadMambaRate.toFixed(0);\n" +
+"    } else { quadBox.style.display='none'; }\n" +
+"  }\n" +
+"\n" +
+"  var modeAtiva = s.mode||'completo';\n" +
+"  var parcialGroupReal = modeAtiva==='reduzido' ? 'parcial_reduzida' : 'parcial';\n" +
+"  document.getElementById('parcial-reduzido-hint').style.display = modeAtiva==='reduzido' ? 'block' : 'none';\n" +
+"  var quadLocked = !!quad.locked;\n" +
+"  var quadReadonly = readonly || quadLocked;\n" +
+"  ['integro','parcial','total','mini'].forEach(function(group){\n" +
+"    var container = document.getElementById('group-'+group);\n" +
+"    var filterGroup = group==='parcial' ? parcialGroupReal : group;\n" +
+"    container.innerHTML = CATS.filter(function(c){return c.group===filterGroup;}).map(function(c){\n" +
+"      var n = chainCumulativeCat(s, state.activeQuadrant, c.id);\n" +
+"      var hairsNote = c.group==='mini' ? t('cnt.hairs_not_in_total') : (c.hairs>0 ? (c.hairs+' '+(c.hairs===1?t('cnt.hair_singular'):t('cnt.hair_plural'))+t('cnt.per_follicle_suffix')) : (c.group==='parcial_reduzida' ? t('cnt.hairs_informative_only') : t('cnt.hairs_lost')));\n" +
+"      var btns = quadReadonly ? '' : incBtns(c.id);\n" +
+"      var countCls = quadReadonly ? 'cat-count' : 'cat-count clickable';\n" +
+"      var countClick = quadReadonly ? '' : ' onclick=\"App.editCount(\\''+c.id+'\\')\"';\n" +
+"      return '<div class=\"cat-row group-'+group+'\"><div class=\"cat-label\">'+escapeHtml(c.label)+'<span class=\"cat-hairs\">'+hairsNote+'</span></div>'+\n" +
+"        '<div class=\"'+countCls+'\"'+countClick+'>'+n+'</div><div class=\"cat-btns\">'+btns+'</div></div>';\n" +
+"    }).join('');\n" +
+"  });\n" +
+"\n" +
+"  var chainHintEl = document.getElementById('quad-chain-hint');\n" +
+"  if (quad.carryFromId && s.quadrants[quad.carryFromId]) {\n" +
+"    var carryTotal = chainPredecessorTotalAllCats(s, state.activeQuadrant);\n" +
+"    chainHintEl.textContent = t('cnt.chain_hint_from', {label: quadrantById(quad.carryFromId).label, total: carryTotal});\n" +
+"  } else {\n" +
+"    chainHintEl.textContent = t('cnt.chain_hint_none');\n" +
+"  }\n" +
+"  var carrySelect = document.getElementById('quad-carry-select');\n" +
+"  var candidateQuads = QUADRANTS.filter(function(q){\n" +
+"    return q.id!==state.activeQuadrant && !wouldCreateCarryCycleClient(s, state.activeQuadrant, q.id);\n" +
+"  });\n" +
+"  carrySelect.innerHTML = '<option value=\"\">'+escapeHtml(t('cnt.carry_from_none_option'))+'</option>' +\n" +
+"    candidateQuads.map(function(q){ return '<option value=\"'+q.id+'\">'+escapeHtml(q.label)+'</option>'; }).join('');\n" +
+"  carrySelect.value = quad.carryFromId || '';\n" +
+"  carrySelect.disabled = quadLocked;\n" +
+"  document.getElementById('quad-finish-btn').style.display = quadLocked ? 'none' : 'inline-block';\n" +
+"  document.getElementById('quad-reopen-btn').style.display = quadLocked ? 'inline-block' : 'none';\n" +
+"  document.getElementById('quad-finish-btn').disabled = readonly;\n" +
+"  document.getElementById('quad-reopen-btn').disabled = readonly;\n" +
+"\n" +
+"  var extMs = elapsedMs(s.timer);\n" +
+"  document.getElementById('timer-display').textContent = fmtHMS(extMs);\n" +
+"  document.getElementById('timer-toggle-btn').textContent = s.timer.running ? t('common.pause') : t('common.start');\n" +
+"  document.getElementById('timer-toggle-btn').disabled = readonly;\n" +
+"  document.getElementById('timer-reset-btn').disabled = readonly;\n" +
+"  var rateEl = document.getElementById('timer-rate');\n" +
+"  if (extMs>0 && sum.foliculosExtraidos>0){ rateEl.textContent = t('cnt.rate_hint',{rate:(sum.foliculosExtraidos/(extMs/3600000)).toFixed(0)}); } else { rateEl.textContent=''; }\n" +
+"\n" +
+"  var tp = elapsedMs(s.preincTimer);\n" +
+"  document.getElementById('preinc-timer-display').textContent = fmtHMS(tp);\n" +
+"  document.getElementById('preinc-timer-toggle-btn').textContent = s.preincTimer.running ? t('common.pause') : t('common.start');\n" +
+"  document.getElementById('preinc-timer-toggle-btn').disabled = readonly;\n" +
+"  document.getElementById('preinc-timer-reset-btn').disabled = readonly;\n" +
+"  var pTotal = preincTotal(s.preincCounts);\n" +
+"  var prateEl = document.getElementById('preinc-timer-rate');\n" +
+"  if (tp>0 && pTotal>0){ prateEl.textContent = t('preinc.rate_hint',{rate:(pTotal/(tp/3600000)).toFixed(0)}); } else { prateEl.textContent=''; }\n" +
+"  document.getElementById('preinc-total').textContent = pTotal;\n" +
+"\n" +
+"  checkAudioMilestone(sum.foliculosExtraidos);\n" +
+"  checkPreincAudioOnChange(pTotal);\n" +
+"  checkTransectionAlerts(sum.taxaParcial, sum.taxaTotal);\n" +
+"  renderPreinc(s);\n" +
+"  renderPhotos(s);\n" +
+"  renderPatientInfo(s);\n" +
+"}\n" +

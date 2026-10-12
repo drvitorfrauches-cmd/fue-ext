@@ -1,0 +1,136 @@
+// ==================== SERVIDOR ====================
+// ---------- backup automático com verificação (a cada N dias) ----------
+// A cada BACKUP_INTERVAL_DAYS (padrão 10) o servidor: (1) copia a pasta de dados
+// pra DATA_DIR/backups/<data-hora>, (2) RELÊ a cópia inteira e confere que todo
+// arquivo abre e que usuários/cirurgias batem com o que está em memória, (3) mantém
+// só as últimas BACKUP_KEEP cópias, e (4) manda e-mail pro admin com o resultado
+// (OK ou FALHA). O e-mail NÃO leva dado de paciente — só contagens.
+// LIMITE HONESTO: a cópia fica no mesmo volume do Railway. Protege contra arquivo
+// corrompido, apagado por engano ou deploy ruim — NÃO contra perder o volume
+// inteiro (pra isso valem o backup de volume do Railway e o botão "Baixar backup").
+var BACKUP_DIR = path.join(DATA_DIR, "backups");
+var BACKUP_STATE_FILE = path.join(BACKUP_DIR, "state.json");
+var BACKUP_INTERVAL_DAYS = Number(process.env.BACKUP_INTERVAL_DAYS) > 0 ? Number(process.env.BACKUP_INTERVAL_DAYS) : 10;
+var BACKUP_KEEP = Number(process.env.BACKUP_KEEP) > 0 ? Math.floor(Number(process.env.BACKUP_KEEP)) : 6;
+
+function backupCopyDir(src, dst) {
+  fs.mkdirSync(dst, { recursive: true });
+  fs.readdirSync(src).forEach(function (name) {
+    if (name.indexOf(".tmp") !== -1) return; // temporários de escrita atômica
+    var from = path.join(src, name), to = path.join(dst, name);
+    if (fs.statSync(from).isDirectory()) backupCopyDir(from, to); else fs.copyFileSync(from, to);
+  });
+}
+function backupReadJsonFiles(dir, out) {
+  out = out || [];
+  fs.readdirSync(dir).forEach(function (name) {
+    var full = path.join(dir, name);
+    if (fs.statSync(full).isDirectory()) backupReadJsonFiles(full, out);
+    else if (/\.json$/.test(name)) out.push(full);
+  });
+  return out;
+}
+function backupDirBytes(dir) {
+  var total = 0;
+  fs.readdirSync(dir).forEach(function (name) {
+    var full = path.join(dir, name), st = fs.statSync(full);
+    total += st.isDirectory() ? backupDirBytes(full) : st.size;
+  });
+  return total;
+}
+function backupLoadState() {
+  try { return JSON.parse(fs.readFileSync(BACKUP_STATE_FILE, "utf8")); } catch (e) { return null; }
+}
+function backupSaveState(st) {
+  if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+  atomicWriteJson(BACKUP_STATE_FILE, st);
+}
+function backupStamp(d) {
+  function z(n) { return String(n).padStart(2, "0"); }
+  return d.getUTCFullYear() + "-" + z(d.getUTCMonth() + 1) + "-" + z(d.getUTCDate()) + "_" + z(d.getUTCHours()) + z(d.getUTCMinutes()) + z(d.getUTCSeconds()) + "-" + String(d.getUTCMilliseconds()).padStart(3, "0");
+}
+// Roda a cópia + verificação. Síncrono de propósito: nenhuma gravação do app
+// consegue intercalar, então a comparação com a memória é exata.
+function runBackupVerification() {
+  var started = new Date();
+  var result = { ok: false, stamp: backupStamp(started), startedAt: started.getTime(), problems: [] };
+  try {
+    if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+    var dest = path.join(BACKUP_DIR, result.stamp);
+    fs.mkdirSync(dest, { recursive: true });
+    var liveUsers = Object.keys(db.users).length;
+    var liveSessions = Object.keys(db.sessions).length;
+    if (usingSplitStorage) backupCopyDir(SPLIT_DIR, path.join(dest, "data"));
+    else if (fs.existsSync(DATA_FILE)) fs.copyFileSync(DATA_FILE, path.join(dest, "data.json"));
+    // Releitura completa da CÓPIA
+    var files = backupReadJsonFiles(dest);
+    var copyUsers = 0, copySessions = 0, copyIds = {};
+    files.forEach(function (f) {
+      var parsed;
+      try { parsed = JSON.parse(fs.readFileSync(f, "utf8")); } catch (e) { result.problems.push("Arquivo ilegível na cópia: " + path.relative(dest, f)); return; }
+      var base = path.basename(f);
+      if (base === "index.json" || base === "data.json") copyUsers += Object.keys(parsed.users || {}).length;
+      if (base === "data.json" || /^orfaos\.json$/.test(base) || path.basename(path.dirname(f)) === "doctors") {
+        Object.keys(parsed.sessions || {}).forEach(function (id) { copySessions++; copyIds[id] = (parsed.sessions[id] || {}).codigo; });
+      }
+    });
+    if (!files.length) result.problems.push("A cópia não contém nenhum arquivo .json.");
+    if (copyUsers !== liveUsers) result.problems.push("Usuários: memória " + liveUsers + " × cópia " + copyUsers + ".");
+    if (copySessions !== liveSessions) result.problems.push("Cirurgias: memória " + liveSessions + " × cópia " + copySessions + ".");
+    Object.keys(db.sessions).forEach(function (id) {
+      if (!(id in copyIds)) result.problems.push("Cirurgia ausente na cópia: " + id);
+      else if (copyIds[id] !== db.sessions[id].codigo) result.problems.push("Nome divergente na cirurgia " + id + ".");
+    });
+    result.users = liveUsers; result.sessions = liveSessions;
+    result.bytes = backupDirBytes(dest);
+    result.ok = result.problems.length === 0;
+    // Rotação: apaga as mais antigas além de BACKUP_KEEP. Cópia com problema NÃO
+    // conta como boa — se falhou, mantemos as anteriores intactas.
+    if (!result.ok) { try { fs.rmSync(dest, { recursive: true, force: true }); } catch (e) {} }
+    var dirs = fs.readdirSync(BACKUP_DIR).filter(function (n) { return /^\d{4}-\d{2}-\d{2}_\d{6}-\d{3}$/.test(n); }).sort();
+    while (dirs.length > BACKUP_KEEP) {
+      var old = dirs.shift();
+      try { fs.rmSync(path.join(BACKUP_DIR, old), { recursive: true, force: true }); } catch (e) {}
+    }
+    result.kept = dirs.length;
+  } catch (e) {
+    result.problems.push("Erro inesperado: " + e.message);
+    result.ok = false;
+  }
+  result.finishedAt = Date.now();
+  backupSaveState({ lastRunAt: result.finishedAt, lastOk: result.ok, users: result.users || 0, sessions: result.sessions || 0, bytes: result.bytes || 0, kept: result.kept || 0, problems: result.problems, intervalDays: BACKUP_INTERVAL_DAYS });
+  return result;
+}
+function backupReportEmail(result) {
+  var mb = ((result.bytes || 0) / 1048576).toFixed(2);
+  var subject = (result.ok ? "[Graftis] Backup automático OK" : "[Graftis] ATENÇÃO: backup automático FALHOU");
+  var text = result.ok
+    ? "O backup automático do Graftis foi copiado e VERIFICADO com sucesso.\n\n" +
+      "Médicos cadastrados: " + result.users + "\nCirurgias: " + result.sessions + "\nTamanho: " + mb + " MB\n" +
+      "Cópias guardadas no servidor: " + result.kept + " (máx. " + BACKUP_KEEP + ")\n" +
+      "Próximo teste automático em ~" + BACKUP_INTERVAL_DAYS + " dias.\n\n" +
+      "Lembrete: a cópia fica no mesmo volume do Railway. Continue usando o backup de volume do Railway e o botão \"Baixar backup\" de vez em quando."
+    : "O backup automático do Graftis FALHOU na verificação.\n\nProblemas:\n- " + result.problems.join("\n- ") +
+      "\n\nAs cópias anteriores foram mantidas. Abra Configurações > Backup automático > \"Rodar agora\" pra repetir e, se persistir, baixe um backup manual.";
+  return smtpSendMail({ to: ADMIN_EMAIL, subject: subject, text: text });
+}
+function runBackupAndReport() {
+  var result = runBackupVerification();
+  console.log("[backup] " + (result.ok ? "OK" : "FALHOU") + " — " + (result.sessions || 0) + " cirurgias, " + (result.users || 0) + " médicos" + (result.problems.length ? " — " + result.problems.join(" | ") : ""));
+  if (SMTP_CONFIG.enabled) {
+    backupReportEmail(result).catch(function (e) { console.error("[backup] não consegui enviar o e-mail do relatório:", e.message); });
+  }
+  return result;
+}
+function backupDue() {
+  var st = backupLoadState();
+  if (!st || !st.lastRunAt) return true;
+  return (Date.now() - st.lastRunAt) >= BACKUP_INTERVAL_DAYS * 86400000;
+}
+function backupTick() { try { if (backupDue()) runBackupAndReport(); } catch (e) { console.error("[backup] erro no agendador:", e.message); } }
+// Primeira checagem 2 min depois de subir (não atrapalha o boot) e depois a cada 6 h.
+var backupBootTimer = setTimeout(backupTick, process.env.BACKUP_BOOT_DELAY_MS ? Number(process.env.BACKUP_BOOT_DELAY_MS) : 120000);
+var backupLoopTimer = setInterval(backupTick, 6 * 3600000);
+if (backupBootTimer.unref) backupBootTimer.unref();
+if (backupLoopTimer.unref) backupLoopTimer.unref();
+

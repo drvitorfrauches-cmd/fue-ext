@@ -1,0 +1,10 @@
+"</script>\n" +
+"</body>\n" +
+"</html>\n";
+
+// Escapa "<" pra "<" antes de embutir o dicionário como JSON dentro do <script> —
+// evita que qualquer valor traduzido que por acaso contenha "</script>" feche a tag
+// mais cedo e quebre a página.
+var STRINGS_JSON_SAFE = JSON.stringify(STRINGS).replace(/</g, "\\u003c");
+var INDEX_HTML_RENDERED = INDEX_HTML.replace("__STRINGS_JSON__", STRINGS_JSON_SAFE);
+

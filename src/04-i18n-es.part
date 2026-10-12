@@ -1,0 +1,683 @@
+  es: {
+    "common.email": "Correo electrónico",
+    "common.password": "Contraseña",
+    "common.confirm_password": "Confirmar contraseña",
+    "auth.title": "Área del médico",
+    "auth.subtitle": "Inicia sesión para ver y crear tus propias cirugías. Los auxiliares que ya tienen el enlace de una cirugía específica no necesitan cuenta — solo quien crea y gestiona la lista de cirugías necesita iniciar sesión.",
+    "auth.tab_login": "Iniciar sesión",
+    "auth.tab_register": "Crear cuenta",
+    "auth.login_submit": "Iniciar sesión",
+    "auth.forgot_link": "Olvidé mi contraseña",
+    "auth.forgot_email_label": "Su correo registrado",
+    "auth.forgot_submit": "Enviar enlace de restablecimiento",
+    "auth.field_fullname": "Nombre completo",
+    "auth.field_crm": "Número de colegiado / matrícula profesional",
+    "auth.crm_placeholder": "Ej: 123456-SP",
+    "auth.field_phone": "Teléfono",
+    "auth.phone_placeholder": "Ej: +34 612 345 678",
+    "auth.register_submit": "Crear cuenta",
+    "reset.title": "Nueva contraseña",
+    "reset.subtitle": "Elige una nueva contraseña para tu cuenta.",
+    "reset.new_password": "Nueva contraseña",
+    "reset.confirm_password": "Confirmar nueva contraseña",
+    "reset.submit": "Guardar nueva contraseña",
+    "toast.fill_email_password": "Complete el correo y la contraseña.",
+    "toast.welcome": "Bienvenido/a, {name}.",
+    "toast.fill_all_fields": "Complete todos los campos.",
+    "toast.passwords_dont_match": "Las contraseñas no coinciden.",
+    "toast.password_too_short": "La contraseña debe tener al menos 6 caracteres.",
+    "toast.account_created_welcome": "Cuenta creada. Bienvenido/a, {name}.",
+    "toast.logged_out": "Cerraste sesión.",
+    "toast.logout_all_confirm": "Esto cierra la sesión de tu cuenta en TODOS los dispositivos donde esté conectada (incluido este). Tendrás que iniciar sesión de nuevo en cada uno. ¿Continuar?",
+    "toast.logged_out_all": "Cerraste sesión en todos los dispositivos.",
+    "toast.generic_error": "Error: {msg}",
+    "toast.enter_your_email": "Ingrese su correo.",
+    "toast.reset_link_sent_generic": "Si ese correo está registrado, enviamos un enlace de restablecimiento.",
+    "toast.enter_new_password": "Ingrese la nueva contraseña.",
+    "toast.password_changed_login": "Contraseña cambiada. Inicia sesión con la nueva contraseña.",
+    "errors.invalid_email": "Correo inválido.",
+    "errors.email_already_registered": "Ya existe una cuenta con este correo.",
+    "errors.invite_invalid": "Este registro necesita un enlace de invitación válido.",
+    "errors.admin_only": "Solo el administrador puede hacer esto.",
+    "config.invites_title": "Invitaciones",
+    "config.invites_subtitle": "Genera un enlace de invitación para que otro médico se registre en Graftis. Cada enlace sirve para un único registro y expira en 7 días.",
+    "config.invites_generate_btn": "Generar enlace de invitación",
+    "config.invites_empty": "Todavía no se generó ninguna invitación.",
+    "config.invites_status_pending": "Pendiente",
+    "config.invites_status_used": "Usada",
+    "config.invites_status_expired": "Expirada",
+    "onboard.title": "Bienvenido/a a Graftis",
+    "onboard.step_of": "Paso {n} de {total}",
+    "onboard.s1_title": "1. Cree la cirugía",
+    "onboard.s1_body": "En la pantalla inicial, ingrese el código del paciente y toque crear. Si quiere, complete edad, tipo de cabello y punch — puede completarlo después en la pestaña Paciente.",
+    "onboard.s2_title": "2. Comparta el enlace con su asistente",
+    "onboard.s2_body": "Dentro de la cirugía, toque Compartir y envíe el enlace por WhatsApp. Quien lo reciba abre directo el conteo, sin login, y todos los dispositivos quedan sincronizados.",
+    "onboard.s3_title": "3. Cuente los folículos",
+    "onboard.s3_body": "Toque las categorías (F1, F2, F3...) a medida que salen los injertos. Cada cuadrante tiene su propio cronómetro y el total se actualiza en tiempo real.",
+    "onboard.s4_title": "4. Finalice y consulte el Dashboard",
+    "onboard.s4_body": "Al terminar, toque Finalizar cirugía. Resumen, informes y comparaciones están en el Dashboard. Puede revisar esta guía en Configuración.",
+    "onboard.next": "Siguiente",
+    "onboard.back": "Atrás",
+    "onboard.skip": "Omitir guía",
+    "onboard.start": "Comenzar",
+    "onboard.reopen_title": "Guía de bienvenida",
+    "onboard.reopen_hint": "Revise el paso a paso de cómo usar Graftis.",
+    "onboard.reopen_btn": "Revisar guía de bienvenida",
+    "invite.modal_title": "Invitación generada",
+    "invite.modal_url_label": "Enlace de invitación (expira en 7 días, vale para 1 registro)",
+    "invite.modal_whatsapp_btn": "Enviar por WhatsApp",
+    "invite.modal_copy_btn": "Copiar enlace",
+    "invite.invalid_body": "Este enlace de invitación ya no es válido. Pide un enlace nuevo a quien te invitó.",
+    "errors.invalid_credentials": "Correo o contraseña incorrectos.",
+    "errors.invalid_body": "Cuerpo de solicitud inválido.",
+    "errors.reset_link_invalid": "Enlace inválido o caducado. Solicite uno nuevo desde la pantalla de inicio de sesión.",
+    "errors.account_not_found": "Cuenta no encontrada.",
+    "errors.too_many_registrations": "Demasiados registros desde esta dirección. Vuelva a intentarlo en unas horas.",
+    "errors.too_many_logins": "Demasiados intentos de inicio de sesión. Espere unos minutos e intente de nuevo.",
+    "errors.too_many_forgot": "Demasiadas solicitudes de restablecimiento desde esta dirección. Vuelva a intentarlo más tarde.",
+    "errors.not_authenticated": "No autenticado.",
+    "errors.invalid_image": "Imagen inválida.",
+    "errors.image_processing_error_prefix": "Error al procesar la imagen: ",
+    "errors.login_required_create_surgery": "Inicia sesión para crear una cirugía.",
+    "errors.patient_code_required": "El código del paciente es obligatorio.",
+    "errors.too_many_missing_session_attempts": "Demasiados intentos de acceso a cirugías inexistentes desde esta dirección. Espere unos minutos.",
+    "errors.surgery_not_found_server": "Cirugía no encontrada en este servidor.",
+    "errors.surgery_not_found": "Cirugía no encontrada.",
+    "errors.surgery_already_finalized": "Cirugía ya finalizada.",
+    "errors.invalid_parameters": "Parámetros inválidos.",
+    "errors.invalid_quadrant": "Cuadrante inválido.",
+    "errors.invalid_value": "Valor inválido.",
+    "errors.invalid_category": "Categoría inválida.",
+    "errors.photo_processing_error_prefix": "Error al procesar la foto: ",
+    "errors.photo_not_found": "Foto no encontrada.",
+    "errors.surgery_finalized_reopen_timer": "Cirugía finalizada — reábrela para modificar el cronómetro.",
+    "errors.fix_duration_needs_finalized": "Finaliza la cirugía antes de corregir la duración.",
+    "errors.fix_duration_no_start": "Esta cirugía no tiene cronómetro global iniciado — no hay duración para corregir.",
+    "errors.fix_duration_invalid": "Duración inválida. Indica los minutos reales de la cirugía (entre 1 y 1440).",
+    "errors.fix_duration_future": "Esa duración pondría el término en el futuro — revisa el valor.",
+    "errors.login_required_delete_surgery": "Inicia sesión para eliminar una cirugía.",
+    "errors.surgery_not_yours": "Esta cirugía no es tuya.",
+    "errors.quadrant_locked": "Este cuadrante está bloqueado. Reábrelo para editar.",
+    "errors.value_below_carry": "El valor no puede ser menor que el total ya traído del cuadrante anterior ({carry}).",
+    "errors.invalid_carry_link": "No se puede vincular ese cuadrante (crearía un ciclo).",
+    "toast.login_required_dashboard": "Inicia sesión para ver el dashboard.",
+    "toast.server_unreachable": "No pude comunicarme con el servidor.",
+    "toast.add_at_least_one_value": "Agrega al menos un valor.",
+    "toast.settings_saved": "Configuración guardada.",
+    "toast.defaults_restored": "Predeterminados restaurados.",
+    "toast.surgery_deleted": "Cirugía eliminada.",
+    "toast.enter_patient_code": "Ingresa un código o las iniciales del paciente.",
+    "toast.sync_failed": "No se sincronizó: {msg}",
+    "toast.uploading_photos": "Enviando {n} foto(s)...",
+    "toast.photos_uploaded": "Foto(s) enviada(s).",
+    "toast.photo_upload_error": "Error al enviar la foto: {msg}",
+    "toast.logo_updated": "Logotipo actualizado.",
+    "toast.logo_upload_error": "Error al enviar el logotipo: {msg}",
+    "toast.logo_removed": "Logotipo eliminado.",
+    "toast.surgery_finalized": "Cirugía finalizada.",
+    "toast.surgery_reopened": "Cirugía reabierta.",
+    "toast.duration_fixed": "Duración corregida.",
+    "common.conn_banner": "Sin conexión con el servidor — verifica que estés en la misma red wifi.",
+    "share.hint": "La auxiliar toca el enlace recibido y la página abre directo en el conteo de esta cirugía — no hay que escribir nada.",
+    "home.card_summary": "{n} folículos · índice {idx}",
+    "photo.read_error": "No pude leer esa imagen.",
+    "invite.whatsapp_text": "Has sido invitado(a) a registrarte en Graftis: {url}",
+    "audio.enabled": "Audio activado.",
+    "audio.preinc_enabled": "Audio de preincisiones activado.",
+    "audio.quadfinish_enabled": "Audio de finalización de cuadrante activado.",
+    "audio.alert_partial_enabled": "Alarma de transección parcial activada.",
+    "audio.alert_total_enabled": "Alarma de transección total activada.",
+    "audio.alert_partial_fired": "Atención: la transección parcial superó el {limit} por ciento. Está en {value} por ciento.",
+    "audio.alert_total_fired": "Atención: la transección total superó el {limit} por ciento. Está en {value} por ciento.",
+    "toast.quadrant_finished": "Cuadrante finalizado.",
+    "toast.quadrant_reopened": "Cuadrante reabierto.",
+    "toast.address_copied": "Dirección copiada.",
+    "toast.copy_failed_manual": "No se pudo copiar — selecciona el texto manualmente.",
+    "toast.copy_manually": "Copia la dirección manualmente: {url}",
+    "toast.no_native_share": "Este navegador no tiene la opción de compartir directo — usa WhatsApp o Copiar.",
+    "toast.no_speech_synthesis": "Este navegador no tiene síntesis de voz.",
+    "confirm.delete_surgery": "¿Eliminar la cirugía \"{code}\" definitivamente? Esto elimina todos sus conteos, pre-incisiones y fotos. Esta acción no se puede deshacer.",
+    "confirm.delete_photo": "¿Quitar esta foto?",
+    "confirm.delete_logo": "¿Quitar el logotipo?",
+    "confirm.reset_extraction_timer": "¿Reiniciar el cronómetro de esta cirugía (afecta a todos los dispositivos conectados)?",
+    "confirm.reset_preinc_timer": "¿Reiniciar el cronómetro de pre-incisiones (afecta a todos los dispositivos conectados)?",
+    "confirm.finalize_surgery": "¿Finalizar esta cirugía? Esto bloquea los conteos en todos los dispositivos conectados.",
+    "confirm.finish_quadrant": "¿Finalizar el conteo de este cuadrante? Quedará bloqueado hasta que lo reabras.",
+    "confirm.reopen_quadrant": "¿Reabrir este cuadrante para editar de nuevo?",
+    "prompt.set_value_for": "Definir valor para \"{label}\":",
+    "prompt.set_quantity_for": "Definir cantidad de \"{label}\":",
+    "errors.file_read_error": "No pude leer el archivo.",
+    "errors.photo_link_expired": "El acceso a esta foto por el enlace expiró (cirugía finalizada hace más de 90 días). Pide al médico dueño de la cirugía que inicie sesión para verla.",
+    "email.reset_subject": "Restablecer tu contraseña — Graftis",
+    "email.reset_body": "Hola, {name}.\n\nSolicitaste restablecer tu contraseña en Graftis.\n\nToca el enlace de abajo (o cópialo y pégalo en tu navegador) para elegir una nueva contraseña. Este enlace caduca en 30 minutos y solo funciona una vez:\n\n{url}\n\nSi no solicitaste esto, simplemente ignora este correo — tu contraseña sigue siendo la misma.",
+    "nav.home": "Inicio",
+    "nav.dashboard": "Dashboard",
+    "nav.config": "Config.",
+    "nav.exit": "Salir",
+    "common.mode_complete": "Completo",
+    "common.mode_reduced": "Reducido",
+    "common.open": "Abrir",
+    "common.delete": "Eliminar",
+    "common.cancel": "Cancelar",
+    "common.ok": "OK",
+    "common.save": "Guardar",
+    "common.remove": "Quitar",
+    "common.back": "Volver",
+    "home.title": "Tus cirugías",
+    "home.subtitle": "Solo tú ves esta lista. Después de crear la cirugía, comparte el enlace con los auxiliares — ellos actualizan los datos en vivo sin necesitar cuenta.",
+    "home.patient_code_label": "Código / iniciales del paciente",
+    "home.patient_code_placeholder": "Ej: JS-090726",
+    "home.count_mode_label": "Modo de conteo",
+    "home.mode_explanation": "Completo: cada transección parcial se registra en el tipo exacto (2→1, 3→2, etc). Reducido: los pelos de la transección parcial entran junto con los folículos íntegros, y se usa un único contador de transección parcial para calcular la tasa — sin detallar el tipo. No se puede cambiar después de creada.",
+    "home.create_button": "+ Nueva cirugía (crear sesión)",
+    "home.no_surgeries_yet": "Aún no has creado ninguna cirugía.",
+    "config.title": "Configuración",
+    "config.increments_subtitle": "Valores extra de los botones de incremento rápido usados en el conteo de extracción, además del -1/+1 que siempre aparece. Configuración solo de este dispositivo — cada celular puede tener sus propios botones (por ejemplo, solo +1 y +100, o solo +50).",
+    "config.add_value": "+ Agregar valor",
+    "config.restore_default": "Restaurar predeterminado (10 / 50 / 100)",
+    "config.identity_title": "Identidad visual",
+    "config.identity_subtitle": "Se aplica a tu cuenta — aparece en todos los dispositivos donde inicies sesión, y también para quien acceda a tus cirugías solo por el enlace (sin iniciar sesión).",
+    "config.logo_label": "Logotipo",
+    "config.logo_empty": "Aún no hay logotipo.",
+    "config.theme_label": "Color del tema",
+    "config.darkmode_label": "Modo oscuro",
+    "config.darkmode_hint": "Los colores clínicos (íntegro/parcial/total/mini) no cambian — solo el fondo y los textos.",
+    "config.language_label": "Idioma / Language / Idioma",
+    "config.language_hint": "Por ahora solo la pantalla de inicio de sesión/registro está traducida — el resto de la app sigue en portugués.",
+    "config.security_title": "Seguridad de la cuenta",
+    "config.security_subtitle": "Si perdiste o prestaste un dispositivo donde habías iniciado sesión, usa esto para cerrar el acceso en todos lados de una vez.",
+    "config.logout_all_btn": "Cerrar sesión en todos los dispositivos",
+    "config.backup_title": "Copia de seguridad de tus datos",
+    "config.backup_subtitle": "Descarga un archivo con el registro de tu cuenta y todas tus cirugías (conteos, tiempos, preincisiones). No incluye las fotos — esas están protegidas por separado por la copia de seguridad de volumen de Railway. Guarda este archivo en un lugar seguro fuera de Railway (tu computadora, Google Drive, etc.).",
+    "config.backup_btn": "Descargar copia de seguridad",
+    "config.back_to_surgery": "Volver a la cirugía",
+    "config.audio_title": "Audio y alarmas de esta cirugía",
+    "config.audio_subtitle": "Se aplica solo a la cirugía que tenías abierta y solo en este dispositivo — cada celular puede tener sus propios ajustes.",
+    "config.audio_section_title": "Audio",
+    "config.audio_announce_hint": "Anuncia en voz alta el total de folículos extraídos (sumando los 4 cuadrantes) cada N.",
+    "config.audio_announce_every": "Anunciar cada",
+    "config.audio_test_btn": "Probar voz",
+    "config.preinc_audio_section_title": "Audio de pre-incisiones",
+    "config.preinc_audio_announce_hint": "Anuncia en voz alta el nuevo total de pre-incisiones (sumando todas las áreas) cada vez que completes el valor de un área.",
+    "config.quadfinish_audio_section_title": "Audio al finalizar cuadrante",
+    "config.quadfinish_audio_announce_hint": "Anuncia el Mamba, los folículos extraídos y la diferencia cada vez que toques \"Conteo finalizado\" en un cuadrante (solo disponible cuando se usa el conteo en cadena).",
+    "config.alarm_section_title": "Alarma de transección",
+    "config.alarm_subtitle": "Avisa por voz apenas la tasa (sumando los 4 cuadrantes) supere el límite que definas.",
+    "config.alert_partial_label": "Avisar si la transección parcial supera (%)",
+    "config.alert_partial_placeholder": "Ej: 7",
+    "config.alert_total_label": "Avisar si la transección total supera (%)",
+    "config.alert_total_placeholder": "Ej: 5",
+    "cat.f1": "1 pelo",
+    "cat.f2": "2 pelos",
+    "cat.f3": "3 pelos",
+    "cat.f4": "4 pelos",
+    "cat.f1fino": "1 pelo especial",
+    "cat.f2fino": "2 pelos especial",
+    "cat.t2_1": "2 → 1 pelo",
+    "cat.t3_2": "3 → 2 pelos",
+    "cat.t3_1": "3 → 1 pelo",
+    "cat.t4_3": "4 → 3 pelos",
+    "cat.t4_2": "4 → 2 pelos",
+    "cat.t4_1": "4 → 1 pelo",
+    "cat.parcial_geral": "Transección parcial",
+    "cat.ttotal": "Transección total (folículo perdido)",
+    "cat.mini": "Mini (miniaturizado)",
+    "quad.temporal_dir": "Temporal derecho",
+    "quad.temporal_esq": "Temporal izquierdo",
+    "quad.occipital_dir": "Occipital derecho",
+    "quad.occipital_esq": "Occipital izquierdo",
+    "preinc.recesso_dir": "Receso derecho",
+    "preinc.recesso_esq": "Receso izquierdo",
+    "preinc.linha": "Línea",
+    "preinc.sublinha": "Sublínea",
+    "preinc.entrada_dir1": "Entrada derecha 1",
+    "preinc.entrada_dir2": "Entrada derecha 2",
+    "preinc.entrada_esq1": "Entrada izquierda 1",
+    "preinc.entrada_esq2": "Entrada izquierda 2",
+    "preinc.topete1": "Tupé 1",
+    "preinc.topete2": "Tupé 2",
+    "preinc.scalp": "Scalp",
+    "preinc.coroa": "Corona",
+    "common.start": "Iniciar",
+    "common.pause": "Pausar",
+    "common.reset": "Reiniciar",
+    "common.status_finalized": "Finalizada",
+    "common.status_in_progress": "En curso",
+    "cnt.share_btn": "🔗 Compartir",
+    "cnt.tab_extracao": "Extracción",
+    "cnt.tab_preinc": "Pre-incisiones",
+    "cnt.tab_fotos": "Fotos",
+    "cnt.tab_paciente": "Paciente",
+    "cnt.tab_resumo": "Resumen Final",
+    "cnt.final_summary_title": "Resumen final de la cirugía",
+    "cnt.final_times_title": "Tiempos",
+    "cnt.final_categories_title": "Folículos por categoría",
+    "cnt.final_preinc_title": "Resumen de preincisiones",
+    "cnt.final_preinc_diff": "Diferencia (folículos extraídos − preincisiones)",
+    "patient.section_title": "Datos del paciente",
+    "patient.section_hint": "Opcional — complételo ahora, después o nunca. No bloquea nada de la cirugía.",
+    "patient.age_label": "Edad",
+    "patient.age_placeholder": "Ej: 45",
+    "patient.height_label": "Altura (cm)",
+    "patient.height_placeholder": "Ej: 175",
+    "patient.weight_label": "Peso (kg)",
+    "patient.weight_placeholder": "Ej: 80",
+    "patient.hair_thickness_label": "Espesor del cabello",
+    "patient.hair_thin": "Fino",
+    "patient.hair_thick": "Grueso",
+    "patient.hair_texture_label": "Textura del cabello",
+    "patient.hair_straight": "Liso",
+    "patient.hair_wavy": "Ondulado",
+    "patient.hair_curly": "Crespo",
+    "patient.surgery_type_label": "Tipo de cirugía",
+    "patient.with_shaving": "Con rasurado",
+    "patient.without_shaving": "Sin rasurado",
+    "patient.punch_label": "Punch utilizado",
+    "patient.punch_095": "0,95 mm",
+    "patient.punch_10": "1,0 mm",
+    "home.patient_info_toggle": "Datos del paciente (opcional)",
+    "cnt.extraction_time_title": "Tiempo de extracción",
+    "cnt.rate_hint": "Ritmo promedio: {rate} folículos/hora",
+    "cnt.summary_general_title": "Resumen general (todos los cuadrantes)",
+    "cnt.summary_extracted": "Folículos extraídos",
+    "cnt.summary_total_hairs": "Total de pelos",
+    "cnt.summary_index": "Índice pelos/folículo",
+    "cnt.summary_partial_transec": "Transección parcial",
+    "cnt.summary_total_transec": "Transección total",
+    "cnt.summary_mini": "Mini (fuera del total)",
+    "cnt.mamba_reading": "Mamba (lectura final)",
+    "cnt.mamba_diff": "Diferencia",
+    "cnt.mamba_diffpct": "Diferencia (% del Mamba)",
+    "cnt.mamba_diff_extraidos": "Diferencia (Mamba − Extraídos)",
+    "cnt.mamba_diffpct_extraidos": "Diferencia (% Mamba × Extraídos)",
+    "cnt.mamba_rate": "Ritmo según Mamba (fol./h)",
+    "cnt.mamba_hint": "Completa el Mamba en el orden en que se extraen los cuadrantes. El valor es la lectura acumulada del aparato al final de este cuadrante — la app calcula sola la diferencia respecto al cuadrante anterior.",
+    "cnt.mamba_input_label": "Mamba (lectura acumulada al final de este cuadrante)",
+    "cnt.mamba_input_placeholder": "Ej: 1000",
+    "cnt.mamba_quad_val": "Mamba de este cuadrante",
+    "cnt.mamba_quad_duration": "Tiempo de este cuadrante",
+    "cnt.chain_title": "Conteo en cadena",
+    "cnt.chain_hint_none": "Este cuadrante empieza desde cero.",
+    "cnt.chain_hint_from": "Contando a partir de: {label} ({total})",
+    "cnt.carry_from_label": "Cargar conteo de",
+    "cnt.carry_from_none_option": "Ninguno (empezar desde cero)",
+    "cnt.quadrant_finish_btn": "Conteo finalizado",
+    "cnt.quadrant_reopen_btn": "Reabrir cuadrante",
+    "cnt.group_integro_title": "Folículos íntegros",
+    "cnt.group_parcial_title": "Transección parcial (folículo aprovechado)",
+    "cnt.parcial_reduzido_hint": "Modo reducido: registra los pelos de ese folículo normalmente en \"Folículos íntegros\" y toca aquí solo para contar la transección parcial (no se suma de nuevo al total).",
+    "cnt.group_mini_title": "Mini",
+    "cnt.mini_hint": "Folículos miniaturizados — no entran en el conteo general de folículos extraídos, pelos o tasas, pero quedan registrados aquí para no perderse.",
+    "preinc.time_title": "Tiempo de pre-incisiones",
+    "preinc.total_label": "Total de pre-incisiones",
+    "preinc.by_area_title": "Pre-incisiones por área",
+    "preinc.area_hint": "Toca el número de arriba para escribir el total del área. UF1/UF2/UF3 abajo = cuántas unidades foliculares de 1, 2 o 3 pelos van a esa área.",
+    "photos.marcacao_title": "Marcación quirúrgica",
+    "photos.marcacao_hint": "Se guardan en este servidor — visibles en todos los celulares conectados.",
+    "photos.posop_title": "Posoperatorio inmediato",
+    "cnt.print_btn": "Imprimir / Guardar PDF",
+    "cnt.finalize_btn": "Finalizar cirugía",
+    "cnt.reopen_btn": "Reabrir",
+    "errors.login_required_rename_patient": "Inicia sesión para editar el nombre del paciente.",
+    "cnt.rename_title": "Editar nombre del paciente",
+    "cnt.rename_prompt": "Nuevo nombre / código del paciente:",
+    "toast.patient_renamed": "Nombre del paciente actualizado.",
+    "config.backup_auto_title": "Copia de seguridad automática",
+    "config.backup_auto_hint": "El servidor copia y verifica los datos solo y te envía el resultado por e-mail. La copia queda en el mismo volumen de Railway — no sustituye la copia de volumen de Railway ni el botón Descargar copia.",
+    "config.backup_auto_run": "Ejecutar ahora",
+    "config.backup_auto_never": "Aún no se ha ejecutado. Primera prueba automática pronto (cada {days} días).",
+    "config.backup_auto_ok": "Última prueba: {when} — OK ({n} cirugías verificadas). Se repite cada {days} días.",
+    "config.backup_auto_fail": "Última prueba: {when} — FALLÓ: {msg}",
+    "toast.backup_ok": "Copia realizada y verificada.",
+    "toast.backup_failed": "La copia FALLÓ en la verificación — vea el detalle en Configuración.",
+    "dash.tab_overview": "Resumen",
+    "dash.tab_compare": "Comparar",
+    "dash.tab_list": "Cirugías",
+    "dash.compare_title": "Comparar por característica",
+    "dash.compare_hint": "Cada fila es un grupo de cirugías finalizadas con la misma característica (promedio por cirugía, en el modo elegido arriba). ★ marca el mejor valor entre grupos (menor transección, mayor velocidad). ⚠ indica pocas cirugías en el grupo — puede ser azar, no saque conclusiones aún.",
+    "dash.compare_rates_todos": "En la pestaña Todos las tasas de transección no son comparables (completo y reducido se calculan distinto). Elija Completo o Reducido.",
+    "dash.group_unknown": "No informado",
+    "dash.age_under40": "Menos de 40",
+    "dash.age_40_49": "40 a 49",
+    "dash.age_50_59": "50 a 59",
+    "dash.age_60plus": "60 o más",
+    "dash.col_n": "Cirugías",
+    "dash.col_extracted_avg": "Extraídos (prom.)",
+    "dash.col_index": "Índice",
+    "dash.col_partial": "Tasa parcial",
+    "dash.col_total": "Tasa total",
+    "dash.col_fpm": "Fol./min",
+    "dash.col_minis": "Minis/1000",
+    "dash.small_sample": "Grupo con menos de 5 cirugías — muestra pequeña.",
+    "dash.pair_title": "Comparar dos cirugías",
+    "dash.pair_hint": "Elija dos cirugías finalizadas y véalas lado a lado, con la diferencia (B − A).",
+    "dash.pair_a": "Cirugía A",
+    "dash.pair_b": "Cirugía B",
+    "dash.pair_metric": "Métrica",
+    "dash.pair_diff": "Diferencia (B − A)",
+    "dash.pair_need_two": "Se necesitan al menos 2 cirugías finalizadas para comparar.",
+    "dash.pair_mode_warning": "Modos distintos (completo × reducido): las tasas de transección no son comparables, por eso no muestro su diferencia.",
+    "dash.metric_time": "Tiempo de extracción",
+    "dash.sort_hint": "Toque el título de la columna para ordenar.",
+    "dash.col_punch": "Punch",
+    "dash.col_thickness": "Grosor",
+    "dash.col_texture": "Textura",
+    "dash.col_shaving": "Rapado",
+    "dash.col_age": "Edad",
+    "nav.menu": "Menú",
+    "cnt.tab_horarios": "Horarios",
+    "cnt.tab_implantacao": "Implantación",
+    "sched.title": "Horarios de la cirugía",
+    "sched.hint": "Complete en el momento con \"Ahora\" o escriba la hora. Inicio y fin de cada etapa, como en la pizarra de la sala.",
+    "sched.stage_entrada": "Entrada del paciente",
+    "sched.stage_bloqueio": "Bloqueo",
+    "sched.stage_anest_doadora": "Anestesia donante",
+    "sched.stage_pre_frontal": "Preincisión frontal",
+    "sched.stage_pre_coroa": "Preincisión corona",
+    "sched.stage_extracao": "Extracción",
+    "sched.stage_imp_coroa": "Implantación corona",
+    "sched.stage_imp_frente": "Implantación frente",
+    "sched.stage_finalizacao": "Finalización",
+    "sched.start": "Inicio",
+    "sched.end": "Fin",
+    "sched.now": "Ahora",
+    "sched.clear": "Borrar",
+    "sched.duration": "Duración",
+    "sched.wrap_warning": "fin antes del inicio — revise (¿pasó la medianoche?)",
+    "sched.use_timer": "Usar cronómetro ({time})",
+    "sched.total_stay": "De la entrada a la finalización",
+    "errors.invalid_time": "Hora inválida (use HH:MM).",
+    "errors.login_required_implant": "Inicia sesión para registrar retiros del chiller.",
+    "errors.invalid_withdrawal": "Cantidad inválida.",
+    "errors.withdrawal_not_found": "Retiro no encontrado.",
+    "impl.title": "Implantación — stock en el chiller",
+    "impl.hint": "Total de folículos íntegros extraídos menos lo que ya se retiró del chiller.",
+    "impl.total": "Extraídos (total)",
+    "impl.withdrawn": "Ya retirados",
+    "impl.remaining": "Quedan en el chiller",
+    "impl.custom_placeholder": "Ej: 250",
+    "impl.withdraw_btn": "Retirar",
+    "impl.history_title": "Retiros",
+    "impl.history_empty": "Aún no hay retiros registrados.",
+    "impl.col_time": "Hora",
+    "impl.col_qty": "Retirados",
+    "impl.col_left": "Quedan",
+    "impl.remove_btn": "Borrar retiro",
+    "impl.remove_confirm": "¿Borrar este retiro de {n} folículos?",
+    "impl.over_balance": "Solo quedan {n} en el chiller — no se puede retirar más que eso.",
+    "impl.owner_only_hint": "Solo el médico responsable (con sesión iniciada) registra los retiros.",
+    "impl.login_needed": "Inicia sesión para registrar retiros.",
+    "impl.invalid_qty": "Ingrese una cantidad válida.",
+    "impl.count_changed_warning": "Atención: ya se retiraron {w}, pero el conteo actual solo tiene {total}. ¿Se modificó el conteo?",
+    "impl.withdrawn_toast": "Retirados {n}. Quedan {left} en el chiller.",
+    "impl.removed_toast": "Retiro borrado.",
+    "impl.done": "Chiller vacío: se retiraron todos los folículos.",
+    "cnt.fix_duration_btn": "Corregir duración",
+    "cnt.fix_duration_prompt": "¿Cuántos minutos duró realmente la cirugía? (ej: 200 para 3h20)",
+    "share.title": "Compartir cirugía",
+    "share.url_label": "Dirección de esta cirugía (compártela con los otros celulares)",
+    "share.share_link_btn": "Compartir enlace",
+    "share.whatsapp_btn": "Enviar por WhatsApp",
+    "share.copy_btn": "Copiar",
+    "audio.test_phrase": "Prueba de audio. Ciento veintitrés folículos.",
+    "audio.milestone": "{n} folículos.",
+    "audio.preinc_update": "{n} pre-incisiones.",
+    "audio.quadfinish_summary": "Mamba {mamba}. Folículos extraídos {extraidos}. Diferencia {diffpct} por ciento.",
+    "audio.quadfinish_extraidos_only": "Folículos extraídos {extraidos}.",
+    "cnt.mode_full": "Modo completo",
+    "cnt.mode_reduced": "Modo reducido",
+    "cnt.global_not_started": "Tiempo total: aún no iniciado",
+    "cnt.global_timer_prefix": "⏱ Tiempo total de la cirugía: ",
+    "cnt.global_finalized_suffix": " (finalizado)",
+    "cnt.global_in_progress_suffix": " (en curso)",
+    "preinc.rate_hint": "Ritmo promedio: {rate} pre-incisiones/hora",
+    "cnt.hair_singular": "pelo",
+    "cnt.hair_plural": "pelos",
+    "cnt.per_follicle_suffix": " por folículo",
+    "cnt.hairs_not_in_total": "no entra en el conteo general",
+    "cnt.hairs_informative_only": "solo conteo informativo",
+    "cnt.hairs_lost": "0 pelos (perdido)",
+    "dash.title": "Dashboard",
+    "dash.subtitle": "Estadísticas calculadas solo con cirugías finalizadas — las cirugías en curso tienen datos parciales y quedan fuera, para no distorsionar los promedios.",
+    "dash.empty": "Aún no tienes ninguna cirugía finalizada. Las estadísticas aparecen aquí en cuanto se finalice la primera.",
+    "dash.extracted_by_surgery_title": "Folículos extraídos por cirugía",
+    "dash.extracted_by_surgery_hint": "Cada barra es una cirugía finalizada, en orden cronológico — permite ver si el volumen por cirugía sube o baja con el tiempo.",
+    "dash.index_by_surgery_title": "Índice pelos/folículo por cirugía",
+    "dash.index_by_surgery_hint": "Cada barra es una cirugía finalizada, en orden cronológico.",
+    "dash.uf_distribution_title": "Distribución por tipo de unidad folicular",
+    "dash.uf_distribution_hint": "Porcentaje entre todos los folículos íntegros, sumando todas las cirugías finalizadas.",
+    "dash.transec_rate_title": "Tasa de transección por cirugía",
+    "dash.transec_rate_hint": "El modo completo y el modo reducido calculan la tasa de formas distintas — por eso están en pestañas separadas, no mezcles los números.",
+    "dash.mode_all": "Todos",
+    "dash.rate_todos_hint": "Esto es solo para ver la evolución cronológica de todas las cirugías juntas — cada barra usa la tasa correcta de su propia cirugía. No existe una \"tasa promedio general\" porque completo y reducido calculan la tasa de formas distintas. Para ver el promedio, usa las pestañas Completo o Reducido.",
+    "dash.rate_empty": "Ninguna cirugía finalizada en este modo todavía.",
+    "dash.quad_index_title": "Índice y transección por cuadrante",
+    "dash.quad_hint": "Usa la misma pestaña Completo/Reducido/Todos de arriba. La diferencia Mamba × banco solo entra en el promedio de las cirugías donde se completó el Mamba en ese cuadrante.",
+    "dash.quad_todos_hint": "En la pestaña \"Todos\" estos promedios desaparecen por el mismo motivo que la tasa de transección — completo y reducido no son comparables. Usa las pestañas Completo o Reducido.",
+    "dash.finalized_surgeries_title": "Cirugías finalizadas",
+    "dash.stat_extracted_total": "Folículos extraídos (total)",
+    "dash.stat_hairs_total": "Pelos trasplantados (total)",
+    "dash.stat_avg_index": "Índice promedio",
+    "dash.stat_preinc_avg": "Pre-incisiones promedio/cirugía",
+    "dash.stat_preinc_total": "Total de pre-incisiones",
+    "dash.stat_follicles_per_min": "Folículos/minuto (promedio)",
+    "dash.stat_avg_time_per_1000": "Tiempo promedio por 1000 unidades",
+    "dash.stat_minis_per_1000": "Minis por 1000 folículos",
+    "dash.stat_surgeries_all_modes": "Cirugías (todos los modos)",
+    "dash.stat_in_complete_mode": "— en modo completo",
+    "dash.stat_in_reduced_mode": "— en modo reducido",
+    "dash.stat_surgeries_mode_complete": "Cirugías (completo)",
+    "dash.stat_surgeries_mode_reduced": "Cirugías (reducido)",
+    "dash.stat_partial_rate_avg": "Tasa parcial promedio",
+    "dash.stat_total_rate_avg": "Tasa total promedio",
+    "dash.no_data_yet": "Aún no hay datos suficientes.",
+    "dash.table_quadrant": "Cuadrante",
+    "dash.table_surgeries": "Cirugías",
+    "dash.table_avg_index": "Índice promedio",
+    "dash.table_partial_rate_avg": "Tasa parcial prom.",
+    "dash.table_total_rate_avg": "Tasa total prom.",
+    "dash.table_mamba_vs_bench": "Mamba × banco",
+    "dash.table_category": "Categoría",
+    "dash.table_quantity": "Cantidad",
+    "dash.table_pct_intact": "% de íntegros",
+    "dash.table_surgery": "Cirugía",
+    "dash.table_date": "Fecha",
+    "dash.table_mode": "Modo",
+    "dash.table_extracted": "Extraídos",
+    "dash.table_index": "Índice",
+    "dash.table_partial_rate": "Tasa parcial",
+    "dash.table_total_rate": "Tasa total",
+    "dash.table_preinc": "Pre-inc.",
+    "print.title": "Informe de Extracción Folicular",
+    "print.patient_label": "Paciente (código)",
+    "print.status_label": "Estado",
+    "print.mode_label": "Modo",
+    "print.index_label": "Índice",
+    "print.rate_avg_label": "Ritmo promedio",
+    "print.fol_per_hour_suffix": " fol./h",
+    "print.preinc_per_hour_suffix": " pre-inc./h",
+    "print.total_surgery_time_label": "Tiempo total de la cirugía",
+    "print.mamba_rate_label": "Ritmo según Mamba",
+    "print.extraction_prefix": "Extracción — ",
+    "print.mamba_accumulated_label": "Mamba (lectura acumulada)",
+    "print.table_hairs_per_follicle": "Pelos/folículo",
+    "print.table_qty": "Cant.",
+    "print.table_total_hairs": "Total de pelos",
+    "print.table_area": "Área",
+    "print.table_preincisions": "Pre-incisiones",
+    "print.dist_title": "Distribución de unidades por área",
+    "print.table_total": "Total",
+    "print.table_grand_total": "Total general",
+    "print.photos_prefix": "Fotos — ",
+    "print.generated_at": "Generado el ",
+    "patrep.button": "Informe para el paciente",
+    "patrep.doc_title": "Informe de su cirugía",
+    "patrep.hero_title": "Su restauración capilar, en números",
+    "patrep.hero_body": "Este informe documenta los datos principales de su cirugía de trasplante capilar por extracción folicular (FUE) — desde el total de folículos implantados hasta los tiempos quirúrgicos.",
+    "patrep.seal_caption": "Folículos trasplantados",
+    "patrep.kpi_index": "Índice folicular",
+    "patrep.kpi_total_hairs": "Total de pelos",
+    "patrep.kpi_total_time": "Tiempo total de la cirugía",
+    "patrep.section_follicles": "Folículos por tipo",
+    "patrep.section_incisions": "Incisiones por área",
+    "patrep.section_times": "Tiempos quirúrgicos",
+    "patrep.section_photos": "Fotos",
+    "patrep.time_preinc": "Preincisiones",
+    "patrep.time_extraction": "Extracción",
+    "patrep.time_implant": "Implantación",
+    "patrep.time_total": "Tiempo total",
+    "patrep.footer_signature": "Generado con Graftis",
+    "patrep.patient_label": "Paciente",
+    "patrep.crm_prefix": "Matrícula "
+  }
+};
+// t(key, lang): busca a tradução; cai pro português se a chave não existir no
+// idioma pedido (nunca deve mostrar a chave crua pro usuário).
+function t(key, lang) {
+  var dict = STRINGS[lang] || STRINGS.pt;
+  return dict[key] || STRINGS.pt[key] || key;
+}
+
+function emptyCounts() {
+  var c = {};
+  CATS.forEach(function (cat) { c[cat.id] = 0; });
+  return c;
+}
+function emptyQuadrant() {
+  // mambaMarkTimeMs = tempo decorrido do cronômetro de extração no momento da marcação
+  //   (usado só pra calcular duração/ritmo do quadrante — pausas do cronômetro não contam).
+  // mambaMarkedAtMs = relógio real (Date.now()) no momento da marcação (usado só pra
+  //   descobrir a ORDEM real de preenchimento entre quadrantes — imune a pausas do
+  //   cronômetro, ao contrário do mambaMarkTimeMs).
+  // carryFromId = id de outro quadrante cuja contagem "entra" na exibição deste (contagem
+  //   em cadeia) — link EXPLÍCITO, criado só quando alguém aperta "Contagem finalizada" ou
+  //   escolhe manualmente no seletor. Nunca inferido por ordem/tempo, de propósito: foi
+  //   exatamente a inferência por horário que causou o bug do Mamba corrigido antes.
+  // locked = true depois de "Contagem finalizada" — bloqueia os botões +1/+5 deste
+  //   quadrante até alguém reabrir explicitamente.
+  return { counts: emptyCounts(), mambaCumulativo: null, mambaMarkTimeMs: null, mambaMarkedAtMs: null, carryFromId: null, locked: false };
+}
+// Dados demográficos do paciente — sempre opcionais, nunca bloqueiam nada da
+// cirurgia. Ficam presos ao código da cirurgia (não ao nome real do paciente,
+// que este app nunca guarda). Servem só pra permitir comparar depois cirurgias
+// parecidas entre si (ex: raspada com raspada).
+var PATIENT_HAIR_THICKNESS = new Set(["fino", "grosso"]);
+var PATIENT_HAIR_TEXTURE = new Set(["liso", "ondulado", "crespo"]);
+var PATIENT_SHAVING = new Set(["sim", "nao"]);
+// Punch usado na extração (diâmetro em mm) — hoje só os dois calibres que o Dr.
+// Vitor usa na prática. Fica junto dos outros dados demográficos/clínicos do
+// paciente pra permitir comparar depois cirurgias com o mesmo punch entre si.
+var PATIENT_PUNCH = new Set(["0.95", "1.0"]);
+function emptyPatientInfo() {
+  return { idade: null, alturaCm: null, pesoKg: null, cabeloEspessura: null, cabeloTextura: null, raspagem: null, punchMm: null };
+}
+// Valida um objeto "flat" com qualquer subconjunto dos campos de patientInfo (vindo
+// tanto do cadastro inicial quanto da aba Paciente depois) e devolve só as chaves
+// válidas prontas pra aplicar com Object.assign. Campo ausente no body = não mexe
+// nele. Campo vazio/null = limpa (paciente pode ter mudado de ideia). Campo com
+// valor fora do esperado = ignorado silenciosamente (não derruba o resto do
+// formulário por causa de um campo só).
+function sanitizePatientInfoFields(body) {
+  var out = {};
+  function numOrNull(v, min, max) {
+    if (v === null || v === undefined || v === "") return null;
+    var n = Number(v);
+    if (!Number.isFinite(n) || n < min || n > max) return undefined;
+    return n;
+  }
+  function enumOrNull(v, allowedSet) {
+    if (v === null || v === undefined || v === "") return null;
+    return allowedSet.has(v) ? v : undefined;
+  }
+  if (body.idade !== undefined) { var v1 = numOrNull(body.idade, 0, 130); if (v1 !== undefined) out.idade = (v1 === null ? null : Math.round(v1)); }
+  if (body.alturaCm !== undefined) { var v2 = numOrNull(body.alturaCm, 0, 260); if (v2 !== undefined) out.alturaCm = v2; }
+  if (body.pesoKg !== undefined) { var v3 = numOrNull(body.pesoKg, 0, 400); if (v3 !== undefined) out.pesoKg = v3; }
+  if (body.cabeloEspessura !== undefined) { var v4 = enumOrNull(body.cabeloEspessura, PATIENT_HAIR_THICKNESS); if (v4 !== undefined) out.cabeloEspessura = v4; }
+  if (body.cabeloTextura !== undefined) { var v5 = enumOrNull(body.cabeloTextura, PATIENT_HAIR_TEXTURE); if (v5 !== undefined) out.cabeloTextura = v5; }
+  if (body.raspagem !== undefined) { var v6 = enumOrNull(body.raspagem, PATIENT_SHAVING); if (v6 !== undefined) out.raspagem = v6; }
+  if (body.punchMm !== undefined) { var v7 = enumOrNull(body.punchMm, PATIENT_PUNCH); if (v7 !== undefined) out.punchMm = v7; }
+  return out;
+}
+// Horários de cada etapa (como na lousa da sala), guardados como texto "HH:MM".
+// Entrada e Finalização são horário único; as demais etapas têm início (Ini) e fim (Fim).
+var SCHEDULE_STAGES = ["bloqueio", "preFrontal", "anestDoadora", "preCoroa", "extracao", "impCoroa", "impFrente"];
+function emptySchedule() {
+  var o = { entrada: null, finalizacao: null };
+  SCHEDULE_STAGES.forEach(function (st) { o[st + "Ini"] = null; o[st + "Fim"] = null; });
+  return o;
+}
+var SCHEDULE_FIELDS = Object.keys(emptySchedule());
+var SCHEDULE_TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+// Devolve {fields, invalid}: só chaves conhecidas; vazio/null limpa; formato ruim => invalid.
+function sanitizeScheduleFields(body) {
+  var out = {}, invalid = false;
+  SCHEDULE_FIELDS.forEach(function (k) {
+    if (body[k] === undefined) return;
+    var v = body[k];
+    if (v === null || v === "") { out[k] = null; return; }
+    if (typeof v === "string" && SCHEDULE_TIME_RE.test(v)) { out[k] = v; return; }
+    invalid = true;
+  });
+  return { fields: out, invalid: invalid };
+}
+// Carimba um horário automático (ex.: ao iniciar cronômetro / finalizar). O HH:MM vem do
+// RELÓGIO DO APARELHO (localTime) — o servidor roda em UTC e não conhece o fuso do
+// Brasil. Sem localTime válido (cliente antigo), não carimba nada em vez de gravar
+// hora errada. overwrite=false só preenche se o campo estiver vazio.
+function stampSchedule(session, field, localTime, overwrite) {
+  if (typeof localTime !== "string" || !SCHEDULE_TIME_RE.test(localTime)) return;
+  if (!session.schedule) session.schedule = emptySchedule();
+  if (overwrite || !session.schedule[field]) session.schedule[field] = localTime;
+}
+// Implantação: retiradas de folículos do chiller (id, qty, at). O saldo NÃO é guardado —
+// é sempre calculado (íntegros extraídos − soma das retiradas) pra nunca ficar fora de sincronia.
+function emptyImplant() { return { withdrawals: [] }; }
+// Confere se ligar quadId.carryFromId = candidateId criaria um ciclo (ex: A vem de B,
+// que vem de A) — percorre a cadeia a partir do candidato e vê se volta pro próprio
+// quadId. Com só 4 quadrantes um ciclo nunca deveria acontecer na prática, mas o
+// seletor manual permite qualquer combinação, então a proteção é obrigatória.
+function wouldCreateCarryCycle(s, quadId, candidateId) {
+  if (candidateId === quadId) return true;
+  var seen = {};
+  seen[quadId] = true;
+  var cur = candidateId;
+  var hops = 0;
+  while (cur && hops < QUADRANTS.length + 1) {
+    if (seen[cur]) return true;
+    seen[cur] = true;
+    var qd = s.quadrants[cur];
+    cur = qd ? qd.carryFromId : null;
+    hops++;
+  }
+  return false;
+}
+// Mesma fórmula do elapsedMs() do lado do cliente, pra calcular no servidor o tempo
+// decorrido de cirurgia no exato instante em que o Mamba de um quadrante é preenchido
+// — evita depender do relógio do celular de quem está digitando (podem estar
+// dessincronizados entre si).
+function serverElapsedMs(timer) {
+  return (timer.accumulatedMs || 0) + (timer.running ? (Date.now() - timer.startedAt) : 0);
+}
+function emptyQuadrants() {
+  var q = {};
+  QUADRANTS.forEach(function (qd) { q[qd.id] = emptyQuadrant(); });
+  return q;
+}
+function emptyPreinc() {
+  var c = {};
+  PREINC_AREAS.forEach(function (a) { c[a.id] = 0; });
+  return c;
+}
+function emptyPreincDist() {
+  var d = {};
+  PREINC_AREAS.forEach(function (a) {
+    var row = {};
+    DIST_FIOS.forEach(function (f) { row[f.id] = 0; });
+    d[a.id] = row;
+  });
+  return d;
+}
+function emptyTimer() {
+  return { accumulatedMs: 0, running: false, startedAt: null };
+}
+

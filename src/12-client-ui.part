@@ -1,0 +1,851 @@
+"function incBtns(catId){\n" +
+"  var html = '<button class=\"cat-btn minus\" onclick=\"App.adjust(\\''+catId+'\\',-1)\">-1</button>';\n" +
+"  html += '<button class=\"cat-btn\" onclick=\"App.adjust(\\''+catId+'\\',1)\">+1</button>';\n" +
+"  state.increments.forEach(function(v){ html += '<button class=\"cat-btn\" onclick=\"App.adjust(\\''+catId+'\\','+v+')\">+'+v+'</button>'; });\n" +
+"  return html;\n" +
+"}\n" +
+"App.adjust = function(catId, delta){\n" +
+"  if (!state.currentId) return;\n" +
+"  var quad = state.activeQuadrant;\n" +
+"  if (state.session){\n" +
+"    var counts = state.session.quadrants[quad].counts;\n" +
+"    counts[catId] = Math.max(0, (counts[catId]||0) + delta);\n" +
+"    render();\n" +
+"  }\n" +
+"  api('/api/session/'+state.currentId+'/adjust','POST',{quadrant:quad, category:catId, delta:delta}).then(function(s){ state.session=s; render(); }).catch(function(err){ toast(t('toast.sync_failed',{msg:err.message})); fetchAndRender(); });\n" +
+"};\n" +
+"App.editCount = function(catId){\n" +
+"  var s = state.session; if (!s || s.status==='finalizada') return;\n" +
+"  var quad = state.activeQuadrant;\n" +
+"  var qd = s.quadrants[quad];\n" +
+"  if (qd.locked) return;\n" +
+"  var current = qd.counts[catId]||0;\n" +
+"  var predecessorTotal = qd.carryFromId ? chainCumulativeCat(s, qd.carryFromId, catId) : 0;\n" +
+"  var currentChain = predecessorTotal + current;\n" +
+"  var cat = CATS.filter(function(c){ return c.id===catId; })[0];\n" +
+"  promptDialog(t('prompt.set_value_for',{label:(cat?cat.label:catId)}), currentChain).then(function(input){\n" +
+"    if (input===null) return;\n" +
+"    var v = parseInt(input,10);\n" +
+"    if (isNaN(v) || v<0){ toast(t('errors.invalid_value')); return; }\n" +
+"    if (v < predecessorTotal){ toast(t('errors.value_below_carry',{carry:predecessorTotal})); return; }\n" +
+"    var newLocal = v - predecessorTotal;\n" +
+"    var delta = newLocal - current;\n" +
+"    if (delta===0) return;\n" +
+"    App.adjust(catId, delta);\n" +
+"  });\n" +
+"};\n" +
+"App.finishQuadrant = function(){\n" +
+"  var s = state.session; if (!s || s.status==='finalizada') return;\n" +
+"  var quad = state.activeQuadrant;\n" +
+"  if (s.quadrants[quad].locked) return;\n" +
+"  confirmDialog(t('confirm.finish_quadrant')).then(function(ok){\n" +
+"    if (!ok) return;\n" +
+"    api('/api/session/'+state.currentId+'/quadrant-finish','POST',{quadrant:quad}).then(function(updated){\n" +
+"      state.session=updated;\n" +
+"      var idx = -1;\n" +
+"      for (var i=0;i<QUADRANTS.length;i++){ if (QUADRANTS[i].id===quad){ idx=i; break; } }\n" +
+"      var nextQuad = (idx!==-1 && idx+1<QUADRANTS.length) ? QUADRANTS[idx+1] : null;\n" +
+"      if (nextQuad) { state.activeQuadrant = nextQuad.id; }\n" +
+"      render();\n" +
+"      announceQuadFinishAudio(updated, quad);\n" +
+"      toast(t('toast.quadrant_finished'));\n" +
+"    }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
+"};\n" +
+"App.reopenQuadrant = function(){\n" +
+"  var s = state.session; if (!s || s.status==='finalizada') return;\n" +
+"  var quad = state.activeQuadrant;\n" +
+"  confirmDialog(t('confirm.reopen_quadrant')).then(function(ok){\n" +
+"    if (!ok) return;\n" +
+"    api('/api/session/'+state.currentId+'/quadrant-reopen','POST',{quadrant:quad}).then(function(updated){ state.session=updated; render(); toast(t('toast.quadrant_reopened')); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
+"};\n" +
+"App.setQuadrantCarryFrom = function(carryFromId){\n" +
+"  var s = state.session; if (!s || s.status==='finalizada') return;\n" +
+"  var quad = state.activeQuadrant;\n" +
+"  api('/api/session/'+state.currentId+'/quadrant-link','POST',{quadrant:quad, carryFromId: carryFromId||null}).then(function(updated){ state.session=updated; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); fetchAndRender(); });\n" +
+"};\n" +
+"App.setQuadMamba = function(value){\n" +
+"  var quad = state.activeQuadrant;\n" +
+"  var v = value===''? null : Number(value);\n" +
+"  api('/api/session/'+state.currentId+'/mamba','POST',{quadrant:quad, value:v}).then(function(s){ state.session=s; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
+"function renderPreinc(s){\n" +
+"  var readonly = s.status==='finalizada';\n" +
+"  var container = document.getElementById('group-preincisoes');\n" +
+"  var dist = s.preincDist || {};\n" +
+"  container.innerHTML = PREINC_AREAS.map(function(a){\n" +
+"    var n = s.preincCounts[a.id]||0;\n" +
+"    var cls = readonly ? 'cat-count' : 'cat-count clickable';\n" +
+"    var click = readonly ? '' : ' onclick=\"App.editPreinc(\\''+a.id+'\\')\"';\n" +
+"    var row = dist[a.id] || {};\n" +
+"    var subCells = DIST_FIOS.map(function(f){\n" +
+"      var dn = row[f.id]||0;\n" +
+"      var dcls = readonly ? 'dist-cell' : 'dist-cell clickable';\n" +
+"      var dclick = readonly ? '' : ' onclick=\"App.editPreincDist(\\''+a.id+'\\',\\''+f.id+'\\')\"';\n" +
+"      return '<div class=\"dist-sub\"><span class=\"dist-sub-lbl\">'+escapeHtml(f.label)+'</span><span class=\"'+dcls+'\"'+dclick+'>'+dn+'</span></div>';\n" +
+"    }).join('');\n" +
+"    return '<div class=\"preinc-item\"><div class=\"cat-label\">'+escapeHtml(a.label)+'</div>'+\n" +
+"      '<div class=\"'+cls+'\"'+click+'>'+n+'</div>'+\n" +
+"      '<div class=\"dist-subrow\">'+subCells+'</div></div>';\n" +
+"  }).join('');\n" +
+"  renderPreincDistTotals(s);\n" +
+"}\n" +
+"App.editPreinc = function(areaId){\n" +
+"  var s = state.session; if (!s || s.status==='finalizada') return;\n" +
+"  var area = PREINC_AREAS.filter(function(a){ return a.id===areaId; })[0];\n" +
+"  var current = s.preincCounts[areaId]||0;\n" +
+"  promptDialog(t('prompt.set_value_for',{label:(area?area.label:areaId)}), current).then(function(input){\n" +
+"    if (input===null) return;\n" +
+"    var v = parseInt(input,10);\n" +
+"    if (isNaN(v) || v<0){ toast(t('errors.invalid_value')); return; }\n" +
+"    api('/api/session/'+state.currentId+'/preinc','POST',{area:areaId, value:v}).then(function(s2){ state.session=s2; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
+"};\n" +
+"function renderPreincDistTotals(s){\n" +
+"  var dist = s.preincDist || {};\n" +
+"  var totalsByFio = {}; DIST_FIOS.forEach(function(f){ totalsByFio[f.id]=0; });\n" +
+"  var grandTotal = 0;\n" +
+"  PREINC_AREAS.forEach(function(a){\n" +
+"    var row = dist[a.id] || {};\n" +
+"    DIST_FIOS.forEach(function(f){ var n=row[f.id]||0; totalsByFio[f.id]+=n; grandTotal+=n; });\n" +
+"  });\n" +
+"  var items = DIST_FIOS.map(function(f){\n" +
+"    return '<div class=\"summary-item\"><div class=\"val\">'+totalsByFio[f.id]+'</div><div class=\"lbl\">Total '+escapeHtml(f.label)+'</div></div>';\n" +
+"  }).join('');\n" +
+"  items += '<div class=\"summary-item\"><div class=\"val\">'+grandTotal+'</div><div class=\"lbl\">Total geral (UFs)</div></div>';\n" +
+"  document.getElementById('preinc-dist-totals').innerHTML = items;\n" +
+"}\n" +
+"App.editPreincDist = function(areaId, fioId){\n" +
+"  var s = state.session; if (!s || s.status==='finalizada') return;\n" +
+"  var area = PREINC_AREAS.filter(function(a){ return a.id===areaId; })[0];\n" +
+"  var fio = DIST_FIOS.filter(function(f){ return f.id===fioId; })[0];\n" +
+"  var current = (s.preincDist && s.preincDist[areaId]) ? (s.preincDist[areaId][fioId]||0) : 0;\n" +
+"  var label = (area?area.label:areaId)+' — '+(fio?fio.label:fioId);\n" +
+"  promptDialog(t('prompt.set_quantity_for',{label:label}), current).then(function(input){\n" +
+"    if (input===null) return;\n" +
+"    var v = parseInt(input,10);\n" +
+"    if (isNaN(v) || v<0){ toast(t('errors.invalid_value')); return; }\n" +
+"    api('/api/session/'+state.currentId+'/preinc-dist','POST',{area:areaId, fio:fioId, value:v}).then(function(s2){ state.session=s2; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
+"};\n" +
+"function renderPhotos(s){\n" +
+"  ['marcacao','posop'].forEach(function(cat){\n" +
+"    var el = document.getElementById('photos-grid-'+cat);\n" +
+"    var list = s.photos[cat]||[];\n" +
+"    el.innerHTML = list.map(function(p){\n" +
+"      return '<div class=\"photo-thumb\"><img src=\"/api/session/'+s.id+'/photos/'+p.id+'\" loading=\"lazy\">'+\n" +
+"        '<button class=\"photo-remove\" onclick=\"App.removePhoto(\\''+p.id+'\\')\">×</button></div>';\n" +
+"    }).join('');\n" +
+"  });\n" +
+"}\n" +
+"function renderPatientInfo(s){\n" +
+"  var pi = s.patientInfo || {};\n" +
+"  var idadeEl = document.getElementById('patient-idade');\n" +
+"  if (document.activeElement !== idadeEl) idadeEl.value = (pi.idade===null||pi.idade===undefined) ? '' : pi.idade;\n" +
+"  var alturaEl = document.getElementById('patient-altura');\n" +
+"  if (document.activeElement !== alturaEl) alturaEl.value = (pi.alturaCm===null||pi.alturaCm===undefined) ? '' : pi.alturaCm;\n" +
+"  var pesoEl = document.getElementById('patient-peso');\n" +
+"  if (document.activeElement !== pesoEl) pesoEl.value = (pi.pesoKg===null||pi.pesoKg===undefined) ? '' : pi.pesoKg;\n" +
+"  var patientChoicePairs = [\n" +
+"    ['patient-espessura-fino','cabeloEspessura','fino'], ['patient-espessura-grosso','cabeloEspessura','grosso'],\n" +
+"    ['patient-textura-liso','cabeloTextura','liso'], ['patient-textura-ondulado','cabeloTextura','ondulado'], ['patient-textura-crespo','cabeloTextura','crespo'],\n" +
+"    ['patient-raspagem-sim','raspagem','sim'], ['patient-raspagem-nao','raspagem','nao'],\n" +
+"    ['patient-punch-095','punchMm','0.95'], ['patient-punch-10','punchMm','1.0']\n" +
+"  ];\n" +
+"  patientChoicePairs.forEach(function(pair){\n" +
+"    var el = document.getElementById(pair[0]);\n" +
+"    if (el) el.className = 'btn' + (pi[pair[1]]===pair[2] ? '' : ' secondary');\n" +
+"  });\n" +
+"}\n" +
+"App.setPatientField = function(field, value){\n" +
+"  var payload = {}; payload[field] = value;\n" +
+"  api('/api/session/'+state.currentId+'/patient-info','POST',payload).then(function(s){ state.session=s; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.refreshNewPatientButtons = function(){\n" +
+"  var p = state.newPatientInfo || {};\n" +
+"  var pairs = [\n" +
+"    ['new-patient-espessura-fino','cabeloEspessura','fino'], ['new-patient-espessura-grosso','cabeloEspessura','grosso'],\n" +
+"    ['new-patient-textura-liso','cabeloTextura','liso'], ['new-patient-textura-ondulado','cabeloTextura','ondulado'], ['new-patient-textura-crespo','cabeloTextura','crespo'],\n" +
+"    ['new-patient-raspagem-sim','raspagem','sim'], ['new-patient-raspagem-nao','raspagem','nao'],\n" +
+"    ['new-patient-punch-095','punchMm','0.95'], ['new-patient-punch-10','punchMm','1.0']\n" +
+"  ];\n" +
+"  pairs.forEach(function(pair){\n" +
+"    var el = document.getElementById(pair[0]);\n" +
+"    if (el) el.className = 'btn' + (p[pair[1]]===pair[2] ? '' : ' secondary');\n" +
+"  });\n" +
+"};\n" +
+"App.setNewPatientField = function(field, value){\n" +
+"  state.newPatientInfo[field] = value;\n" +
+"  App.refreshNewPatientButtons();\n" +
+"};\n" +
+"App.uploadPhotos = function(category, inputEl){\n" +
+"  var files = Array.prototype.slice.call((inputEl && inputEl.files) || []);\n" +
+"  if (!files.length) return;\n" +
+"  toast(t('toast.uploading_photos',{n:files.length}));\n" +
+"  var chain = Promise.resolve();\n" +
+"  files.forEach(function(file){\n" +
+"    chain = chain.then(function(){ return resizeImageFile(file, 1600, 0.82); })\n" +
+"      .then(function(dataUrl){ return api('/api/session/'+state.currentId+'/photos','POST',{category:category, dataUrl:dataUrl}); })\n" +
+"      .then(function(s){ state.session=s; render(); });\n" +
+"  });\n" +
+"  chain.then(function(){ inputEl.value=''; toast(t('toast.photos_uploaded')); })\n" +
+"    .catch(function(err){ toast(t('toast.photo_upload_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.removePhoto = function(photoId){\n" +
+"  confirmDialog(t('confirm.delete_photo')).then(function(ok){\n" +
+"    if (!ok) return;\n" +
+"    api('/api/session/'+state.currentId+'/photos/'+photoId+'/delete','POST',{}).then(function(s){ state.session=s; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
+"};\n" +
+"function resizeImageFile(file, maxDim, quality){\n" +
+"  return new Promise(function(resolve, reject){\n" +
+"    var reader = new FileReader();\n" +
+"    reader.onload = function(e){\n" +
+"      var img = new Image();\n" +
+"      img.onload = function(){\n" +
+"        var w=img.width, h=img.height;\n" +
+"        var scale = Math.min(1, maxDim/Math.max(w,h));\n" +
+"        var cw = Math.max(1, Math.round(w*scale)), ch = Math.max(1, Math.round(h*scale));\n" +
+"        var canvas = document.createElement('canvas'); canvas.width=cw; canvas.height=ch;\n" +
+"        var ctx = canvas.getContext('2d'); ctx.drawImage(img,0,0,cw,ch);\n" +
+"        resolve(canvas.toDataURL('image/jpeg', quality));\n" +
+"      };\n" +
+"      img.onerror = function(){ reject(new Error('HEIC_DECODE_FAIL')); };\n" +
+"      img.src = e.target.result;\n" +
+"    };\n" +
+"    reader.onerror = function(){ reject(new Error(t('errors.file_read_error'))); };\n" +
+"    reader.readAsDataURL(file);\n" +
+"  });\n" +
+"}\n" +
+"function resizeLogoFile(file, maxDim){\n" +
+"  return new Promise(function(resolve, reject){\n" +
+"    var reader = new FileReader();\n" +
+"    reader.onload = function(e){\n" +
+"      var img = new Image();\n" +
+"      img.onload = function(){\n" +
+"        var w=img.width, h=img.height;\n" +
+"        var scale = Math.min(1, maxDim/Math.max(w,h));\n" +
+"        var cw = Math.max(1, Math.round(w*scale)), ch = Math.max(1, Math.round(h*scale));\n" +
+"        var canvas = document.createElement('canvas'); canvas.width=cw; canvas.height=ch;\n" +
+"        var ctx = canvas.getContext('2d'); ctx.drawImage(img,0,0,cw,ch);\n" +
+"        resolve(canvas.toDataURL('image/png'));\n" +
+"      };\n" +
+"      img.onerror = function(){ reject(new Error(t('photo.read_error'))); };\n" +
+"      img.src = e.target.result;\n" +
+"    };\n" +
+"    reader.onerror = function(){ reject(new Error(t('errors.file_read_error'))); };\n" +
+"    reader.readAsDataURL(file);\n" +
+"  });\n" +
+"}\n" +
+"App.uploadLogo = function(inputEl){\n" +
+"  var file = inputEl.files && inputEl.files[0];\n" +
+"  if (!file) return;\n" +
+"  resizeLogoFile(file, 480).then(function(dataUrl){\n" +
+"    return api('/api/me/logo','POST',{dataUrl:dataUrl});\n" +
+"  }).then(function(r){\n" +
+"    state.currentUser = r.user; applyBranding(r.user.branding); renderSettingsScreen();\n" +
+"    inputEl.value=''; toast(t('toast.logo_updated'));\n" +
+"  }).catch(function(err){ toast(t('toast.logo_upload_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.removeLogo = function(){\n" +
+"  confirmDialog(t('confirm.delete_logo')).then(function(ok){\n" +
+"    if (!ok) return;\n" +
+"    api('/api/me/logo/delete','POST',{}).then(function(r){\n" +
+"      state.currentUser = r.user; applyBranding(r.user.branding); renderSettingsScreen();\n" +
+"      toast(t('toast.logo_removed'));\n" +
+"    }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
+"};\n" +
+"App.setTheme = function(theme){\n" +
+"  api('/api/me/branding','POST',{theme:theme}).then(function(r){\n" +
+"    state.currentUser = r.user; applyBranding(r.user.branding); renderSettingsScreen();\n" +
+"  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.toggleDarkMode = function(checked){\n" +
+"  api('/api/me/branding','POST',{darkMode:checked}).then(function(r){\n" +
+"    state.currentUser = r.user; applyBranding(r.user.branding);\n" +
+"  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.toggleTimer = function(){\n" +
+"  if (!state.currentId || !state.session) return;\n" +
+"  var action = state.session.timer.running ? 'pause' : 'start';\n" +
+"  api('/api/session/'+state.currentId+'/timer','POST',{action:action, localTime:schedFromTs(Date.now())}).then(function(s){ state.session=s; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.resetTimer = function(){ confirmDialog(t('confirm.reset_extraction_timer')).then(function(ok){ if (!ok) return; api('/api/session/'+state.currentId+'/timer','POST',{action:'reset'}).then(function(s){ state.session=s; render(); }); }); };\n" +
+"App.togglePreincTimer = function(){\n" +
+"  if (!state.currentId || !state.session) return;\n" +
+"  var action = state.session.preincTimer.running ? 'pause' : 'start';\n" +
+"  api('/api/session/'+state.currentId+'/preinc-timer','POST',{action:action, localTime:schedFromTs(Date.now())}).then(function(s){ state.session=s; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.resetPreincTimer = function(){ confirmDialog(t('confirm.reset_preinc_timer')).then(function(ok){ if (!ok) return; api('/api/session/'+state.currentId+'/preinc-timer','POST',{action:'reset'}).then(function(s){ state.session=s; render(); }); }); };\n" +
+"App.finalizeSession = function(){ confirmDialog(t('confirm.finalize_surgery')).then(function(ok){ if (!ok) return; api('/api/session/'+state.currentId+'/finalize','POST',{localTime:schedFromTs(Date.now())}).then(function(s){ state.session=s; render(); App.switchTab('resumofinal'); toast(t('toast.surgery_finalized')); }); }); };\n" +
+"App.reopenSession = function(){ api('/api/session/'+state.currentId+'/reopen','POST',{}).then(function(s){ state.session=s; render(); toast(t('toast.surgery_reopened')); }); };\n" +
+"// App.fixDuration: corrige a duração da cirurgia quando alguém esqueceu de\n" +
+"// apertar \"Finalizar cirurgia\" na hora certa (o tempo global fica contando ao\n" +
+"// vivo até alguém perceber, podendo chegar a 24h+). Pede os minutos reais em vez\n" +
+"// de um horário exato — mais rápido de digitar no celular e reaproveita o mesmo\n" +
+"// modal numérico usado em editCount.\n" +
+"App.fixDuration = function(){\n" +
+"  promptDialog(t('cnt.fix_duration_prompt')).then(function(v){\n" +
+"    if (v === null || v === '') return;\n" +
+"    var minutes = Number(v);\n" +
+"    if (!isFinite(minutes) || minutes <= 0) { toast(t('toast.generic_error',{msg:t('errors.fix_duration_invalid')})); return; }\n" +
+"    api('/api/session/'+state.currentId+'/fix-duration','POST',{minutes:minutes, localTime:schedFromTs((state.session.globalTimerStartedAt||Date.now()) + Math.round(minutes*60000))}).then(function(s){ state.session=s; render(); toast(t('toast.duration_fixed')); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
+"};\n" +
+"App.renamePatient = function(){\n" +
+"  var cur = state.session ? state.session.codigo : '';\n" +
+"  promptDialog(t('cnt.rename_prompt'), cur, 'text').then(function(v){\n" +
+"    if (v === null) return;\n" +
+"    v = String(v).trim();\n" +
+"    if (!v || v === cur) return;\n" +
+"    api('/api/session/'+state.currentId+'/rename','POST',{codigo:v}).then(function(s){ state.session=s; render(); toast(t('toast.patient_renamed')); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
+"};\n" +
+"App.openShareModal = function(){\n" +
+"  document.getElementById('share-url').textContent = shareUrlFor(state.currentId);\n" +
+"  document.getElementById('share-modal-overlay').classList.add('show');\n" +
+"};\n" +
+"App.closeShareModal = function(){\n" +
+"  document.getElementById('share-modal-overlay').classList.remove('show');\n" +
+"};\n" +
+"App.generateInvite = function(){\n" +
+"  return api('/api/admin/invites','POST',{}).then(function(r){\n" +
+"    App.openInviteModal(r.url);\n" +
+"    return App.loadInvitesList();\n" +
+"  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.loadInvitesList = function(){\n" +
+"  return api('/api/admin/invites').then(function(r){\n" +
+"    var el = document.getElementById('invites-list');\n" +
+"    if (!r.invites.length){ el.innerHTML = '<p class=\"hint\">'+escapeHtml(t('config.invites_empty'))+'</p>'; return; }\n" +
+"    var statusLabel = { pendente: t('config.invites_status_pending'), usado: t('config.invites_status_used'), expirado: t('config.invites_status_expired') };\n" +
+"    el.innerHTML = r.invites.map(function(inv){\n" +
+"      var d = new Date(inv.createdAt);\n" +
+"      return '<div class=\"row\" style=\"justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--c-border);\"><span>'+escapeHtml(d.toLocaleDateString())+'</span><span>'+escapeHtml(statusLabel[inv.status]||inv.status)+'</span></div>';\n" +
+"    }).join('');\n" +
+"  }).catch(function(){});\n" +
+"};\n" +
+"var ONBOARD_STEPS = 4;\n" +
+"App.onboardingRender = function(){\n" +
+"  var n = (state.onboardStep || 0) + 1;\n" +
+"  document.getElementById('onboard-counter').textContent = t('onboard.step_of',{n:n,total:ONBOARD_STEPS});\n" +
+"  var base = 'onboard.s'+n;\n" +
+"  document.getElementById('onboard-title').textContent = t(base+'_title');\n" +
+"  document.getElementById('onboard-body').textContent = t(base+'_body');\n" +
+"  document.getElementById('onboard-back-btn').style.display = n > 1 ? '' : 'none';\n" +
+"  document.getElementById('onboard-next-btn').textContent = n < ONBOARD_STEPS ? t('onboard.next') : t('onboard.start');\n" +
+"};\n" +
+"App.renderBackupStatus = function(r){\n" +
+"  var el = document.getElementById('backup-auto-status'); if (!el) return;\n" +
+"  var st = r && r.status;\n" +
+"  if (!st){ el.textContent = t('config.backup_auto_never',{days:String(r ? r.intervalDays : '')}); return; }\n" +
+"  var when = new Date(st.lastRunAt).toLocaleString(localeForLang());\n" +
+"  el.textContent = st.lastOk\n" +
+"    ? t('config.backup_auto_ok',{when:when, n:String(st.sessions), days:String(r.intervalDays)})\n" +
+"    : t('config.backup_auto_fail',{when:when, msg:(st.problems||[]).join(' | ')});\n" +
+"};\n" +
+"App.loadBackupStatus = function(){\n" +
+"  api('/api/admin/backup').then(App.renderBackupStatus).catch(function(){});\n" +
+"};\n" +
+"App.runBackupNow = function(){\n" +
+"  api('/api/admin/backup','POST',{}).then(function(r){\n" +
+"    App.renderBackupStatus(r);\n" +
+"    toast(r.ok ? t('toast.backup_ok') : t('toast.backup_failed'));\n" +
+"  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.openOnboarding = function(){\n" +
+"  state.onboardStep = 0;\n" +
+"  App.onboardingRender();\n" +
+"  document.getElementById('onboard-modal-overlay').classList.add('show');\n" +
+"};\n" +
+"App.onboardingNext = function(){\n" +
+"  if ((state.onboardStep || 0) < ONBOARD_STEPS - 1){ state.onboardStep = (state.onboardStep || 0) + 1; App.onboardingRender(); }\n" +
+"  else App.onboardingFinish();\n" +
+"};\n" +
+"App.onboardingBack = function(){\n" +
+"  if ((state.onboardStep || 0) > 0){ state.onboardStep--; App.onboardingRender(); }\n" +
+"};\n" +
+"App.onboardingFinish = function(){\n" +
+"  document.getElementById('onboard-modal-overlay').classList.remove('show');\n" +
+"  if (state.currentUser && state.currentUser.onboardingPending){\n" +
+"    state.currentUser.onboardingPending = false;\n" +
+"    api('/api/onboarding/complete','POST',{}).catch(function(){});\n" +
+"  }\n" +
+"};\n" +
+"App.maybeShowOnboarding = function(){\n" +
+"  if (state.currentUser && state.currentUser.onboardingPending) App.openOnboarding();\n" +
+"};\n" +
+"App.openInviteModal = function(url){\n" +
+"  state.currentInviteUrl = url;\n" +
+"  document.getElementById('invite-url').textContent = url;\n" +
+"  document.getElementById('invite-modal-overlay').classList.add('show');\n" +
+"};\n" +
+"App.closeInviteModal = function(){\n" +
+"  document.getElementById('invite-modal-overlay').classList.remove('show');\n" +
+"};\n" +
+"App.copyInviteUrl = function(){\n" +
+"  var url = state.currentInviteUrl;\n" +
+"  if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(function(){ toast(t('toast.address_copied')); }, function(){ toast(t('toast.copy_failed_manual')); }); }\n" +
+"  else { toast(t('toast.copy_manually',{url:url}), 4000); }\n" +
+"};\n" +
+"App.shareInviteViaWhatsapp = function(){\n" +
+"  var url = state.currentInviteUrl;\n" +
+"  var text = t('invite.whatsapp_text',{url:url});\n" +
+"  window.open('https://wa.me/?text='+encodeURIComponent(text), '_blank');\n" +
+"};\n" +
+"// confirmDialog()/promptDialog(): substitutos do window.confirm()/window.prompt()\n" +
+"// nativos, usando o mesmo modal HTML (.modal-overlay/.modal-box) do modal de\n" +
+"// compartilhar. Ambos retornam uma Promise, então todo call site que usava\n" +
+"// confirm()/prompt() de forma síncrona precisou virar um .then(). O motivo é o\n" +
+"// bug relatado pelo Dr. Vitor: no iPad dele, depois de vários confirm()/prompt()\n" +
+"// na mesma cirurgia (editCount usa prompt() dezenas de vezes por quadrante), o\n" +
+"// Safari do iOS passa a bloquear silenciosamente TODOS os diálogos nativos\n" +
+"// seguintes — sem erro, sem aviso, só retornando false/null direto — fazendo o\n" +
+"// botão de finalizar quadrante parecer travado sem motivo aparente. Um modal\n" +
+"// próprio não sofre desse bloqueio.\n" +
+"var dialogModalResolve = null;\n" +
+"var dialogModalIsPrompt = false;\n" +
+"function showDialogModal(message, opts){\n" +
+"  opts = opts || {};\n" +
+"  return new Promise(function(resolve){\n" +
+"    dialogModalResolve = resolve;\n" +
+"    dialogModalIsPrompt = !!opts.isPrompt;\n" +
+"    document.getElementById('dialog-modal-message').textContent = message;\n" +
+"    var inputWrap = document.getElementById('dialog-modal-input-wrap');\n" +
+"    var input = document.getElementById('dialog-modal-input');\n" +
+"    if (dialogModalIsPrompt){\n" +
+"      inputWrap.style.display = 'block';\n" +
+"      input.type = opts.inputType || 'number';\n" +
+"      input.inputMode = (opts.inputType==='text' ? 'text' : 'numeric');\n" +
+"      input.value = (opts.defaultValue===undefined || opts.defaultValue===null) ? '' : opts.defaultValue;\n" +
+"    } else {\n" +
+"      inputWrap.style.display = 'none';\n" +
+"    }\n" +
+"    document.getElementById('dialog-modal-overlay').classList.add('show');\n" +
+"    if (dialogModalIsPrompt){\n" +
+"      setTimeout(function(){ if (input.focus) input.focus(); if (input.select) input.select(); }, 50);\n" +
+"    }\n" +
+"  });\n" +
+"}\n" +
+"function closeDialogModal(result){\n" +
+"  document.getElementById('dialog-modal-overlay').classList.remove('show');\n" +
+"  var resolveFn = dialogModalResolve;\n" +
+"  dialogModalResolve = null;\n" +
+"  if (resolveFn) resolveFn(result);\n" +
+"}\n" +
+"App.dialogModalOk = function(){\n" +
+"  if (dialogModalIsPrompt){\n" +
+"    var v = document.getElementById('dialog-modal-input').value;\n" +
+"    closeDialogModal(v);\n" +
+"  } else {\n" +
+"    closeDialogModal(true);\n" +
+"  }\n" +
+"};\n" +
+"App.dialogModalCancel = function(){\n" +
+"  closeDialogModal(dialogModalIsPrompt ? null : false);\n" +
+"};\n" +
+"function confirmDialog(message){ return showDialogModal(message, {isPrompt:false}); }\n" +
+"function promptDialog(message, defaultValue, inputType){ return showDialogModal(message, {isPrompt:true, defaultValue:defaultValue, inputType:inputType}); }\n" +
+"App.copyShareUrl = function(){\n" +
+"  var url = shareUrlFor(state.currentId);\n" +
+"  if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(function(){ toast(t('toast.address_copied')); }, function(){ toast(t('toast.copy_failed_manual')); }); }\n" +
+"  else { toast(t('toast.copy_manually',{url:url}), 4000); }\n" +
+"};\n" +
+"App.shareViaSystem = function(){\n" +
+"  var url = shareUrlFor(state.currentId);\n" +
+"  var codigo = state.session ? state.session.codigo : '';\n" +
+"  if (navigator.share){\n" +
+"    navigator.share({title:'Graftis — '+codigo, text:'Entrar na contagem da cirurgia '+codigo+':', url:url}).catch(function(){});\n" +
+"  } else {\n" +
+"    toast(t('toast.no_native_share'), 3000);\n" +
+"  }\n" +
+"};\n" +
+"App.shareViaWhatsapp = function(){\n" +
+"  var url = shareUrlFor(state.currentId);\n" +
+"  var codigo = state.session ? state.session.codigo : '';\n" +
+"  var text = 'Entrar na contagem da cirurgia '+codigo+': '+url;\n" +
+"  window.open('https://wa.me/?text='+encodeURIComponent(text), '_blank');\n" +
+"};\n" +
+"App.printReport = function(){\n" +
+"  var s = state.session; if (!s) return;\n" +
+"  var combined = combinedExtractionCounts(s);\n" +
+"  var sum = computeSummary(combined, s.mode||'completo');\n" +
+"  var msPrint = elapsedMs(s.timer);\n" +
+"  var msGlobalPrint = globalElapsedMs(s);\n" +
+"  var ritmoPrint = (msPrint>0 && sum.foliculosExtraidos>0) ? (sum.foliculosExtraidos/(msPrint/3600000)) : null;\n" +
+"  var finalMamba = mambaFinalCumulativo(s);\n" +
+"  var mdiffGeral = computeMambaDiff(finalMamba, sum.foliculosExtraidos);\n" +
+"\n" +
+"  var pi = s.patientInfo || {};\n" +
+"  var piParts = [];\n" +
+"  if (pi.idade!==null && pi.idade!==undefined) piParts.push('<div>'+escapeHtml(t('patient.age_label'))+'<br><b>'+pi.idade+'</b></div>');\n" +
+"  if (pi.alturaCm!==null && pi.alturaCm!==undefined) piParts.push('<div>'+escapeHtml(t('patient.height_label'))+'<br><b>'+pi.alturaCm+'</b></div>');\n" +
+"  if (pi.pesoKg!==null && pi.pesoKg!==undefined) piParts.push('<div>'+escapeHtml(t('patient.weight_label'))+'<br><b>'+pi.pesoKg+'</b></div>');\n" +
+"  if (pi.cabeloEspessura) piParts.push('<div>'+escapeHtml(t('patient.hair_thickness_label'))+'<br><b>'+escapeHtml(t(pi.cabeloEspessura==='fino'?'patient.hair_thin':'patient.hair_thick'))+'</b></div>');\n" +
+"  if (pi.cabeloTextura) {\n" +
+"    var texturaKey = pi.cabeloTextura==='liso' ? 'patient.hair_straight' : (pi.cabeloTextura==='ondulado' ? 'patient.hair_wavy' : 'patient.hair_curly');\n" +
+"    piParts.push('<div>'+escapeHtml(t('patient.hair_texture_label'))+'<br><b>'+escapeHtml(t(texturaKey))+'</b></div>');\n" +
+"  }\n" +
+"  if (pi.raspagem) piParts.push('<div>'+escapeHtml(t('patient.surgery_type_label'))+'<br><b>'+escapeHtml(t(pi.raspagem==='sim'?'patient.with_shaving':'patient.without_shaving'))+'</b></div>');\n" +
+"  if (pi.punchMm) piParts.push('<div>'+escapeHtml(t('patient.punch_label'))+'<br><b>'+escapeHtml(t(pi.punchMm==='0.95'?'patient.punch_095':'patient.punch_10'))+'</b></div>');\n" +
+"  var patientInfoHtml = piParts.length ? ('<h2>'+escapeHtml(t('patient.section_title'))+'</h2><div class=\"print-summary\">'+piParts.join('')+'</div>') : '';\n" +
+"\n" +
+"  var quadrantsHtml = QUADRANTS.map(function(q){\n" +
+"    var qc = s.quadrants[q.id].counts;\n" +
+"    var qsum = computeSummary(qc, s.mode||'completo');\n" +
+"    var rows = function(group){\n" +
+"      return CATS.filter(function(c){return c.group===group;}).map(function(c){\n" +
+"        var n = qc[c.id]||0;\n" +
+"        return '<tr><td>'+escapeHtml(c.label)+'</td><td>'+c.hairs+'</td><td>'+n+'</td><td>'+(n*c.hairs)+'</td></tr>';\n" +
+"      }).join('');\n" +
+"    };\n" +
+"    var mc = s.quadrants[q.id].mambaCumulativo;\n" +
+"    var mcHtml = '';\n" +
+"    if (mc!==null && mc!==undefined && mc!==''){\n" +
+"      var prev = mambaPrevCumulativo(s, q.id);\n" +
+"      var delta = Number(mc) - prev;\n" +
+"      var qmdiff = computeMambaDiff(delta, qsum.foliculosExtraidos);\n" +
+"      var qDur = quadrantDurationMs(s, q.id);\n" +
+"      var qRate = mambaRatePerHour(delta, qDur);\n" +
+"      mcHtml = '<div class=\"print-summary\">' +\n" +
+"        '<div>'+escapeHtml(t('print.mamba_accumulated_label'))+'<br><b>'+mc+'</b></div>' +\n" +
+"        '<div>'+escapeHtml(t('cnt.mamba_quad_val'))+'<br><b>'+delta+'</b></div>' +\n" +
+"        (qmdiff ? '<div>'+escapeHtml(t('cnt.mamba_diff'))+'<br><b>'+(qmdiff.diff>0?'+':'')+qmdiff.diff+' ('+(qmdiff.diffPct>0?'+':'')+qmdiff.diffPct.toFixed(1)+'%)</b></div>' : '') +\n" +
+"        (qDur ? '<div>'+escapeHtml(t('cnt.mamba_quad_duration'))+'<br><b>'+fmtHMS(qDur)+'</b></div>' : '') +\n" +
+"        (qRate!==null ? '<div>'+escapeHtml(t('print.mamba_rate_label'))+'<br><b>'+qRate.toFixed(0)+t('print.fol_per_hour_suffix')+'</b></div>' : '') +\n" +
+"      '</div>';\n" +
+"    }\n" +
+"    return '' +\n" +
+"      '<h2>'+escapeHtml(t('print.extraction_prefix'))+escapeHtml(q.label)+'</h2>' +\n" +
+"      '<div class=\"print-summary\">' +\n" +
+"        '<div>'+escapeHtml(t('cnt.summary_extracted'))+'<br><b>'+qsum.foliculosExtraidos+'</b></div>' +\n" +
+"        '<div>'+escapeHtml(t('cnt.summary_total_hairs'))+'<br><b>'+qsum.totalFios+'</b></div>' +\n" +
+"        '<div>'+escapeHtml(t('print.index_label'))+'<br><b>'+qsum.indice.toFixed(2)+'</b></div>' +\n" +
+"        '<div>'+escapeHtml(t('cnt.summary_partial_transec'))+'<br><b>'+qsum.taxaParcial.toFixed(1)+'%</b></div>' +\n" +
+"        '<div>'+escapeHtml(t('cnt.summary_total_transec'))+'<br><b>'+qsum.taxaTotal.toFixed(1)+'%</b></div>' +\n" +
+"        '<div>'+escapeHtml(t('cnt.summary_mini'))+'<br><b>'+qsum.miniTotal+'</b></div>' +\n" +
+"      '</div>' +\n" +
+"      mcHtml +\n" +
+"      '<table><tr><th>'+escapeHtml(t('dash.table_category'))+'</th><th>'+escapeHtml(t('print.table_hairs_per_follicle'))+'</th><th>'+escapeHtml(t('print.table_qty'))+'</th><th>'+escapeHtml(t('print.table_total_hairs'))+'</th></tr>'+rows('integro')+rows((s.mode==='reduzido')?'parcial_reduzida':'parcial')+rows('total')+rows('mini')+'</table>';\n" +
+"  }).join('');\n" +
+"\n" +
+"  var pTotal = preincTotal(s.preincCounts);\n" +
+"  var msPreinc = elapsedMs(s.preincTimer);\n" +
+"  var ritmoPreinc = (msPreinc>0 && pTotal>0) ? (pTotal/(msPreinc/3600000)) : null;\n" +
+"  var preincRows = PREINC_AREAS.map(function(a){\n" +
+"    return '<tr><td>'+escapeHtml(a.label)+'</td><td>'+(s.preincCounts[a.id]||0)+'</td></tr>';\n" +
+"  }).join('');\n" +
+"  var preincHtml = '<h2>'+escapeHtml(t('cnt.tab_preinc'))+'</h2>' +\n" +
+"    '<div class=\"print-summary\">' +\n" +
+"      '<div>'+escapeHtml(t('preinc.total_label'))+'<br><b>'+pTotal+'</b></div>' +\n" +
+"      '<div>'+escapeHtml(t('preinc.time_title'))+'<br><b>'+fmtHMS(msPreinc)+'</b></div>' +\n" +
+"      (ritmoPreinc ? '<div>'+escapeHtml(t('print.rate_avg_label'))+'<br><b>'+ritmoPreinc.toFixed(0)+t('print.preinc_per_hour_suffix')+'</b></div>' : '') +\n" +
+"    '</div>' +\n" +
+"    '<table><tr><th>'+escapeHtml(t('print.table_area'))+'</th><th>'+escapeHtml(t('print.table_preincisions'))+'</th></tr>'+preincRows+'</table>';\n" +
+"\n" +
+"  var distDataP = s.preincDist || {};\n" +
+"  var distTotalsP = {}; DIST_FIOS.forEach(function(f){ distTotalsP[f.id]=0; });\n" +
+"  var distGrandTotalP = 0;\n" +
+"  var distRowsP = PREINC_AREAS.map(function(a){\n" +
+"    var row = distDataP[a.id] || {};\n" +
+"    var rowTotal = 0;\n" +
+"    var cells = DIST_FIOS.map(function(f){ var n=row[f.id]||0; rowTotal+=n; distTotalsP[f.id]+=n; return '<td>'+n+'</td>'; }).join('');\n" +
+"    distGrandTotalP += rowTotal;\n" +
+"    return '<tr><td>'+escapeHtml(a.label)+'</td>'+cells+'<td>'+rowTotal+'</td></tr>';\n" +
+"  }).join('');\n" +
+"  var distHeaderP = '<tr><th>'+escapeHtml(t('print.table_area'))+'</th>'+DIST_FIOS.map(function(f){ return '<th>'+escapeHtml(f.label)+'</th>'; }).join('')+'<th>'+escapeHtml(t('print.table_total'))+'</th></tr>';\n" +
+"  var distFooterP = '<tr><td>'+escapeHtml(t('print.table_grand_total'))+'</td>'+DIST_FIOS.map(function(f){ return '<td>'+distTotalsP[f.id]+'</td>'; }).join('')+'<td>'+distGrandTotalP+'</td></tr>';\n" +
+"  var distHtml = '<h2>'+escapeHtml(t('print.dist_title'))+'</h2><table>'+distHeaderP+distRowsP+distFooterP+'</table>';\n" +
+"\n" +
+"  var photoBlock = function(cat, label){\n" +
+"    var list = s.photos[cat]||[];\n" +
+"    if (!list.length) return '';\n" +
+"    return '<h2>'+label+'</h2><div class=\"photo-print-grid\">'+list.map(function(p){\n" +
+"      return '<img src=\"/api/session/'+s.id+'/photos/'+p.id+'\">';\n" +
+"    }).join('')+'</div>';\n" +
+"  };\n" +
+"  var hasPhotos = (s.photos.marcacao||[]).length || (s.photos.posop||[]).length;\n" +
+"\n" +
+"  var logoHtml = (s.ownerBranding && s.ownerBranding.logoFilename && s.ownerBranding.ownerId) ?\n" +
+"    '<img src=\"/api/user/'+s.ownerBranding.ownerId+'/logo\" style=\"max-height:60px;max-width:220px;object-fit:contain;display:block;margin-bottom:6px;\">' : '';\n" +
+"  var html = '' +\n" +
+"    logoHtml +\n" +
+"    '<h1>'+escapeHtml(t('print.title'))+'</h1>' +\n" +
+"    '<div>'+escapeHtml(t('print.patient_label'))+': <b>'+escapeHtml(s.codigo)+'</b> &nbsp;|&nbsp; '+escapeHtml(t('print.status_label'))+': <b>'+(s.status==='finalizada'?t('common.status_finalized'):t('common.status_in_progress'))+'</b> &nbsp;|&nbsp; '+escapeHtml(t('print.mode_label'))+': <b>'+((s.mode==='reduzido')?t('common.mode_reduced'):t('common.mode_complete'))+'</b></div>' +\n" +
+"    patientInfoHtml +\n" +
+"    '<h2>'+escapeHtml(t('cnt.summary_general_title'))+'</h2>' +\n" +
+"    '<div class=\"print-summary\">' +\n" +
+"      '<div>'+escapeHtml(t('cnt.summary_extracted'))+'<br><b>'+sum.foliculosExtraidos+'</b></div>' +\n" +
+"      '<div>'+escapeHtml(t('cnt.summary_total_hairs'))+'<br><b>'+sum.totalFios+'</b></div>' +\n" +
+"      '<div>'+escapeHtml(t('print.index_label'))+'<br><b>'+sum.indice.toFixed(2)+'</b></div>' +\n" +
+"      '<div>'+escapeHtml(t('cnt.summary_partial_transec'))+'<br><b>'+sum.taxaParcial.toFixed(1)+'%</b></div>' +\n" +
+"      '<div>'+escapeHtml(t('cnt.summary_total_transec'))+'<br><b>'+sum.taxaTotal.toFixed(1)+'%</b></div>' +\n" +
+"      '<div>'+escapeHtml(t('cnt.summary_mini'))+'<br><b>'+sum.miniTotal+'</b></div>' +\n" +
+"      '<div>'+escapeHtml(t('cnt.extraction_time_title'))+'<br><b>'+fmtHMS(msPrint)+'</b></div>' +\n" +
+"      (ritmoPrint ? '<div>'+escapeHtml(t('print.rate_avg_label'))+'<br><b>'+ritmoPrint.toFixed(0)+t('print.fol_per_hour_suffix')+'</b></div>' : '') +\n" +
+"      (msGlobalPrint!==null ? '<div>'+escapeHtml(t('print.total_surgery_time_label'))+'<br><b>'+fmtHMS(msGlobalPrint)+'</b></div>' : '') +\n" +
+"    '</div>' +\n" +
+"    (mdiffGeral ? '<div class=\"print-summary\"><div>'+escapeHtml(t('cnt.mamba_reading'))+'<br><b>'+mdiffGeral.mamba+'</b></div><div>'+escapeHtml(t('cnt.summary_extracted'))+'<br><b>'+mdiffGeral.base+'</b></div><div>'+escapeHtml(t('cnt.mamba_diff'))+'<br><b>'+(mdiffGeral.diff>0?'+':'')+mdiffGeral.diff+' ('+(mdiffGeral.diffPct>0?'+':'')+mdiffGeral.diffPct.toFixed(1)+'%)</b></div>'+(mambaRatePerHour(mdiffGeral.mamba, msPrint>0?msPrint:null)!==null ? '<div>'+escapeHtml(t('print.mamba_rate_label'))+'<br><b>'+mambaRatePerHour(mdiffGeral.mamba, msPrint).toFixed(0)+t('print.fol_per_hour_suffix')+'</b></div>' : '')+'</div>' : '') +\n" +
+"    quadrantsHtml +\n" +
+"    preincHtml +\n" +
+"    distHtml +\n" +
+"    (hasPhotos ? '<div class=\"photo-report-page\">'+photoBlock('marcacao',escapeHtml(t('print.photos_prefix'))+escapeHtml(t('photos.marcacao_title')))+photoBlock('posop',escapeHtml(t('print.photos_prefix'))+escapeHtml(t('photos.posop_title')))+'</div>' : '') +\n" +
+"    '<p style=\"margin-top:16px;font-size:11px;color:#666;\">'+escapeHtml(t('print.generated_at'))+new Date().toLocaleString(localeForLang())+'</p>';\n" +
+"  document.getElementById('print-report').innerHTML = html;\n" +
+"  window.print();\n" +
+"};\n" +
+"// fmtHM: duração amigável \"Xh YYmin\", usada só no Relatório para o paciente — o\n" +
+"// relatório técnico interno (App.printReport) continua usando fmtHMS (HH:MM:SS).\n" +
+"function fmtHM(ms){\n" +
+"  var totalMin = Math.max(0, Math.round(ms/60000));\n" +
+"  var h = Math.floor(totalMin/60), m = totalMin%60;\n" +
+"  return h+'h '+String(m).padStart(2,'0')+'min';\n" +
+"}\n" +
+"// Relatório para o paciente: pedido do Dr. Vitor (17/07/2026) — versão separada e\n" +
+"// redesenhada do relatório de impressão, focada só no que o paciente quer ver e\n" +
+"// pronta pra entregar impressa: dados do paciente, fotos, total de folículos por\n" +
+"// tipo (só íntegros + mini — deixa de fora Mamba, transecção e distribuição de\n" +
+"// unidades por fio, que são controle de qualidade interno, não interessam ao\n" +
+"// paciente), índice, total de fios, incisões por área e tempos cirúrgicos (agora\n" +
+"// em 4 etapas: pré-incisões, extração, implantação — calculada como o tempo total\n" +
+"// menos as outras duas, não cronometrada à parte — e tempo total). O relatório\n" +
+"// técnico completo (App.printReport) continua existindo do jeito que está, pro uso\n" +
+"// interno da equipe.\n" +
+"App.printPatientReport = function(){\n" +
+"  var s = state.session; if (!s) return;\n" +
+"  var combined = combinedExtractionCounts(s);\n" +
+"  var sum = computeSummary(combined, s.mode||'completo');\n" +
+"\n" +
+"  var pi = s.patientInfo || {};\n" +
+"  var piParts = [];\n" +
+"  if (pi.idade!==null && pi.idade!==undefined) piParts.push('<span class=\"pr-item\">'+escapeHtml(t('patient.age_label'))+' <b>'+pi.idade+'</b></span>');\n" +
+"  if (pi.alturaCm!==null && pi.alturaCm!==undefined) piParts.push('<span class=\"pr-item\">'+escapeHtml(t('patient.height_label'))+' <b>'+pi.alturaCm+'</b></span>');\n" +
+"  if (pi.pesoKg!==null && pi.pesoKg!==undefined) piParts.push('<span class=\"pr-item\">'+escapeHtml(t('patient.weight_label'))+' <b>'+pi.pesoKg+'</b></span>');\n" +
+"  if (pi.cabeloEspessura) piParts.push('<span class=\"pr-item\">'+escapeHtml(t('patient.hair_thickness_label'))+' <b>'+escapeHtml(t(pi.cabeloEspessura==='fino'?'patient.hair_thin':'patient.hair_thick'))+'</b></span>');\n" +
+"  if (pi.cabeloTextura){\n" +
+"    var texturaKey = pi.cabeloTextura==='liso' ? 'patient.hair_straight' : (pi.cabeloTextura==='ondulado' ? 'patient.hair_wavy' : 'patient.hair_curly');\n" +
+"    piParts.push('<span class=\"pr-item\">'+escapeHtml(t('patient.hair_texture_label'))+' <b>'+escapeHtml(t(texturaKey))+'</b></span>');\n" +
+"  }\n" +
+"\n" +
+"  var patientCats = CATS.filter(function(c){ return c.group==='integro' || c.group==='mini'; });\n" +
+"  var maxCatCount = 0;\n" +
+"  patientCats.forEach(function(c){ var n = combined[c.id]||0; if (n>maxCatCount) maxCatCount = n; });\n" +
+"  var barsHtml = patientCats.map(function(c){\n" +
+"    var n = combined[c.id]||0;\n" +
+"    var pct = (maxCatCount>0 && n>0) ? Math.max(2, Math.round(n/maxCatCount*100)) : 0;\n" +
+"    return '<div class=\"pr-bar-row\"><div class=\"pr-bar-label\">'+escapeHtml(c.label)+'</div><div class=\"pr-bar-track\"><div class=\"pr-bar-fill\" style=\"width:'+pct+'%\"></div></div><div class=\"pr-bar-count\">'+n+'</div></div>';\n" +
+"  }).join('');\n" +
+"\n" +
+"  var half = Math.ceil(PREINC_AREAS.length/2);\n" +
+"  var areaRow = function(a){ return '<div class=\"pr-area-row\"><span>'+escapeHtml(a.label)+'</span><span class=\"pr-n\">'+(s.preincCounts[a.id]||0)+'</span></div>'; };\n" +
+"  var areasColA = PREINC_AREAS.slice(0,half).map(areaRow).join('');\n" +
+"  var areasColB = PREINC_AREAS.slice(half).map(areaRow).join('');\n" +
+"\n" +
+"  var msPreinc = elapsedMs(s.preincTimer);\n" +
+"  var msExtraction = elapsedMs(s.timer);\n" +
+"  var msTotal = globalElapsedMs(s);\n" +
+"  var msImplant = (msTotal!==null) ? Math.max(0, msTotal - msPreinc - msExtraction) : null;\n" +
+"  var timesHtml = '<div class=\"pr-times\">' +\n" +
+"    '<div class=\"pr-t\"><div class=\"pr-t-lbl\">'+escapeHtml(t('patrep.time_preinc'))+'</div><div class=\"pr-t-val\">'+fmtHM(msPreinc)+'</div></div>' +\n" +
+"    '<div class=\"pr-t\"><div class=\"pr-t-lbl\">'+escapeHtml(t('patrep.time_extraction'))+'</div><div class=\"pr-t-val\">'+fmtHM(msExtraction)+'</div></div>' +\n" +
+"    (msImplant!==null ? '<div class=\"pr-t\"><div class=\"pr-t-lbl\">'+escapeHtml(t('patrep.time_implant'))+'</div><div class=\"pr-t-val\">'+fmtHM(msImplant)+'</div></div>' : '') +\n" +
+"    (msTotal!==null ? '<div class=\"pr-t\"><div class=\"pr-t-lbl\">'+escapeHtml(t('patrep.time_total'))+'</div><div class=\"pr-t-val\">'+fmtHM(msTotal)+'</div></div>' : '') +\n" +
+"  '</div>';\n" +
+"\n" +
+"  var photoBlock = function(cat, titleKey){\n" +
+"    var list = s.photos[cat]||[];\n" +
+"    if (!list.length) return '';\n" +
+"    return '<div class=\"pr-photos-block\"><p class=\"pr-photo-group-title\">'+escapeHtml(t(titleKey))+'</p><div class=\"pr-photos-grid\">'+list.map(function(p){\n" +
+"      return '<img src=\"/api/session/'+s.id+'/photos/'+p.id+'\">';\n" +
+"    }).join('')+'</div></div>';\n" +
+"  };\n" +
+"  var photosHtml = photoBlock('marcacao','photos.marcacao_title')+photoBlock('posop','photos.posop_title');\n" +
+"  var hasPhotos = (s.photos.marcacao||[]).length || (s.photos.posop||[]).length;\n" +
+"\n" +
+"  // Sem logo do médico no cabeçalho — pedido do Dr. Vitor (17/07/2026), depois de\n" +
+"  // testar com a logo de verdade e preferir só o nome/CRM em texto. O cabeçalho\n" +
+"  // verde (teal da marca) foi mantido, ele gostou desse. A pequena assinatura\n" +
+"  // \"Gerado com Graftis\" agora aparece TAMBÉM no cabeçalho (além do rodapé) — ele\n" +
+"  // pediu, pra garantir que a marca apareça mesmo que alguém só veja a primeira\n" +
+"  // parte do documento.\n" +
+"  var ob = s.ownerBranding || {};\n" +
+"  var doctorName = ob.nomeCompleto ? escapeHtml(ob.nomeCompleto) : '';\n" +
+"  var crmLine = ob.crm ? escapeHtml(t('patrep.crm_prefix'))+escapeHtml(ob.crm) : '';\n" +
+"\n" +
+"  var dataGridHtml = '<div class=\"pr-data-grid\">' +\n" +
+"    '<div><p class=\"pr-eyebrow\">'+escapeHtml(t('patrep.section_follicles'))+'</p>'+barsHtml+'</div>' +\n" +
+"    '<div class=\"pr-incisions-wrap\"><p class=\"pr-eyebrow\">'+escapeHtml(t('patrep.section_incisions'))+'</p><div class=\"pr-incisions-cols\"><div>'+areasColA+'</div><div>'+areasColB+'</div></div></div>' +\n" +
+"  '</div>';\n" +
+"\n" +
+"  var html = '' +\n" +
+"    '<div class=\"pr-masthead\">' +\n" +
+"      '<div><div class=\"pr-brand-name\">'+(doctorName||'Graftis')+'</div>'+(crmLine?'<div class=\"pr-clinic-line\">'+crmLine+'</div>':'')+'</div>' +\n" +
+"      '<div class=\"pr-masthead-right\"><div class=\"pr-doc-title\">'+escapeHtml(t('patrep.doc_title'))+'</div><div class=\"pr-doc-date\">'+new Date().toLocaleDateString(localeForLang())+'</div><div class=\"pr-masthead-sig\">'+escapeHtml(t('patrep.footer_signature'))+'</div></div>' +\n" +
+"    '</div>' +\n" +
+"    '<div class=\"pr-stub\"><span class=\"pr-item\">'+escapeHtml(t('patrep.patient_label'))+' <b>'+escapeHtml(s.codigo)+'</b></span>'+piParts.join('')+'</div>' +\n" +
+"    '<div class=\"pr-hero\">' +\n" +
+"      '<div class=\"pr-seal\"><div class=\"pr-num\">'+fmtBig(sum.foliculosExtraidos)+'</div><div class=\"pr-cap\">'+escapeHtml(t('patrep.seal_caption'))+'</div></div>' +\n" +
+"      '<div class=\"pr-hero-copy\"><h1>'+escapeHtml(t('patrep.hero_title'))+'</h1><p>'+escapeHtml(t('patrep.hero_body'))+'</p></div>' +\n" +
+"    '</div>' +\n" +
+"    '<div class=\"pr-kpi-row\">' +\n" +
+"      '<div class=\"pr-kpi\"><div class=\"pr-val\">'+sum.indice.toFixed(2)+'</div><div class=\"pr-lbl\">'+escapeHtml(t('patrep.kpi_index'))+'</div></div>' +\n" +
+"      '<div class=\"pr-kpi\"><div class=\"pr-val\">'+fmtBig(sum.totalFios)+'</div><div class=\"pr-lbl\">'+escapeHtml(t('patrep.kpi_total_hairs'))+'</div></div>' +\n" +
+"      (msTotal!==null ? '<div class=\"pr-kpi\"><div class=\"pr-val\">'+fmtHM(msTotal)+'</div><div class=\"pr-lbl\">'+escapeHtml(t('patrep.kpi_total_time'))+'</div></div>' : '') +\n" +
+"    '</div>' +\n" +
+"    '<div class=\"pr-section\">'+dataGridHtml+'</div>' +\n" +
+"    '<div class=\"pr-section\"><p class=\"pr-eyebrow\">'+escapeHtml(t('patrep.section_times'))+'</p>'+timesHtml+'</div>' +\n" +
+"    (hasPhotos ? '<div class=\"pr-section\"><p class=\"pr-eyebrow\">'+escapeHtml(t('patrep.section_photos'))+'</p>'+photosHtml+'</div>' : '') +\n" +
+"    '<div class=\"pr-footer\"><span class=\"pr-sig\"><svg width=\"11\" height=\"11\" viewBox=\"0 0 120 120\"><g stroke=\"#B8804A\" stroke-width=\"8\" stroke-linecap=\"round\" fill=\"none\"><line x1=\"60\" y1=\"52\" x2=\"60\" y2=\"20\"/><line x1=\"48\" y1=\"55\" x2=\"34\" y2=\"30\"/><line x1=\"72\" y1=\"55\" x2=\"86\" y2=\"30\"/></g><ellipse cx=\"60\" cy=\"76\" rx=\"27\" ry=\"21\" fill=\"#B8804A\"/></svg>'+escapeHtml(t('patrep.footer_signature'))+'</span></div>';\n" +
+"\n" +
+"  document.getElementById('print-patient-report').innerHTML = html;\n" +
+"  window.print();\n" +
+"};\n" +
+"function audioKey(id){ return 'fue_live_audio_'+id; }\n" +
+"function loadAudioPrefs(id){\n" +
+"  try{ var raw = localStorage.getItem(audioKey(id));\n" +
+"    var p = raw ? JSON.parse(raw) : {enabled:false, interval:100, lastAnnounced:0, preincEnabled:false, preincLastTotal:null, quadFinishEnabled:false, alertParcialEnabled:false, alertParcialThreshold:null, alertTotalEnabled:false, alertTotalThreshold:null};\n" +
+"    state.audioEnabled = !!p.enabled; state.audioInterval = p.interval||100; state.lastAnnounced = p.lastAnnounced||0;\n" +
+"    state.preincAudioEnabled = !!p.preincEnabled; state.preincLastTotal = (p.preincLastTotal===undefined?null:p.preincLastTotal);\n" +
+"    state.quadFinishAudioEnabled = !!p.quadFinishEnabled;\n" +
+"    state.alertParcialEnabled = !!p.alertParcialEnabled; state.alertParcialThreshold = (p.alertParcialThreshold===undefined?null:p.alertParcialThreshold);\n" +
+"    state.alertTotalEnabled = !!p.alertTotalEnabled; state.alertTotalThreshold = (p.alertTotalThreshold===undefined?null:p.alertTotalThreshold);\n" +
+"    state.alertParcialFired = false; state.alertTotalFired = false;\n" +
+"  }catch(e){\n" +
+"    state.audioEnabled=false; state.audioInterval=100; state.lastAnnounced=0;\n" +
+"    state.preincAudioEnabled=false; state.preincLastTotal=null; state.quadFinishAudioEnabled=false;\n" +
+"    state.alertParcialEnabled=false; state.alertParcialThreshold=null; state.alertTotalEnabled=false; state.alertTotalThreshold=null;\n" +
+"  }\n" +
+"  document.getElementById('audio-toggle').checked = state.audioEnabled;\n" +
+"  document.getElementById('audio-interval').value = state.audioInterval;\n" +
+"  document.getElementById('preinc-audio-toggle').checked = state.preincAudioEnabled;\n" +
+"  document.getElementById('quadfinish-audio-toggle').checked = state.quadFinishAudioEnabled;\n" +
+"  document.getElementById('alert-parcial-toggle').checked = state.alertParcialEnabled;\n" +
+"  document.getElementById('alert-parcial-threshold').value = (state.alertParcialThreshold===null?'':state.alertParcialThreshold);\n" +
+"  document.getElementById('alert-total-toggle').checked = state.alertTotalEnabled;\n" +
+"  document.getElementById('alert-total-threshold').value = (state.alertTotalThreshold===null?'':state.alertTotalThreshold);\n" +
+"}\n" +
+"function saveAudioPrefs(){\n" +
+"  if (!state.currentId) return;\n" +
+"  localStorage.setItem(audioKey(state.currentId), JSON.stringify({\n" +
+"    enabled:state.audioEnabled, interval:state.audioInterval, lastAnnounced:state.lastAnnounced,\n" +
+"    preincEnabled:state.preincAudioEnabled, preincLastTotal:state.preincLastTotal,\n" +
+"    quadFinishEnabled:state.quadFinishAudioEnabled,\n" +
+"    alertParcialEnabled:state.alertParcialEnabled, alertParcialThreshold:state.alertParcialThreshold,\n" +
+"    alertTotalEnabled:state.alertTotalEnabled, alertTotalThreshold:state.alertTotalThreshold\n" +
+"  }));\n" +
+"}\n" +
+"App.toggleAudio = function(checked){ state.audioEnabled = checked; saveAudioPrefs(); if (checked) speak(t('audio.enabled')); };\n" +
+"App.togglePreincAudio = function(checked){ state.preincAudioEnabled = checked; saveAudioPrefs(); if (checked) speak(t('audio.preinc_enabled')); };\n" +
+"App.toggleQuadFinishAudio = function(checked){ state.quadFinishAudioEnabled = checked; saveAudioPrefs(); if (checked) speak(t('audio.quadfinish_enabled')); };\n" +
+"App.toggleAlertParcial = function(checked){ state.alertParcialEnabled = checked; state.alertParcialFired = false; saveAudioPrefs(); if (checked) speak(t('audio.alert_partial_enabled')); };\n" +
+"App.saveAlertParcialThreshold = function(value){ var n = parseFloat(value); state.alertParcialThreshold = (isNaN(n)||n<0) ? null : n; state.alertParcialFired = false; saveAudioPrefs(); };\n" +
+"App.toggleAlertTotal = function(checked){ state.alertTotalEnabled = checked; state.alertTotalFired = false; saveAudioPrefs(); if (checked) speak(t('audio.alert_total_enabled')); };\n" +
+"App.saveAlertTotalThreshold = function(value){ var n = parseFloat(value); state.alertTotalThreshold = (isNaN(n)||n<0) ? null : n; state.alertTotalFired = false; saveAudioPrefs(); };\n" +
+"function checkTransectionAlerts(taxaParcial, taxaTotal){\n" +
+"  if (state.alertParcialEnabled && state.alertParcialThreshold!==null){\n" +
+"    if (taxaParcial > state.alertParcialThreshold){\n" +
+"      if (!state.alertParcialFired){ state.alertParcialFired = true; speak(t('audio.alert_partial_fired',{limit:String(state.alertParcialThreshold),value:taxaParcial.toFixed(1)})); }\n" +
+"    } else if (state.alertParcialFired){ state.alertParcialFired = false; }\n" +
+"  }\n" +
+"  if (state.alertTotalEnabled && state.alertTotalThreshold!==null){\n" +
+"    if (taxaTotal > state.alertTotalThreshold){\n" +
+"      if (!state.alertTotalFired){ state.alertTotalFired = true; speak(t('audio.alert_total_fired',{limit:String(state.alertTotalThreshold),value:taxaTotal.toFixed(1)})); }\n" +
+"    } else if (state.alertTotalFired){ state.alertTotalFired = false; }\n" +
+"  }\n" +
+"}\n" +
+"App.saveAudioInterval = function(value){ var n = parseInt(value,10); state.audioInterval = (isNaN(n)||n<1) ? 100 : n; saveAudioPrefs(); };\n" +
+"App.testAudio = function(){ speak(t('audio.test_phrase')); };\n" +
+"function speak(text){ if (!('speechSynthesis' in window)) { toast(t('toast.no_speech_synthesis')); return; } var u = new SpeechSynthesisUtterance(text); u.lang=({pt:'pt-BR',en:'en-US',es:'es-ES'}[state.lang]||'pt-BR'); window.speechSynthesis.speak(u); }\n" +
+"function checkAudioMilestone(total){\n" +
+"  if (!state.audioEnabled || !state.audioInterval) return;\n" +
+"  var milestone = Math.floor(total/state.audioInterval)*state.audioInterval;\n" +
+"  if (milestone>0 && milestone>state.lastAnnounced){ state.lastAnnounced=milestone; saveAudioPrefs(); speak(t('audio.milestone',{n:String(milestone)})); }\n" +
+"}\n" +
+"// Cada área de pré-incisão (recesso direito, linha, etc.) é um contador PRÓPRIO e\n" +
+"// ABSOLUTO — não uma leitura acumulada única tipo o Mamba — então o total (soma de\n" +
+"// todas as áreas) não depende da ORDEM em que você preenche cada campo, nem precisa\n" +
+"// de nenhum rastreamento por horário: é sempre só a soma direta do que está em cada\n" +
+"// campo agora. Por isso este anúncio pode ser simplesmente 'o total mudou desde a\n" +
+"// última vez que eu vi' — comparando com o valor mais recente já visto/anunciado\n" +
+"// (state.preincLastTotal), sem precisar de nenhum 'quem veio antes de quem'.\n" +
+"// Roda dentro de render(), então dispara tanto pela edição feita no próprio aparelho\n" +
+"// quanto quando o poll (a cada 1.5s) traz uma mudança feita por OUTRO aparelho —\n" +
+"// igual já acontece com o alarme de transecção. Na primeira renderização depois de\n" +
+"// abrir a cirurgia (preincLastTotal ainda null), só grava a base sem anunciar, pra\n" +
+"// não anunciar um total que já estava lá antes de você abrir o app.\n" +
+"function checkPreincAudioOnChange(total){\n" +
+"  if (!state.preincAudioEnabled){ state.preincLastTotal = total; return; }\n" +
+"  if (state.preincLastTotal===null || state.preincLastTotal===undefined){ state.preincLastTotal = total; saveAudioPrefs(); return; }\n" +
+"  if (total !== state.preincLastTotal){\n" +
+"    state.preincLastTotal = total;\n" +
+"    saveAudioPrefs();\n" +
+"    speak(t('audio.preinc_update',{n:String(total)}));\n" +
+"  }\n" +
+"}\n" +
+"// Disparado uma vez, na hora em que o \"Contagem finalizada\" de um quadrante tem\n" +
+"// sucesso (não fica escutando mudança nenhuma, ao contrário do checkPreincAudioOnChange\n" +
+"// acima) — anuncia o Mamba PRÓPRIO do quadrante que acabou de ser finalizado, os\n" +
+"// folículos extraídos somados até aquele ponto (todos os quadrantes já preenchidos,\n" +
+"// cadeia inclusa) e a diferença % do Mamba. Pedido do Dr. Vitor depois de sentir\n" +
+"// falta dessa leitura em voz alta durante uma cirurgia de verdade. Se o Mamba\n" +
+"// daquele quadrante ainda não tiver sido preenchido (equipe finalizou a contagem antes\n" +
+"// de anotar o Mamba), não dá pra calcular a diferença — nesse caso anuncia só os\n" +
+"// folículos extraídos, em vez de travar ou falar um número incompleto/errado.\n" +
+"//\n" +
+"// Correção (17/07/2026): a versão original usava mambaFinalCumulativo(s), que pega\n" +
+"// o Mamba com o relógio real (mambaMarkedAtMs) mais recente em TODA a cirurgia, sem\n" +
+"// saber qual quadrante estava sendo finalizado. Bug relatado pelo Dr. Vitor: se a\n" +
+"// equipe digita o Mamba de um quadrante ainda EM ABERTO (ex: adianta a leitura do\n" +
+"// temporal direito) antes de finalizar um quadrante anterior (ex: temporal\n" +
+"// esquerdo), o áudio ao finalizar o temporal esquerdo anunciava o Mamba do temporal\n" +
+"// direito (mais recente por horário, mas de outro quadrante, ainda nem fechado) —\n" +
+"// nunca o do quadrante que de fato tinha acabado de ser finalizado. Agora a função\n" +
+"// recebe o id do quadrante finalizado e usa só o Mamba digitado NELE, ignorando\n" +
+"// completamente o que estiver em qualquer outro quadrante, aberto ou não.\n" +
+"function announceQuadFinishAudio(s, quadId){\n" +
+"  if (!state.quadFinishAudioEnabled) return;\n" +
+"  var combined = combinedExtractionCounts(s);\n" +
+"  var sum = computeSummary(combined, s.mode||'completo');\n" +
+"  var qd = s.quadrants[quadId];\n" +
+"  var ownMamba = (qd && qd.mambaCumulativo!==null && qd.mambaCumulativo!==undefined && qd.mambaCumulativo!=='') ? Number(qd.mambaCumulativo) : null;\n" +
+"  if (ownMamba===null){\n" +
+"    speak(t('audio.quadfinish_extraidos_only',{extraidos:String(sum.foliculosExtraidos)}));\n" +
+"    return;\n" +
+"  }\n" +
+"  var mdiff = computeMambaDiff(ownMamba, sum.foliculosExtraidos);\n" +
+"  speak(t('audio.quadfinish_summary',{mamba:String(mdiff.mamba), extraidos:String(sum.foliculosExtraidos), diffpct:mdiff.diffPct.toFixed(1)}));\n" +
+"}\n" +
+"setInterval(function(){ api('/api/ping').catch(function(){}); }, 5000);\n" +
+"document.addEventListener('DOMContentLoaded', function(){\n" +
+"  window.App = App;\n" +
+"  initLanguage();\n" +
+"  loadIncrementSettings();\n" +
+"  resolveBaseUrl().then(function(){ if (state.session) render(); });\n" +
+"  var m = window.location.pathname.match(/^\\/s\\/([a-f0-9]+)$/);\n" +
+"  var mReset = window.location.pathname.match(/^\\/reset\\/([a-f0-9]+)$/);\n" +
+"  var mInvite = window.location.pathname.match(/^\\/convite\\/([a-f0-9]+)$/);\n" +
+"  if (m){\n" +
+"    // Acesso direto a uma cirurgia via link — não exige login (fluxo das auxiliares).\n" +
+"    state.currentId=m[1]; loadAudioPrefs(m[1]); showScreen('counting'); App.switchTab('extracao'); fetchAndRender().then(function(){ startPolling(); });\n" +
+"    // Mas se o navegador já tiver uma sessão de médico logado (ex: o próprio médico\n" +
+"    // abrindo um atalho/link direto pra cirurgia, em vez de entrar pela Home), detecta\n" +
+"    // isso em paralelo — sem isso, state.currentUser ficava null a sessão toda, e o\n" +
+"    // botão \"Início\" (App.goHome) achava que era uma auxiliar sem login e voltava pra\n" +
+"    // própria cirurgia em vez de ir pra listagem. Se não tiver sessão válida (é mesmo\n" +
+"    // uma auxiliar sem login), o catch não faz nada — segue o fluxo normal.\n" +
+"    api('/api/me').then(function(r){ state.currentUser = r.user; renderUserBar(); }).catch(function(){});\n" +
+"  } else if (mReset){\n" +
+"    state.resetToken = mReset[1]; showScreen('reset');\n" +
+"  } else if (mInvite){\n" +
+"    App.checkInviteAndShowScreen(mInvite[1]);\n" +
+"  } else {\n" +
+"    App.checkAuthAndShowHome();\n" +
+"  }\n" +
+"});\n" +
+"window.addEventListener('popstate', function(){\n" +
+"  var m = window.location.pathname.match(/^\\/s\\/([a-f0-9]+)$/);\n" +
+"  if (m){ App.openSession(m[1]); } else { App.goHome(); }\n" +
+"});\n" +
+"})();\n" +

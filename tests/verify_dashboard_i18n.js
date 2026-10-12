@@ -34,10 +34,12 @@ state.dashboardSessions = [
 
 console.log('--- Dashboard em português ---');
 state.lang = 'pt';
+state.dashTab = 'geral';
 renderDashboardScreen();
 var summaryPt = elements['dash-summary'].innerHTML;
 console.log('contém "Cirurgias finalizadas":', summaryPt.indexOf('Cirurgias finalizadas') !== -1);
 console.log('contém "Índice médio":', summaryPt.indexOf('Índice médio') !== -1);
+state.dashTab = 'lista'; renderDashboardScreen(); state.dashTab = 'geral';
 var tablePt = elements['dash-table'].innerHTML;
 console.log('cabeçalho da tabela contém "Cirurgia" e "Extraídos":', tablePt.indexOf('>Cirurgia<')!==-1 && tablePt.indexOf('>Extraídos<')!==-1);
 console.log('linha da tabela mostra "Completo":', tablePt.indexOf('Completo') !== -1);
@@ -49,12 +51,13 @@ renderDashboardScreen();
 var summaryEn = elements['dash-summary'].innerHTML;
 console.log('contém "Finalized surgeries":', summaryEn.indexOf('Finalized surgeries') !== -1);
 console.log('contém "Average index":', summaryEn.indexOf('Average index') !== -1);
+var ufTableEn = elements['dash-uf-table'].innerHTML;
+var quadTableEn = elements['dash-quad-table'].innerHTML;
+state.dashTab = 'lista'; renderDashboardScreen();
 var tableEn = elements['dash-table'].innerHTML;
 console.log('cabeçalho da tabela contém "Surgery" e "Extracted":', tableEn.indexOf('>Surgery<')!==-1 && tableEn.indexOf('>Extracted<')!==-1);
 console.log('linha da tabela mostra "Complete":', tableEn.indexOf('Complete') !== -1);
-var ufTableEn = elements['dash-uf-table'].innerHTML;
 console.log('tabela UF contém "Category"/"Quantity":', ufTableEn.indexOf('Category')!==-1 && ufTableEn.indexOf('Quantity')!==-1);
-var quadTableEn = elements['dash-quad-table'].innerHTML;
 console.log('tabela por quadrante contém "Quadrant":', quadTableEn.indexOf('Quadrant') !== -1);
 
 console.log();

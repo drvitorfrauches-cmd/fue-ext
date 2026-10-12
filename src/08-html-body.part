@@ -1,0 +1,662 @@
+"<body>\n" +
+"<div class=\"app\">\n" +
+"  <header class=\"topbar\">\n" +
+"    <div class=\"row\" style=\"align-items:center;gap:8px;\"><img class=\"brand-logo\" style=\"display:none;height:30px;max-width:110px;object-fit:contain;border-radius:4px;\"><div><h1><span class=\"conn-dot\" id=\"conn-dot\"></span>Graftis</h1></div></div>\n" +
+"    <div class=\"row\" style=\"gap:8px;align-items:center;\">\n" +
+"      <button class=\"icon-btn\" data-i18n=\"nav.home\" onclick=\"App.goHome()\">Início</button>\n" +
+"      <button class=\"icon-btn\" id=\"dashboard-btn\" style=\"display:none;\" data-i18n=\"nav.dashboard\" onclick=\"App.showDashboard()\">Dashboard</button>\n" +
+"      <button class=\"icon-btn\" data-i18n=\"nav.config\" onclick=\"App.showSettings()\">Config</button>\n" +
+"      <span id=\"user-bar\"></span>\n" +
+"    </div>\n" +
+"  </header>\n" +
+"  <div class=\"conn-banner\" id=\"conn-banner\" data-i18n=\"common.conn_banner\">Sem conexão com o servidor — verifique se está na mesma rede wifi.</div>\n" +
+"\n" +
+"  <section id=\"screen-auth\" class=\"screen\">\n" +
+"    <div class=\"card\">\n" +
+"      <img src=\"data:image/png;base64,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\" alt=\"Graftis\" style=\"display:block;max-width:220px;width:100%;height:auto;margin:0 auto 16px;\">\n" +
+"      <img class=\"brand-logo\" style=\"display:none;max-height:60px;max-width:220px;object-fit:contain;margin-bottom:10px;\">\n" +
+"      <div class=\"row\" style=\"gap:6px;margin-bottom:10px;\">\n" +
+"        <button type=\"button\" class=\"btn lang-switch-btn\" data-lang=\"pt\" onclick=\"App.setLanguage('pt')\">PT</button>\n" +
+"        <button type=\"button\" class=\"btn secondary lang-switch-btn\" data-lang=\"en\" onclick=\"App.setLanguage('en')\">EN</button>\n" +
+"        <button type=\"button\" class=\"btn secondary lang-switch-btn\" data-lang=\"es\" onclick=\"App.setLanguage('es')\">ES</button>\n" +
+"      </div>\n" +
+"      <h2 data-i18n=\"auth.title\">Área do médico</h2>\n" +
+"      <p class=\"hint\" data-i18n=\"auth.subtitle\">Entre com sua conta pra ver e criar suas próprias cirurgias. Auxiliares que já têm o link de uma cirurgia específica não precisam de conta — só quem cria e gerencia a lista de cirurgias precisa entrar.</p>\n" +
+"      <p class=\"hint\" id=\"invite-invalid-msg\" style=\"display:none;color:var(--c-erro,#c0392b);\" data-i18n=\"invite.invalid_body\">Este link de convite não é mais válido. Peça um novo link a quem te convidou.</p>\n" +
+"      <div class=\"row\" style=\"gap:8px;margin:14px 0;\" id=\"auth-tabs-row\">\n" +
+"        <button class=\"btn\" id=\"authtab-login-btn\" data-i18n=\"auth.tab_login\" onclick=\"App.switchAuthTab('login')\">Entrar</button>\n" +
+"      </div>\n" +
+"      <div id=\"authpanel-login\">\n" +
+"        <div class=\"field\"><label data-i18n=\"common.email\">E-mail</label><input type=\"email\" id=\"login-email\" autocomplete=\"username\"></div>\n" +
+"        <div class=\"field\"><label data-i18n=\"common.password\">Senha</label><input type=\"password\" id=\"login-password\" autocomplete=\"current-password\"></div>\n" +
+"        <button class=\"btn block lg\" data-i18n=\"auth.login_submit\" onclick=\"App.doLogin()\">Entrar</button>\n" +
+"        <button class=\"btn secondary\" style=\"margin-top:8px;\" data-i18n=\"auth.forgot_link\" onclick=\"App.toggleForgotPassword()\">Esqueci minha senha</button>\n" +
+"        <div id=\"forgot-password-panel\" style=\"display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--c-border);\">\n" +
+"          <div class=\"field\"><label data-i18n=\"auth.forgot_email_label\">Seu e-mail cadastrado</label><input type=\"email\" id=\"forgot-email\"></div>\n" +
+"          <button class=\"btn secondary\" data-i18n=\"auth.forgot_submit\" onclick=\"App.doForgotPassword()\">Enviar link de redefinição</button>\n" +
+"        </div>\n" +
+"      </div>\n" +
+"      <div id=\"authpanel-cadastro\" style=\"display:none;\">\n" +
+"        <div class=\"field\"><label data-i18n=\"auth.field_fullname\">Nome completo</label><input type=\"text\" id=\"reg-nome\"></div>\n" +
+"        <div class=\"field\"><label data-i18n=\"auth.field_crm\">CRM</label><input type=\"text\" id=\"reg-crm\" placeholder=\"Ex: 123456-SP\" data-i18n-placeholder=\"auth.crm_placeholder\"></div>\n" +
+"        <div class=\"field\"><label data-i18n=\"common.email\">E-mail</label><input type=\"email\" id=\"reg-email\" autocomplete=\"username\"></div>\n" +
+"        <div class=\"field\"><label data-i18n=\"auth.field_phone\">Telefone (com DDD)</label><input type=\"tel\" id=\"reg-telefone\" placeholder=\"Ex: (11) 91234-5678\" data-i18n-placeholder=\"auth.phone_placeholder\"></div>\n" +
+"        <div class=\"field\"><label data-i18n=\"common.password\">Senha</label><input type=\"password\" id=\"reg-password\" autocomplete=\"new-password\"></div>\n" +
+"        <div class=\"field\"><label data-i18n=\"common.confirm_password\">Confirmar senha</label><input type=\"password\" id=\"reg-password2\" autocomplete=\"new-password\"></div>\n" +
+"        <button class=\"btn block lg\" data-i18n=\"auth.register_submit\" onclick=\"App.doRegister()\">Criar conta</button>\n" +
+"      </div>\n" +
+"    </div>\n" +
+"  </section>\n" +
+"\n" +
+"  <section id=\"screen-reset\" class=\"screen\">\n" +
+"    <div class=\"card\">\n" +
+"      <h2 data-i18n=\"reset.title\">Nova senha</h2>\n" +
+"      <p class=\"hint\" data-i18n=\"reset.subtitle\">Escolha uma nova senha pra sua conta.</p>\n" +
+"      <div class=\"field\"><label data-i18n=\"reset.new_password\">Nova senha</label><input type=\"password\" id=\"reset-password\" autocomplete=\"new-password\"></div>\n" +
+"      <div class=\"field\"><label data-i18n=\"reset.confirm_password\">Confirmar nova senha</label><input type=\"password\" id=\"reset-password2\" autocomplete=\"new-password\"></div>\n" +
+"      <button class=\"btn block lg\" data-i18n=\"reset.submit\" onclick=\"App.doResetPassword()\">Salvar nova senha</button>\n" +
+"    </div>\n" +
+"  </section>\n" +
+"\n" +
+"  <section id=\"screen-home\" class=\"screen\">\n" +
+"    <div class=\"card\">\n" +
+"      <h2 data-i18n=\"home.title\">Suas cirurgias</h2>\n" +
+"      <p class=\"hint\" data-i18n=\"home.subtitle\">Só você vê essa lista. Depois de criar a cirurgia, compartilhe o link dela com as auxiliares — elas atualizam os dados ao vivo sem precisar de conta.</p>\n" +
+"      <div class=\"field\"><label data-i18n=\"home.patient_code_label\">Código / iniciais do paciente</label><input type=\"text\" id=\"new-codigo\" placeholder=\"Ex: JS-090726\" data-i18n-placeholder=\"home.patient_code_placeholder\"></div>\n" +
+"      <div class=\"field\">\n" +
+"        <label data-i18n=\"home.count_mode_label\">Modo de contagem</label>\n" +
+"        <div class=\"row\" style=\"gap:8px;\">\n" +
+"          <button type=\"button\" class=\"btn\" id=\"new-mode-reduzido\" data-i18n=\"common.mode_reduced\" onclick=\"App.setNewMode('reduzido')\">Reduzido</button>\n" +
+"          <button type=\"button\" class=\"btn secondary\" id=\"new-mode-completo\" data-i18n=\"common.mode_complete\" onclick=\"App.setNewMode('completo')\">Completo</button>\n" +
+"        </div>\n" +
+"        <p class=\"hint\" style=\"margin-top:6px;\" data-i18n=\"home.mode_explanation\">Completo: cada transecção parcial é registrada no tipo exato (2→1, 3→2 etc). Reduzido: os fios da transecção parcial entram junto com os folículos íntegros, e só um contador único de transecção parcial é usado pra calcular a taxa — sem detalhar o tipo. Não dá pra trocar depois de criada.</p>\n" +
+"      </div>\n" +
+"      <details class=\"field\">\n" +
+"        <summary style=\"cursor:pointer;\" data-i18n=\"home.patient_info_toggle\">Dados do paciente (opcional)</summary>\n" +
+"        <div style=\"margin-top:10px;\">\n" +
+"          <div class=\"field\">\n" +
+"            <label data-i18n=\"patient.age_label\">Idade</label>\n" +
+"            <input type=\"number\" id=\"new-patient-idade\" min=\"0\" max=\"130\" placeholder=\"Ex: 45\" data-i18n-placeholder=\"patient.age_placeholder\" onchange=\"App.setNewPatientField('idade', this.value)\">\n" +
+"          </div>\n" +
+"          <div class=\"field\">\n" +
+"            <label data-i18n=\"patient.height_label\">Altura (cm)</label>\n" +
+"            <input type=\"number\" id=\"new-patient-altura\" min=\"0\" max=\"260\" placeholder=\"Ex: 175\" data-i18n-placeholder=\"patient.height_placeholder\" onchange=\"App.setNewPatientField('alturaCm', this.value)\">\n" +
+"          </div>\n" +
+"          <div class=\"field\">\n" +
+"            <label data-i18n=\"patient.weight_label\">Peso (kg)</label>\n" +
+"            <input type=\"number\" id=\"new-patient-peso\" min=\"0\" max=\"400\" step=\"0.1\" placeholder=\"Ex: 80\" data-i18n-placeholder=\"patient.weight_placeholder\" onchange=\"App.setNewPatientField('pesoKg', this.value)\">\n" +
+"          </div>\n" +
+"          <div class=\"field\">\n" +
+"            <label data-i18n=\"patient.hair_thickness_label\">Espessura do cabelo</label>\n" +
+"            <div class=\"row\" style=\"gap:8px;\">\n" +
+"              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-espessura-fino\" data-i18n=\"patient.hair_thin\" onclick=\"App.setNewPatientField('cabeloEspessura','fino')\">Fino</button>\n" +
+"              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-espessura-grosso\" data-i18n=\"patient.hair_thick\" onclick=\"App.setNewPatientField('cabeloEspessura','grosso')\">Grosso</button>\n" +
+"            </div>\n" +
+"          </div>\n" +
+"          <div class=\"field\">\n" +
+"            <label data-i18n=\"patient.hair_texture_label\">Textura do cabelo</label>\n" +
+"            <div class=\"row\" style=\"gap:8px;\">\n" +
+"              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-textura-liso\" data-i18n=\"patient.hair_straight\" onclick=\"App.setNewPatientField('cabeloTextura','liso')\">Liso</button>\n" +
+"              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-textura-ondulado\" data-i18n=\"patient.hair_wavy\" onclick=\"App.setNewPatientField('cabeloTextura','ondulado')\">Ondulado</button>\n" +
+"              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-textura-crespo\" data-i18n=\"patient.hair_curly\" onclick=\"App.setNewPatientField('cabeloTextura','crespo')\">Crespo</button>\n" +
+"            </div>\n" +
+"          </div>\n" +
+"          <div class=\"field\">\n" +
+"            <label data-i18n=\"patient.surgery_type_label\">Tipo de cirurgia</label>\n" +
+"            <div class=\"row\" style=\"gap:8px;\">\n" +
+"              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-raspagem-sim\" data-i18n=\"patient.with_shaving\" onclick=\"App.setNewPatientField('raspagem','sim')\">Com raspagem</button>\n" +
+"              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-raspagem-nao\" data-i18n=\"patient.without_shaving\" onclick=\"App.setNewPatientField('raspagem','nao')\">Sem raspagem</button>\n" +
+"            </div>\n" +
+"          </div>\n" +
+"          <div class=\"field\" style=\"margin-bottom:0;\">\n" +
+"            <label data-i18n=\"patient.punch_label\">Punch utilizado</label>\n" +
+"            <div class=\"row\" style=\"gap:8px;\">\n" +
+"              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-punch-095\" data-i18n=\"patient.punch_095\" onclick=\"App.setNewPatientField('punchMm','0.95')\">0,95 mm</button>\n" +
+"              <button type=\"button\" class=\"btn secondary\" id=\"new-patient-punch-10\" data-i18n=\"patient.punch_10\" onclick=\"App.setNewPatientField('punchMm','1.0')\">1,0 mm</button>\n" +
+"            </div>\n" +
+"          </div>\n" +
+"        </div>\n" +
+"      </details>\n" +
+"      <button class=\"btn block lg\" data-i18n=\"home.create_button\" onclick=\"App.createSession()\">+ Nova cirurgia (criar sessão)</button>\n" +
+"    </div>\n" +
+"    <div id=\"surgery-list\"></div>\n" +
+"  </section>\n" +
+"\n" +
+"  <section id=\"screen-settings\" class=\"screen\">\n" +
+"    <div class=\"card\">\n" +
+"      <h2 data-i18n=\"config.title\">Configurações</h2>\n" +
+"      <p class=\"hint\" data-i18n=\"config.increments_subtitle\">Valores extras dos botões de incremento rápido usados na contagem da extração, além do -1/+1 que aparece sempre. Configuração só deste aparelho — cada celular pode ter os próprios botões (por exemplo, só +1 e +100, ou só +50).</p>\n" +
+"      <div id=\"increments-editor\" class=\"increments-editor\"></div>\n" +
+"      <div class=\"row\" style=\"margin-top:6px;\">\n" +
+"        <button class=\"btn secondary\" data-i18n=\"config.add_value\" onclick=\"App.addIncrementField()\">+ Adicionar valor</button>\n" +
+"      </div>\n" +
+"      <footer class=\"actions\">\n" +
+"        <button class=\"btn\" data-i18n=\"common.save\" onclick=\"App.saveSettings()\">Salvar</button>\n" +
+"        <button class=\"btn secondary\" data-i18n=\"config.restore_default\" onclick=\"App.resetSettings()\">Restaurar padrão (10 / 50 / 100)</button>\n" +
+"      </footer>\n" +
+"    </div>\n" +
+"\n" +
+"    <div class=\"card\">\n" +
+"      <h2 style=\"font-size:16px;\" data-i18n=\"config.identity_title\">Identidade visual</h2>\n" +
+"      <p class=\"hint\" data-i18n=\"config.identity_subtitle\">Vale pra sua conta — aparece em todos os aparelhos onde você fizer login, e também pra quem acessar suas cirurgias só pelo link (sem login).</p>\n" +
+"      <div class=\"field\">\n" +
+"        <label data-i18n=\"config.logo_label\">Logomarca</label>\n" +
+"        <div class=\"row\" style=\"align-items:center;gap:14px;\">\n" +
+"          <img id=\"settings-logo-preview\" class=\"brand-logo\" style=\"display:none;max-height:56px;max-width:160px;border-radius:6px;border:1px solid var(--c-border);background:var(--c-tint);padding:4px;\">\n" +
+"          <span id=\"settings-logo-empty\" class=\"hint\" style=\"margin:0;\" data-i18n=\"config.logo_empty\">Nenhuma logomarca ainda.</span>\n" +
+"        </div>\n" +
+"        <div class=\"row\" style=\"margin-top:8px;gap:8px;\">\n" +
+"          <input type=\"file\" accept=\"image/png,image/jpeg\" id=\"settings-logo-input\" onchange=\"App.uploadLogo(this)\" style=\"max-width:260px;\">\n" +
+"          <button class=\"btn secondary\" id=\"settings-logo-remove-btn\" style=\"display:none;\" data-i18n=\"common.remove\" onclick=\"App.removeLogo()\">Remover</button>\n" +
+"        </div>\n" +
+"      </div>\n" +
+"      <div class=\"field\">\n" +
+"        <label data-i18n=\"config.theme_label\">Cor do tema</label>\n" +
+"        <div class=\"row\" id=\"settings-theme-swatches\" style=\"gap:8px;flex-wrap:wrap;\"></div>\n" +
+"      </div>\n" +
+"      <div class=\"field\">\n" +
+"        <label data-i18n=\"config.darkmode_label\">Modo escuro</label>\n" +
+"        <div class=\"row\" style=\"align-items:center;gap:12px;\">\n" +
+"          <label class=\"switch\"><input type=\"checkbox\" id=\"settings-darkmode-toggle\" onchange=\"App.toggleDarkMode(this.checked)\"><span class=\"slider\"></span></label>\n" +
+"          <span class=\"hint\" style=\"margin:0;\" data-i18n=\"config.darkmode_hint\">As cores clínicas (íntegro/parcial/total/mini) não mudam — só o fundo e os textos.</span>\n" +
+"        </div>\n" +
+"      </div>\n" +
+"      <div class=\"field\" style=\"margin-bottom:0;\">\n" +
+"        <label data-i18n=\"config.language_label\">Idioma / Language / Idioma</label>\n" +
+"        <div class=\"row\" style=\"gap:6px;\">\n" +
+"          <button type=\"button\" class=\"btn lang-switch-btn\" data-lang=\"pt\" onclick=\"App.setLanguage('pt')\">PT</button>\n" +
+"          <button type=\"button\" class=\"btn secondary lang-switch-btn\" data-lang=\"en\" onclick=\"App.setLanguage('en')\">EN</button>\n" +
+"          <button type=\"button\" class=\"btn secondary lang-switch-btn\" data-lang=\"es\" onclick=\"App.setLanguage('es')\">ES</button>\n" +
+"        </div>\n" +
+"        <p class=\"hint\" style=\"margin-top:6px;margin-bottom:0;\" data-i18n=\"config.language_hint\">Por enquanto só a tela de login/cadastro é traduzida — o resto do app continua em português.</p>\n" +
+"      </div>\n" +
+"    </div>\n" +
+"\n" +
+"    <div class=\"card\" id=\"settings-security-card\" style=\"display:none;\">\n" +
+"      <h2 style=\"font-size:16px;\" data-i18n=\"config.security_title\">Segurança da conta</h2>\n" +
+"      <p class=\"hint\" data-i18n=\"config.security_subtitle\">Se você perdeu ou emprestou um aparelho onde tinha feito login, use isto pra encerrar o acesso em todo lugar de uma vez.</p>\n" +
+"      <button class=\"btn secondary\" data-i18n=\"config.logout_all_btn\" onclick=\"App.logoutAllDevices()\">Sair de todos os aparelhos</button>\n" +
+"      <h2 style=\"font-size:16px;margin-top:20px;\" data-i18n=\"config.backup_title\">Backup dos seus dados</h2>\n" +
+"      <p class=\"hint\" data-i18n=\"config.backup_subtitle\">Baixa um arquivo com o cadastro da sua conta e todas as suas cirurgias (contagens, tempos, pré-incisões). Não inclui as fotos — essas ficam protegidas separadamente pelo backup de volume do Railway. Guarde este arquivo num lugar seguro fora do Railway (computador, Google Drive, etc.).</p>\n" +
+"      <button class=\"btn secondary\" data-i18n=\"config.backup_btn\" onclick=\"App.downloadBackup()\">Baixar backup</button>\n" +
+"      <h2 style=\"font-size:16px;margin-top:20px;\" data-i18n=\"onboard.reopen_title\">Guia de boas-vindas</h2>\n" +
+"      <p class=\"hint\" data-i18n=\"onboard.reopen_hint\">Rever o passo a passo de como usar o Graftis.</p>\n" +
+"      <button class=\"btn secondary\" data-i18n=\"onboard.reopen_btn\" onclick=\"App.openOnboarding()\">Rever guia de boas-vindas</button>\n" +
+"    </div>\n" +
+"\n" +
+"    <div class=\"card\" id=\"settings-invites-card\" style=\"display:none;\">\n" +
+"      <h2 style=\"font-size:16px;\" data-i18n=\"config.invites_title\">Convites</h2>\n" +
+"      <p class=\"hint\" data-i18n=\"config.invites_subtitle\">Gere um link de convite pra outro médico se cadastrar no Graftis. Cada link serve pra um único cadastro e expira em 7 dias.</p>\n" +
+"      <button class=\"btn secondary\" data-i18n=\"config.invites_generate_btn\" onclick=\"App.generateInvite()\">Gerar link de convite</button>\n" +
+"      <div id=\"invites-list\" style=\"margin-top:14px;\"></div>\n" +
+"      <h2 style=\"font-size:16px;margin-top:22px;\" data-i18n=\"config.backup_auto_title\">Backup automático</h2>\n" +
+"      <p class=\"hint\" data-i18n=\"config.backup_auto_hint\">O servidor copia e verifica os dados sozinho a cada poucos dias e manda o resultado por e-mail.</p>\n" +
+"      <p id=\"backup-auto-status\" style=\"margin:6px 0 10px;\"></p>\n" +
+"      <button class=\"btn secondary\" data-i18n=\"config.backup_auto_run\" onclick=\"App.runBackupNow()\">Rodar agora</button>\n" +
+"    </div>\n" +
+"\n" +
+"    <div class=\"card\" id=\"settings-audio-card\" style=\"display:none;\">\n" +
+"      <h2 style=\"font-size:16px;\" data-i18n=\"config.audio_title\">Áudio e alarmes desta cirurgia</h2>\n" +
+"      <p class=\"hint\" data-i18n=\"config.audio_subtitle\">Vale só pra cirurgia que você tinha aberta e só neste aparelho — cada celular pode ter os próprios ajustes.</p>\n" +
+"      <h3 class=\"section-title\" style=\"margin:16px 0 8px;\" data-i18n=\"config.audio_section_title\">Áudio</h3>\n" +
+"      <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"config.audio_announce_hint\">Anuncia em voz alta o total de folículos extraídos (somando os 4 quadrantes) a cada N.</p>\n" +
+"      <div class=\"row\" style=\"align-items:center;gap:16px;margin-top:8px;\">\n" +
+"        <label class=\"switch\"><input type=\"checkbox\" id=\"audio-toggle\" onchange=\"App.toggleAudio(this.checked)\"><span class=\"slider\"></span></label>\n" +
+"        <div class=\"field\" style=\"margin:0;max-width:160px;\"><label data-i18n=\"config.audio_announce_every\">Anunciar a cada</label><input type=\"number\" id=\"audio-interval\" value=\"100\" min=\"10\" step=\"10\" onchange=\"App.saveAudioInterval(this.value)\"></div>\n" +
+"        <button class=\"btn secondary\" data-i18n=\"config.audio_test_btn\" onclick=\"App.testAudio()\">Testar voz</button>\n" +
+"      </div>\n" +
+"      <h3 class=\"section-title\" style=\"margin:22px 0 8px;\" data-i18n=\"config.preinc_audio_section_title\">Áudio de pré-incisões</h3>\n" +
+"      <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"config.preinc_audio_announce_hint\">Anuncia em voz alta o novo total de pré-incisões (somando todas as áreas) toda vez que você preencher o valor de uma área.</p>\n" +
+"      <div class=\"row\" style=\"align-items:center;gap:16px;margin-top:8px;\">\n" +
+"        <label class=\"switch\"><input type=\"checkbox\" id=\"preinc-audio-toggle\" onchange=\"App.togglePreincAudio(this.checked)\"><span class=\"slider\"></span></label>\n" +
+"        <button class=\"btn secondary\" data-i18n=\"config.audio_test_btn\" onclick=\"App.testAudio()\">Testar voz</button>\n" +
+"      </div>\n" +
+"      <h3 class=\"section-title\" style=\"margin:22px 0 8px;\" data-i18n=\"config.quadfinish_audio_section_title\">Áudio ao finalizar quadrante</h3>\n" +
+"      <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"config.quadfinish_audio_announce_hint\">Anuncia o Mamba, os folículos extraídos e a diferença sempre que você tocar em \"Contagem finalizada\" num quadrante (só disponível quando a contagem em cadeia está em uso).</p>\n" +
+"      <div class=\"row\" style=\"align-items:center;gap:16px;margin-top:8px;\">\n" +
+"        <label class=\"switch\"><input type=\"checkbox\" id=\"quadfinish-audio-toggle\" onchange=\"App.toggleQuadFinishAudio(this.checked)\"><span class=\"slider\"></span></label>\n" +
+"        <button class=\"btn secondary\" data-i18n=\"config.audio_test_btn\" onclick=\"App.testAudio()\">Testar voz</button>\n" +
+"      </div>\n" +
+"      <h3 class=\"section-title\" style=\"margin:22px 0 8px;\" data-i18n=\"config.alarm_section_title\">Alarme de transecção</h3>\n" +
+"      <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"config.alarm_subtitle\">Avisa por voz assim que a taxa (somando os 4 quadrantes) ultrapassar o limite que você definir.</p>\n" +
+"      <div class=\"row\" style=\"align-items:center;gap:16px;margin-top:10px;flex-wrap:wrap;\">\n" +
+"        <label class=\"switch\"><input type=\"checkbox\" id=\"alert-parcial-toggle\" onchange=\"App.toggleAlertParcial(this.checked)\"><span class=\"slider\"></span></label>\n" +
+"        <div class=\"field\" style=\"margin:0;max-width:260px;\"><label data-i18n=\"config.alert_partial_label\">Avisar se transecção parcial passar de (%)</label><input type=\"number\" id=\"alert-parcial-threshold\" min=\"0\" max=\"100\" step=\"0.5\" placeholder=\"Ex: 7\" data-i18n-placeholder=\"config.alert_partial_placeholder\" onchange=\"App.saveAlertParcialThreshold(this.value)\"></div>\n" +
+"      </div>\n" +
+"      <div class=\"row\" style=\"align-items:center;gap:16px;margin-top:10px;flex-wrap:wrap;\">\n" +
+"        <label class=\"switch\"><input type=\"checkbox\" id=\"alert-total-toggle\" onchange=\"App.toggleAlertTotal(this.checked)\"><span class=\"slider\"></span></label>\n" +
+"        <div class=\"field\" style=\"margin:0;max-width:260px;\"><label data-i18n=\"config.alert_total_label\">Avisar se transecção total passar de (%)</label><input type=\"number\" id=\"alert-total-threshold\" min=\"0\" max=\"100\" step=\"0.5\" placeholder=\"Ex: 5\" data-i18n-placeholder=\"config.alert_total_placeholder\" onchange=\"App.saveAlertTotalThreshold(this.value)\"></div>\n" +
+"      </div>\n" +
+"    </div>\n" +
+"\n" +
+"    <footer class=\"actions\" id=\"settings-back-footer\" style=\"display:none;\">\n" +
+"      <button class=\"btn\" id=\"settings-back-btn\" data-i18n=\"config.back_to_surgery\" onclick=\"App.backToSurgery()\">Voltar pra cirurgia</button>\n" +
+"    </footer>\n" +
+"  </section>\n" +
+"\n" +
+"  <section id=\"screen-dashboard\" class=\"screen\">\n" +
+"    <div class=\"card\">\n" +
+"      <h2 data-i18n=\"dash.title\">Dashboard</h2>\n" +
+"      <p class=\"hint\" data-i18n=\"dash.subtitle\">Estatísticas calculadas só com cirurgias <b>finalizadas</b> — cirurgias em andamento têm dados parciais e ficam de fora, pra não distorcer as médias.</p>\n" +
+"      <div id=\"dash-empty\" class=\"empty-state\" style=\"display:none;\" data-i18n=\"dash.empty\">Você ainda não tem nenhuma cirurgia finalizada. As estatísticas aparecem aqui assim que a primeira for finalizada.</div>\n" +
+"      <div id=\"dash-content\" style=\"display:none;\">\n" +
+"        <div class=\"row\" style=\"gap:8px;margin:10px 0;\">\n" +
+"          <button type=\"button\" class=\"btn\" id=\"dash-tab-geral\" data-i18n=\"dash.tab_overview\" onclick=\"App.switchDashTab('geral')\">Visão geral</button>\n" +
+"          <button type=\"button\" class=\"btn secondary\" id=\"dash-tab-comparar\" data-i18n=\"dash.tab_compare\" onclick=\"App.switchDashTab('comparar')\">Comparar</button>\n" +
+"          <button type=\"button\" class=\"btn secondary\" id=\"dash-tab-lista\" data-i18n=\"dash.tab_list\" onclick=\"App.switchDashTab('lista')\">Cirurgias</button>\n" +
+"        </div>\n" +
+"        <div class=\"row\" id=\"dash-mode-row\" style=\"gap:8px;margin-bottom:4px;align-items:center;flex-wrap:wrap;\">\n" +
+"          <button type=\"button\" class=\"btn\" id=\"dash-mode-completo\" data-i18n=\"common.mode_complete\" onclick=\"App.switchDashboardMode('completo')\">Completo</button>\n" +
+"          <button type=\"button\" class=\"btn secondary\" id=\"dash-mode-reduzido\" data-i18n=\"common.mode_reduced\" onclick=\"App.switchDashboardMode('reduzido')\">Reduzido</button>\n" +
+"          <button type=\"button\" class=\"btn secondary\" id=\"dash-mode-todos\" data-i18n=\"dash.mode_all\" onclick=\"App.switchDashboardMode('todos')\">Todos</button>\n" +
+"        </div>\n" +
+"        <p class=\"hint\" style=\"margin-top:0;\" data-i18n=\"dash.transec_rate_hint\">Modo completo e modo reduzido calculam a taxa de formas diferentes — por isso ficam em abas separadas, não misture os números.</p>\n" +
+"\n" +
+"        <div id=\"dash-panel-geral\">\n" +
+"          <div class=\"summary-bar static\" id=\"dash-summary\"></div>\n" +
+"          <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-integro)\"></span><span data-i18n=\"dash.extracted_by_surgery_title\">Folículos extraídos por cirurgia</span></h3>\n" +
+"          <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"dash.extracted_by_surgery_hint\">Cada barra é uma cirurgia finalizada, em ordem cronológica.</p>\n" +
+"          <div id=\"dash-extraidos-chart\" class=\"chart-box\"></div>\n" +
+"          <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-primary)\"></span><span data-i18n=\"dash.index_by_surgery_title\">Índice fios/folículo por cirurgia</span></h3>\n" +
+"          <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"dash.index_by_surgery_hint\">Cada barra é uma cirurgia finalizada, em ordem cronológica.</p>\n" +
+"          <div id=\"dash-index-chart\" class=\"chart-box\"></div>\n" +
+"          <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-parcial)\"></span><span data-i18n=\"dash.transec_rate_title\">Taxa de transecção por cirurgia</span></h3>\n" +
+"          <div class=\"summary-bar static\" id=\"dash-rate-summary\"></div>\n" +
+"          <p class=\"hint\" id=\"dash-rate-todos-hint\" style=\"display:none;margin-top:6px;\" data-i18n=\"dash.rate_todos_hint\">Aqui é só pra ver a evolução cronológica.</p>\n" +
+"          <div id=\"dash-rate-chart\" class=\"chart-box\"></div>\n" +
+"          <div id=\"dash-rate-empty\" class=\"hint\" style=\"display:none;\" data-i18n=\"dash.rate_empty\">Nenhuma cirurgia finalizada nesse modo ainda.</div>\n" +
+"          <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-mini)\"></span><span data-i18n=\"dash.quad_index_title\">Índice e transecção por quadrante</span></h3>\n" +
+"          <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"dash.quad_hint\">Usa o modo escolhido acima.</p>\n" +
+"          <p class=\"hint\" id=\"dash-quad-todos-hint\" style=\"display:none;\" data-i18n=\"dash.quad_todos_hint\">Na aba Todos essas médias somem.</p>\n" +
+"          <div id=\"dash-quad-table\"></div>\n" +
+"          <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-integro)\"></span><span data-i18n=\"dash.uf_distribution_title\">Distribuição por tipo de unidade folicular</span></h3>\n" +
+"          <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"dash.uf_distribution_hint\">Percentual entre todos os folículos íntegros, somando todas as cirurgias finalizadas.</p>\n" +
+"          <div id=\"dash-uf-table\"></div>\n" +
+"        </div>\n" +
+"\n" +
+"        <div id=\"dash-panel-comparar\" style=\"display:none;\">\n" +
+"          <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-primary)\"></span><span data-i18n=\"dash.compare_title\">Comparar por característica</span></h3>\n" +
+"          <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"dash.compare_hint\">Cada linha é um grupo de cirurgias finalizadas.</p>\n" +
+"          <div class=\"row\" style=\"gap:6px;flex-wrap:wrap;margin-bottom:10px;\">\n" +
+"            <button type=\"button\" class=\"btn\" id=\"dash-dim-punch\" onclick=\"App.switchDashDim('punch')\">Punch</button>\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"dash-dim-espessura\" onclick=\"App.switchDashDim('espessura')\">Espessura</button>\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"dash-dim-textura\" onclick=\"App.switchDashDim('textura')\">Textura</button>\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"dash-dim-raspagem\" onclick=\"App.switchDashDim('raspagem')\">Raspagem</button>\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"dash-dim-idade\" onclick=\"App.switchDashDim('idade')\">Idade</button>\n" +
+"          </div>\n" +
+"          <p class=\"hint\" id=\"dash-compare-rates-hint\" style=\"display:none;\" data-i18n=\"dash.compare_rates_todos\">Na aba Todos as taxas não são comparáveis.</p>\n" +
+"          <div id=\"dash-compare-table\"></div>\n" +
+"          <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-mini)\"></span><span data-i18n=\"dash.pair_title\">Comparar duas cirurgias</span></h3>\n" +
+"          <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"dash.pair_hint\">Escolha duas cirurgias finalizadas e veja lado a lado.</p>\n" +
+"          <div id=\"dash-pair-box\"></div>\n" +
+"        </div>\n" +
+"\n" +
+"        <div id=\"dash-panel-lista\" style=\"display:none;\">\n" +
+"          <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-preinc)\"></span><span data-i18n=\"dash.finalized_surgeries_title\">Cirurgias finalizadas</span></h3>\n" +
+"          <p class=\"hint\" style=\"margin-top:-4px;\" data-i18n=\"dash.sort_hint\">Toque no título da coluna pra ordenar.</p>\n" +
+"          <div id=\"dash-table\"></div>\n" +
+"        </div>\n" +
+"      </div>\n" +
+"    </div>\n" +
+"    <footer class=\"actions\" id=\"dashboard-back-footer\" style=\"display:none;\">\n" +
+"      <button class=\"btn\" id=\"dashboard-back-btn\" data-i18n=\"config.back_to_surgery\" onclick=\"App.backToSurgery()\">Voltar pra cirurgia</button>\n" +
+"    </footer>\n" +
+"  </section>\n" +
+"\n" +
+"  <section id=\"screen-counting\" class=\"screen\">\n" +
+"    <div class=\"card\">\n" +
+"      <div class=\"row\" style=\"justify-content:space-between;align-items:flex-start;\">\n" +
+"        <div><div style=\"display:flex;align-items:center;gap:8px;\"><h2 id=\"cnt-codigo\" style=\"margin:0;\">—</h2><button class=\"icon-btn\" id=\"btn-rename-patient\" style=\"display:none;background:var(--c-surface2);color:var(--c-text);\" data-i18n-title=\"cnt.rename_title\" title=\"Editar nome do paciente\" onclick=\"App.renamePatient()\">✏️</button></div><div class=\"hint\" id=\"cnt-meta\">—</div><div class=\"hint\" id=\"cnt-global-timer\" style=\"font-weight:700;color:var(--c-primary-dark);margin-top:2px;\"></div></div>\n" +
+"        <div style=\"display:flex;flex-direction:column;gap:6px;align-items:flex-end;\">\n" +
+"          <span class=\"badge\" id=\"cnt-status\">—</span><span class=\"badge\" id=\"cnt-mode\" style=\"background:var(--c-primary-dark);\">—</span>\n" +
+"          <button class=\"btn secondary\" style=\"padding:6px 10px;font-size:12px;white-space:nowrap;\" data-i18n=\"cnt.share_btn\" onclick=\"App.openShareModal()\">🔗 Compartilhar</button>\n" +
+"        </div>\n" +
+"      </div>\n" +
+"    </div>\n" +
+"\n" +
+"    <div class=\"nav-bar\">\n" +
+"      <button type=\"button\" class=\"icon-btn\" id=\"nav-toggle-btn\" style=\"background:var(--c-surface2);color:var(--c-text);font-size:20px;\" data-i18n-title=\"nav.menu\" title=\"Menu\" onclick=\"App.openNav()\">☰</button>\n" +
+"      <div class=\"nav-title\" id=\"cnt-tab-title\">Extração</div>\n" +
+"    </div>\n" +
+"    <div class=\"drawer-overlay\" id=\"nav-drawer-overlay\" onclick=\"if(event.target===this) App.closeNav();\">\n" +
+"      <nav class=\"drawer\">\n" +
+"        <div class=\"row\" style=\"justify-content:space-between;align-items:center;margin-bottom:6px;\">\n" +
+"          <b data-i18n=\"nav.menu\">Menu</b>\n" +
+"          <button type=\"button\" class=\"icon-btn\" style=\"background:var(--c-surface2);color:var(--c-text);\" onclick=\"App.closeNav()\">✕</button>\n" +
+"        </div>\n" +
+"        <button class=\"btn\" id=\"tab-extracao-btn\" data-i18n=\"cnt.tab_extracao\" onclick=\"App.switchTab('extracao')\">Extração</button>\n" +
+"        <button class=\"btn secondary\" id=\"tab-preinc-btn\" data-i18n=\"cnt.tab_preinc\" onclick=\"App.switchTab('preincisoes')\">Pré-incisões</button>\n" +
+"        <button class=\"btn secondary\" id=\"tab-horarios-btn\" data-i18n=\"cnt.tab_horarios\" onclick=\"App.switchTab('horarios')\">Horários</button>\n" +
+"        <button class=\"btn secondary\" id=\"tab-implantacao-btn\" data-i18n=\"cnt.tab_implantacao\" onclick=\"App.switchTab('implantacao')\">Implantação</button>\n" +
+"        <button class=\"btn secondary\" id=\"tab-fotos-btn\" data-i18n=\"cnt.tab_fotos\" onclick=\"App.switchTab('fotos')\">Fotos</button>\n" +
+"        <button class=\"btn secondary\" id=\"tab-paciente-btn\" data-i18n=\"cnt.tab_paciente\" onclick=\"App.switchTab('paciente')\">Paciente</button>\n" +
+"        <button class=\"btn secondary\" id=\"tab-resumo-btn\" data-i18n=\"cnt.tab_resumo\" onclick=\"App.switchTab('resumofinal')\">Resumo Final</button>\n" +
+"      </nav>\n" +
+"    </div>\n" +
+"    <div id=\"panel-extracao\">\n" +
+"      <div class=\"card\">\n" +
+"        <h2 style=\"font-size:15px;margin:0 0 10px;\" data-i18n=\"cnt.extraction_time_title\">Tempo de extração</h2>\n" +
+"        <div class=\"row\" style=\"align-items:center;gap:16px;flex-wrap:wrap;\">\n" +
+"          <div id=\"timer-display\" style=\"font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--c-primary-dark);\">00:00:00</div>\n" +
+"          <div class=\"row\" style=\"gap:8px;\"><button class=\"btn\" id=\"timer-toggle-btn\" data-i18n=\"common.start\" onclick=\"App.toggleTimer()\">Iniciar</button><button class=\"btn secondary\" id=\"timer-reset-btn\" data-i18n=\"common.reset\" onclick=\"App.resetTimer()\">Zerar</button></div>\n" +
+"        </div>\n" +
+"        <div class=\"hint\" id=\"timer-rate\" style=\"margin-top:8px;\"></div>\n" +
+"      </div>\n" +
+"\n" +
+"      <div class=\"card\">\n" +
+"        <h2 style=\"font-size:15px;margin:0 0 10px;\" data-i18n=\"cnt.summary_general_title\">Resumo geral (todos os quadrantes)</h2>\n" +
+"        <div class=\"summary-bar static\">\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"geral-extraidos\">0</div><div class=\"lbl\" data-i18n=\"cnt.summary_extracted\">Folículos extraídos</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"geral-fios\">0</div><div class=\"lbl\" data-i18n=\"cnt.summary_total_hairs\">Total de fios</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"geral-indice\">0.00</div><div class=\"lbl\" data-i18n=\"cnt.summary_index\">Índice fios/folículo</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"geral-transec-parcial\">0%</div><div class=\"lbl\" data-i18n=\"cnt.summary_partial_transec\">Transecção parcial</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"geral-transec-total\">0%</div><div class=\"lbl\" data-i18n=\"cnt.summary_total_transec\">Transecção total</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"geral-mini\">0</div><div class=\"lbl\" data-i18n=\"cnt.summary_mini\">Mini (fora do total)</div></div>\n" +
+"        </div>\n" +
+"        <div class=\"summary-bar static\" id=\"geral-mamba-summary\" style=\"display:none;margin-top:10px;\">\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"geral-mamba-val\">0</div><div class=\"lbl\" data-i18n=\"cnt.mamba_reading\">Mamba (leitura final)</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"geral-mamba-manip\">0</div><div class=\"lbl\" data-i18n=\"cnt.summary_extracted\">Folículos extraídos</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"geral-mamba-diff\">0</div><div class=\"lbl\" data-i18n=\"cnt.mamba_diff\">Diferença</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"geral-mamba-diffpct\">0%</div><div class=\"lbl\" data-i18n=\"cnt.mamba_diffpct\">Diferença (% do Mamba)</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"geral-mamba-rate\">—</div><div class=\"lbl\" data-i18n=\"cnt.mamba_rate\">Ritmo pelo Mamba (fol./h)</div></div>\n" +
+"        </div>\n" +
+"      </div>\n" +
+"\n" +
+"      <div class=\"row\" id=\"quadrant-tabs\" style=\"gap:8px;margin-top:14px;flex-wrap:wrap;\"></div>\n" +
+"\n" +
+"      <div class=\"card\">\n" +
+"        <h2 style=\"font-size:15px;margin:0 0 4px;\" data-i18n=\"cnt.chain_title\">Contagem em cadeia</h2>\n" +
+"        <p class=\"hint\" id=\"quad-chain-hint\" style=\"margin-bottom:10px;\">—</p>\n" +
+"        <div class=\"field\" style=\"max-width:280px;margin-bottom:10px;\">\n" +
+"          <label data-i18n=\"cnt.carry_from_label\">Carregar contagem de</label>\n" +
+"          <select id=\"quad-carry-select\" onchange=\"App.setQuadrantCarryFrom(this.value)\"></select>\n" +
+"        </div>\n" +
+"        <div class=\"row\" style=\"gap:8px;\">\n" +
+"          <button class=\"btn secondary\" id=\"quad-finish-btn\" data-i18n=\"cnt.quadrant_finish_btn\" onclick=\"App.finishQuadrant()\">Contagem finalizada</button>\n" +
+"          <button class=\"btn secondary\" id=\"quad-reopen-btn\" style=\"display:none;\" data-i18n=\"cnt.quadrant_reopen_btn\" onclick=\"App.reopenQuadrant()\">Reabrir quadrante</button>\n" +
+"        </div>\n" +
+"      </div>\n" +
+"\n" +
+"      <div class=\"card\">\n" +
+"        <h2 style=\"font-size:15px;margin:0 0 4px;\" id=\"quad-title\">—</h2>\n" +
+"        <div class=\"hint\" style=\"margin-bottom:10px;\" data-i18n=\"cnt.mamba_hint\">Preencha o Mamba na ordem em que os quadrantes forem extraídos. O valor é a leitura acumulada do aparelho ao final deste quadrante — o app calcula sozinho a diferença em relação ao quadrante anterior.</div>\n" +
+"        <div class=\"field\" style=\"max-width:280px;margin-bottom:0;\">\n" +
+"          <label data-i18n=\"cnt.mamba_input_label\">Mamba (leitura acumulada ao final deste quadrante)</label>\n" +
+"          <input type=\"number\" id=\"quad-mamba-input\" min=\"0\" placeholder=\"Ex: 1000\" data-i18n-placeholder=\"cnt.mamba_input_placeholder\" onchange=\"App.setQuadMamba(this.value)\">\n" +
+"        </div>\n" +
+"        <div class=\"summary-bar static\" id=\"quad-mamba-summary\" style=\"display:none;margin-top:14px;\">\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"quad-mamba-val\">0</div><div class=\"lbl\" data-i18n=\"cnt.mamba_quad_val\">Mamba deste quadrante</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"quad-mamba-manip\">0</div><div class=\"lbl\" data-i18n=\"cnt.summary_extracted\">Folículos extraídos</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"quad-mamba-diff\">0</div><div class=\"lbl\" data-i18n=\"cnt.mamba_diff\">Diferença</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"quad-mamba-diffpct\">0%</div><div class=\"lbl\" data-i18n=\"cnt.mamba_diffpct\">Diferença (% do Mamba)</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"quad-mamba-duracao\">—</div><div class=\"lbl\" data-i18n=\"cnt.mamba_quad_duration\">Tempo deste quadrante</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"quad-mamba-rate\">—</div><div class=\"lbl\" data-i18n=\"cnt.mamba_rate\">Ritmo pelo Mamba (fol./h)</div></div>\n" +
+"        </div>\n" +
+"      </div>\n" +
+"\n" +
+"      <div class=\"summary-bar\">\n" +
+"        <div id=\"quad-summary-title\" style=\"grid-column:1/-1;font-weight:700;font-size:13px;color:var(--c-primary-dark);text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px;\">—</div>\n" +
+"        <div class=\"summary-item\"><div class=\"val\" id=\"quad-extraidos\">0</div><div class=\"lbl\" data-i18n=\"cnt.summary_extracted\">Folículos extraídos</div></div>\n" +
+"        <div class=\"summary-item\"><div class=\"val\" id=\"quad-fios\">0</div><div class=\"lbl\" data-i18n=\"cnt.summary_total_hairs\">Total de fios</div></div>\n" +
+"        <div class=\"summary-item\"><div class=\"val\" id=\"quad-indice\">0.00</div><div class=\"lbl\" data-i18n=\"cnt.summary_index\">Índice fios/folículo</div></div>\n" +
+"        <div class=\"summary-item\"><div class=\"val\" id=\"quad-transec-parcial\">0%</div><div class=\"lbl\" data-i18n=\"cnt.summary_partial_transec\">Transecção parcial</div></div>\n" +
+"        <div class=\"summary-item\"><div class=\"val\" id=\"quad-transec-total\">0%</div><div class=\"lbl\" data-i18n=\"cnt.summary_total_transec\">Transecção total</div></div>\n" +
+"        <div class=\"summary-item\"><div class=\"val\" id=\"quad-mini\">0</div><div class=\"lbl\" data-i18n=\"cnt.summary_mini\">Mini (fora do total)</div></div>\n" +
+"      </div>\n" +
+"\n" +
+"      <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-integro)\"></span><span data-i18n=\"cnt.group_integro_title\">Folículos íntegros</span></h3><div id=\"group-integro\"></div>\n" +
+"      <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-parcial)\"></span><span data-i18n=\"cnt.group_parcial_title\">Transecção parcial (folículo aproveitado)</span></h3>\n" +
+"      <p class=\"hint\" id=\"parcial-reduzido-hint\" style=\"display:none;margin-top:-4px;margin-bottom:10px;\" data-i18n=\"cnt.parcial_reduzido_hint\">Modo reduzido: registre os fios desse folículo normalmente em \"Folículos íntegros\" e toque aqui só pra contar a transecção parcial (não soma de novo no total).</p>\n" +
+"      <div id=\"group-parcial\"></div>\n" +
+"      <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-total)\"></span><span data-i18n=\"cat.ttotal\">Transecção total (folículo perdido)</span></h3><div id=\"group-total\"></div>\n" +
+"      <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-mini)\"></span><span data-i18n=\"cnt.group_mini_title\">Mini</span></h3>\n" +
+"      <p class=\"hint\" style=\"margin-top:-4px;margin-bottom:10px;\" data-i18n=\"cnt.mini_hint\">Folículos miniaturizados — não entram na contagem geral de folículos extraídos, fios ou taxas, mas ficam registrados aqui pra não se perderem.</p>\n" +
+"      <div id=\"group-mini\"></div>\n" +
+"    </div>\n" +
+"\n" +
+"    <div id=\"panel-preincisoes\" style=\"display:none;\">\n" +
+"      <div class=\"card\">\n" +
+"        <h2 style=\"font-size:15px;margin:0 0 10px;\" data-i18n=\"preinc.time_title\">Tempo de pré-incisões</h2>\n" +
+"        <div class=\"row\" style=\"align-items:center;gap:16px;flex-wrap:wrap;\">\n" +
+"          <div id=\"preinc-timer-display\" style=\"font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--c-primary-dark);\">00:00:00</div>\n" +
+"          <div class=\"row\" style=\"gap:8px;\"><button class=\"btn\" id=\"preinc-timer-toggle-btn\" data-i18n=\"common.start\" onclick=\"App.togglePreincTimer()\">Iniciar</button><button class=\"btn secondary\" id=\"preinc-timer-reset-btn\" data-i18n=\"common.reset\" onclick=\"App.resetPreincTimer()\">Zerar</button></div>\n" +
+"        </div>\n" +
+"        <div class=\"hint\" id=\"preinc-timer-rate\" style=\"margin-top:8px;\"></div>\n" +
+"      </div>\n" +
+"      <div class=\"summary-bar static\">\n" +
+"        <div class=\"summary-item\"><div class=\"val\" id=\"preinc-total\">0</div><div class=\"lbl\" data-i18n=\"preinc.total_label\">Total de pré-incisões</div></div>\n" +
+"      </div>\n" +
+"      <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-preinc)\"></span><span data-i18n=\"preinc.by_area_title\">Pré-incisões por área</span></h3>\n" +
+"      <p class=\"hint\" style=\"margin-top:-4px;margin-bottom:10px;\" data-i18n=\"preinc.area_hint\">Toque no número de cima pra digitar o total da área. UF1/UF2/UF3 embaixo = quantas unidades foliculares de 1, 2 ou 3 fios vão pra essa área.</p>\n" +
+"      <div id=\"group-preincisoes\"></div>\n" +
+"      <div class=\"summary-bar static\" id=\"preinc-dist-totals\"></div>\n" +
+"    </div>\n" +
+"\n" +
+"    <div id=\"panel-horarios\" style=\"display:none;\">\n" +
+"      <div class=\"card\">\n" +
+"        <h2 style=\"font-size:15px;margin:0 0 4px;\" data-i18n=\"sched.title\">Horários da cirurgia</h2>\n" +
+"        <p class=\"hint\" style=\"margin-bottom:10px;\" data-i18n=\"sched.hint\">Preencha na hora com \"Agora\" ou digite o horário. Início e fim de cada etapa, como na lousa da sala.</p>\n" +
+"        <div id=\"sched-rows\"></div>\n" +
+"      </div>\n" +
+"    </div>\n" +
+"\n" +
+"    <div id=\"panel-implantacao\" style=\"display:none;\">\n" +
+"      <div class=\"card\">\n" +
+"        <h2 style=\"font-size:15px;margin:0 0 4px;\" data-i18n=\"impl.title\">Implantação — estoque no chiller</h2>\n" +
+"        <p class=\"hint\" style=\"margin-bottom:10px;\" data-i18n=\"impl.hint\">Total de folículos íntegros extraídos menos o que já foi retirado do chiller.</p>\n" +
+"        <div class=\"summary-bar static\">\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"impl-total\">0</div><div class=\"lbl\" data-i18n=\"impl.total\">Extraídos (total)</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"impl-withdrawn\">0</div><div class=\"lbl\" data-i18n=\"impl.withdrawn\">Já retirados</div></div>\n" +
+"        </div>\n" +
+"        <div style=\"text-align:center;margin-top:14px;\">\n" +
+"          <div class=\"lbl\" style=\"font-size:12px;color:var(--c-muted);text-transform:uppercase;letter-spacing:.3px;\" data-i18n=\"impl.remaining\">Restam no chiller</div>\n" +
+"          <div class=\"impl-big\" id=\"impl-remaining\">0</div>\n" +
+"        </div>\n" +
+"        <div class=\"impl-bar\"><i id=\"impl-progress\"></i></div>\n" +
+"        <p class=\"hint\" id=\"impl-warning\" style=\"display:none;font-weight:700;\"></p>\n" +
+"        <div id=\"impl-controls\" style=\"display:none;margin-top:10px;\">\n" +
+"          <div class=\"row\" style=\"gap:8px;flex-wrap:wrap;\">\n" +
+"            <button type=\"button\" class=\"btn\" style=\"font-size:18px;padding:12px 18px;\" onclick=\"App.implWithdraw(100)\">−100</button>\n" +
+"            <button type=\"button\" class=\"btn\" style=\"font-size:18px;padding:12px 18px;\" onclick=\"App.implWithdraw(200)\">−200</button>\n" +
+"            <button type=\"button\" class=\"btn\" style=\"font-size:18px;padding:12px 18px;\" onclick=\"App.implWithdraw(300)\">−300</button>\n" +
+"          </div>\n" +
+"          <div class=\"row\" style=\"gap:8px;margin-top:10px;align-items:center;\">\n" +
+"            <input type=\"number\" id=\"impl-custom\" inputmode=\"numeric\" min=\"1\" style=\"width:130px;\" placeholder=\"Ex: 250\" data-i18n-placeholder=\"impl.custom_placeholder\" onkeydown=\"if(event.key==='Enter'){event.preventDefault();App.implWithdrawCustom();}\">\n" +
+"            <button type=\"button\" class=\"btn secondary\" data-i18n=\"impl.withdraw_btn\" onclick=\"App.implWithdrawCustom()\">Retirar</button>\n" +
+"          </div>\n" +
+"        </div>\n" +
+"        <p class=\"hint\" id=\"impl-readonly-hint\" style=\"display:none;margin-top:10px;\" data-i18n=\"impl.owner_only_hint\">Só o médico responsável (logado) registra as retiradas.</p>\n" +
+"      </div>\n" +
+"      <div class=\"card\">\n" +
+"        <h3 class=\"section-title\" style=\"margin-top:0;\"><span class=\"dot\" style=\"background:var(--c-primary)\"></span><span data-i18n=\"impl.history_title\">Retiradas</span></h3>\n" +
+"        <div id=\"impl-history\"></div>\n" +
+"      </div>\n" +
+"    </div>\n" +
+"    <div id=\"panel-fotos\" style=\"display:none;\">\n" +
+"      <div class=\"card\">\n" +
+"        <h2 style=\"font-size:15px;margin:0 0 4px;\" data-i18n=\"photos.marcacao_title\">Marcação cirúrgica</h2>\n" +
+"        <p class=\"hint\" style=\"margin-bottom:10px;\" data-i18n=\"photos.marcacao_hint\">Ficam salvas neste servidor — visíveis em todos os celulares conectados.</p>\n" +
+"        <input type=\"file\" accept=\"image/*\" multiple onchange=\"App.uploadPhotos('marcacao', this)\">\n" +
+"        <div class=\"photo-grid\" id=\"photos-grid-marcacao\"></div>\n" +
+"      </div>\n" +
+"      <div class=\"card\">\n" +
+"        <h2 style=\"font-size:15px;margin:0 0 4px;\" data-i18n=\"photos.posop_title\">Pós-operatório imediato</h2>\n" +
+"        <input type=\"file\" accept=\"image/*\" multiple onchange=\"App.uploadPhotos('posop', this)\">\n" +
+"        <div class=\"photo-grid\" id=\"photos-grid-posop\"></div>\n" +
+"      </div>\n" +
+"    </div>\n" +
+"\n" +
+"    <div id=\"panel-paciente\" style=\"display:none;\">\n" +
+"      <div class=\"card\">\n" +
+"        <h2 style=\"font-size:15px;margin:0 0 4px;\" data-i18n=\"patient.section_title\">Dados do paciente</h2>\n" +
+"        <p class=\"hint\" style=\"margin-bottom:10px;\" data-i18n=\"patient.section_hint\">Opcional — preencha agora, depois, ou nunca. Não trava nada da cirurgia.</p>\n" +
+"        <div class=\"field\">\n" +
+"          <label data-i18n=\"patient.age_label\">Idade</label>\n" +
+"          <input type=\"number\" id=\"patient-idade\" min=\"0\" max=\"130\" placeholder=\"Ex: 45\" data-i18n-placeholder=\"patient.age_placeholder\" onchange=\"App.setPatientField('idade', this.value)\">\n" +
+"        </div>\n" +
+"        <div class=\"field\">\n" +
+"          <label data-i18n=\"patient.height_label\">Altura (cm)</label>\n" +
+"          <input type=\"number\" id=\"patient-altura\" min=\"0\" max=\"260\" placeholder=\"Ex: 175\" data-i18n-placeholder=\"patient.height_placeholder\" onchange=\"App.setPatientField('alturaCm', this.value)\">\n" +
+"        </div>\n" +
+"        <div class=\"field\">\n" +
+"          <label data-i18n=\"patient.weight_label\">Peso (kg)</label>\n" +
+"          <input type=\"number\" id=\"patient-peso\" min=\"0\" max=\"400\" step=\"0.1\" placeholder=\"Ex: 80\" data-i18n-placeholder=\"patient.weight_placeholder\" onchange=\"App.setPatientField('pesoKg', this.value)\">\n" +
+"        </div>\n" +
+"        <div class=\"field\">\n" +
+"          <label data-i18n=\"patient.hair_thickness_label\">Espessura do cabelo</label>\n" +
+"          <div class=\"row\" style=\"gap:8px;\">\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"patient-espessura-fino\" data-i18n=\"patient.hair_thin\" onclick=\"App.setPatientField('cabeloEspessura','fino')\">Fino</button>\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"patient-espessura-grosso\" data-i18n=\"patient.hair_thick\" onclick=\"App.setPatientField('cabeloEspessura','grosso')\">Grosso</button>\n" +
+"          </div>\n" +
+"        </div>\n" +
+"        <div class=\"field\">\n" +
+"          <label data-i18n=\"patient.hair_texture_label\">Textura do cabelo</label>\n" +
+"          <div class=\"row\" style=\"gap:8px;\">\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"patient-textura-liso\" data-i18n=\"patient.hair_straight\" onclick=\"App.setPatientField('cabeloTextura','liso')\">Liso</button>\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"patient-textura-ondulado\" data-i18n=\"patient.hair_wavy\" onclick=\"App.setPatientField('cabeloTextura','ondulado')\">Ondulado</button>\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"patient-textura-crespo\" data-i18n=\"patient.hair_curly\" onclick=\"App.setPatientField('cabeloTextura','crespo')\">Crespo</button>\n" +
+"          </div>\n" +
+"        </div>\n" +
+"        <div class=\"field\">\n" +
+"          <label data-i18n=\"patient.surgery_type_label\">Tipo de cirurgia</label>\n" +
+"          <div class=\"row\" style=\"gap:8px;\">\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"patient-raspagem-sim\" data-i18n=\"patient.with_shaving\" onclick=\"App.setPatientField('raspagem','sim')\">Com raspagem</button>\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"patient-raspagem-nao\" data-i18n=\"patient.without_shaving\" onclick=\"App.setPatientField('raspagem','nao')\">Sem raspagem</button>\n" +
+"          </div>\n" +
+"        </div>\n" +
+"        <div class=\"field\" style=\"margin-bottom:0;\">\n" +
+"          <label data-i18n=\"patient.punch_label\">Punch utilizado</label>\n" +
+"          <div class=\"row\" style=\"gap:8px;\">\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"patient-punch-095\" data-i18n=\"patient.punch_095\" onclick=\"App.setPatientField('punchMm','0.95')\">0,95 mm</button>\n" +
+"            <button type=\"button\" class=\"btn secondary\" id=\"patient-punch-10\" data-i18n=\"patient.punch_10\" onclick=\"App.setPatientField('punchMm','1.0')\">1,0 mm</button>\n" +
+"          </div>\n" +
+"        </div>\n" +
+"      </div>\n" +
+"    </div>\n" +
+"\n" +
+"    <div id=\"panel-resumofinal\" style=\"display:none;\">\n" +
+"      <div class=\"card\">\n" +
+"        <h2 style=\"font-size:15px;margin:0 0 10px;\" data-i18n=\"cnt.final_summary_title\">Resumo final da cirurgia</h2>\n" +
+"        <h3 class=\"section-title\" style=\"margin-top:0;\"><span class=\"dot\" style=\"background:var(--c-primary)\"></span><span data-i18n=\"cnt.final_times_title\">Tempos</span></h3>\n" +
+"        <div class=\"summary-bar static\">\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"final-tempo-extracao\">00:00:00</div><div class=\"lbl\" data-i18n=\"cnt.extraction_time_title\">Tempo de extração</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"final-tempo-preinc\">00:00:00</div><div class=\"lbl\" data-i18n=\"preinc.time_title\">Tempo de pré-incisões</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"final-tempo-total\">—</div><div class=\"lbl\" data-i18n=\"print.total_surgery_time_label\">Tempo total da cirurgia</div></div>\n" +
+"        </div>\n" +
+"      </div>\n" +
+"\n" +
+"      <div class=\"card\">\n" +
+"        <h2 style=\"font-size:15px;margin:0 0 10px;\" data-i18n=\"cnt.summary_general_title\">Resumo geral (todos os quadrantes)</h2>\n" +
+"        <div class=\"summary-bar static\">\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"final-extraidos\">0</div><div class=\"lbl\" data-i18n=\"cnt.summary_extracted\">Folículos extraídos</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"final-fios\">0</div><div class=\"lbl\" data-i18n=\"cnt.summary_total_hairs\">Total de fios</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"final-indice\">0.00</div><div class=\"lbl\" data-i18n=\"cnt.summary_index\">Índice fios/folículo</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"final-transec-parcial\">0%</div><div class=\"lbl\" data-i18n=\"cnt.summary_partial_transec\">Transecção parcial</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"final-transec-total\">0%</div><div class=\"lbl\" data-i18n=\"cnt.summary_total_transec\">Transecção total</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"final-mini\">0</div><div class=\"lbl\" data-i18n=\"cnt.summary_mini\">Mini (fora do total)</div></div>\n" +
+"        </div>\n" +
+"        <div class=\"summary-bar static\" id=\"final-mamba-summary\" style=\"display:none;margin-top:10px;\">\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"final-mamba-val\">0</div><div class=\"lbl\" data-i18n=\"cnt.mamba_reading\">Mamba (leitura final)</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"final-mamba-diff\">0</div><div class=\"lbl\" data-i18n=\"cnt.mamba_diff_extraidos\">Diferença (Mamba − Extraídos)</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"final-mamba-diffpct-extraidos\">0%</div><div class=\"lbl\" data-i18n=\"cnt.mamba_diffpct_extraidos\">Diferença (% Mamba × Extraídos)</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"final-mamba-rate\">—</div><div class=\"lbl\" data-i18n=\"cnt.mamba_rate\">Ritmo pelo Mamba (fol./h)</div></div>\n" +
+"        </div>\n" +
+"      </div>\n" +
+"\n" +
+"      <h3 class=\"section-title\"><span class=\"dot\" style=\"background:var(--c-integro)\"></span><span data-i18n=\"cnt.final_categories_title\">Folículos por categoria</span></h3>\n" +
+"      <div class=\"summary-bar static cat-grid\" id=\"final-categorias\"></div>\n" +
+"\n" +
+"      <div class=\"card\">\n" +
+"        <h2 style=\"font-size:15px;margin:0 0 10px;\" data-i18n=\"cnt.final_preinc_title\">Resumo de pré-incisões</h2>\n" +
+"        <div class=\"summary-bar static\">\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"final-preinc-total\">0</div><div class=\"lbl\" data-i18n=\"preinc.total_label\">Total de pré-incisões</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"final-preinc-diff\">0</div><div class=\"lbl\" data-i18n=\"cnt.final_preinc_diff\">Diferença (pré-incisões − folículos extraídos)</div></div>\n" +
+"        </div>\n" +
+"      </div>\n" +
+"    </div>\n" +
+"\n" +
+"    <footer class=\"actions\">\n" +
+"      <button class=\"btn secondary\" data-i18n=\"cnt.print_btn\" onclick=\"App.printReport()\">Imprimir / Salvar PDF</button>\n" +
+"      <button class=\"btn secondary\" data-i18n=\"patrep.button\" onclick=\"App.printPatientReport()\">Relatório para o paciente</button>\n" +
+"      <button class=\"btn secondary\" id=\"btn-finalizar\" data-i18n=\"cnt.finalize_btn\" onclick=\"App.finalizeSession()\">Finalizar cirurgia</button>\n" +
+"      <button class=\"btn secondary\" id=\"btn-reabrir\" style=\"display:none;\" data-i18n=\"cnt.reopen_btn\" onclick=\"App.reopenSession()\">Reabrir</button>\n" +
+"      <button class=\"btn secondary\" id=\"btn-fix-duration\" style=\"display:none;\" data-i18n=\"cnt.fix_duration_btn\" onclick=\"App.fixDuration()\">Corrigir duração</button>\n" +
+"    </footer>\n" +
+"  </section>\n" +
+"</div>\n" +
+"<div class=\"toast\" id=\"toast\"></div>\n" +
+"<div id=\"print-report\"></div>\n" +
+"<div id=\"print-patient-report\"></div>\n" +
+"<div class=\"modal-overlay\" id=\"share-modal-overlay\" onclick=\"if(event.target===this) App.closeShareModal();\">\n" +
+"  <div class=\"modal-box\">\n" +
+"    <div class=\"row\" style=\"justify-content:space-between;align-items:center;\">\n" +
+"      <h2 style=\"margin:0;font-size:16px;\" data-i18n=\"share.title\">Compartilhar cirurgia</h2>\n" +
+"      <button class=\"icon-btn\" style=\"background:var(--c-surface2);color:var(--c-text);\" onclick=\"App.closeShareModal()\">✕</button>\n" +
+"    </div>\n" +
+"    <div class=\"field\" style=\"margin-top:14px;margin-bottom:0;\">\n" +
+"      <label data-i18n=\"share.url_label\">Endereço desta cirurgia (compartilhe com os outros celulares)</label>\n" +
+"      <div class=\"share-url\" id=\"share-url\">—</div>\n" +
+"      <div class=\"row\" style=\"margin-top:8px;gap:8px;\">\n" +
+"        <button class=\"btn\" data-i18n=\"share.share_link_btn\" onclick=\"App.shareViaSystem()\">Compartilhar link</button>\n" +
+"        <button class=\"btn secondary\" data-i18n=\"share.whatsapp_btn\" onclick=\"App.shareViaWhatsapp()\">Enviar por WhatsApp</button>\n" +
+"        <button class=\"btn secondary\" data-i18n=\"share.copy_btn\" onclick=\"App.copyShareUrl()\">Copiar</button>\n" +
+"      </div>\n" +
+"      <p class=\"hint\" style=\"margin-top:8px;\" data-i18n=\"share.hint\">A auxiliar toca no link recebido e a página abre direto na contagem desta cirurgia — não precisa digitar nada.</p>\n" +
+"    </div>\n" +
+"  </div>\n" +
+"</div>\n" +
+"<div class=\"modal-overlay\" id=\"onboard-modal-overlay\">\n" +
+"  <div class=\"modal-box\">\n" +
+"    <p class=\"hint\" style=\"margin:0 0 4px;\" id=\"onboard-counter\"></p>\n" +
+"    <h2 style=\"margin:0 0 8px;font-size:18px;\" id=\"onboard-title\"></h2>\n" +
+"    <p id=\"onboard-body\" style=\"margin:0 0 16px;\"></p>\n" +
+"    <div class=\"row\" style=\"justify-content:space-between;gap:8px;\">\n" +
+"      <button class=\"btn secondary\" id=\"onboard-skip-btn\" data-i18n=\"onboard.skip\" onclick=\"App.onboardingFinish()\">Pular guia</button>\n" +
+"      <div class=\"row\" style=\"gap:8px;\">\n" +
+"        <button class=\"btn secondary\" id=\"onboard-back-btn\" data-i18n=\"onboard.back\" onclick=\"App.onboardingBack()\">Voltar</button>\n" +
+"        <button class=\"btn\" id=\"onboard-next-btn\" onclick=\"App.onboardingNext()\"></button>\n" +
+"      </div>\n" +
+"    </div>\n" +
+"  </div>\n" +
+"</div>\n" +
+"<div class=\"modal-overlay\" id=\"invite-modal-overlay\" onclick=\"if(event.target===this) App.closeInviteModal();\">\n" +
+"  <div class=\"modal-box\">\n" +
+"    <div class=\"row\" style=\"justify-content:space-between;align-items:center;\">\n" +
+"      <h2 style=\"margin:0;font-size:16px;\" data-i18n=\"invite.modal_title\">Convite gerado</h2>\n" +
+"      <button class=\"icon-btn\" style=\"background:var(--c-surface2);color:var(--c-text);\" onclick=\"App.closeInviteModal()\">✕</button>\n" +
+"    </div>\n" +
+"    <div class=\"field\" style=\"margin-top:14px;margin-bottom:0;\">\n" +
+"      <label data-i18n=\"invite.modal_url_label\">Link do convite (expira em 7 dias, vale pra 1 cadastro)</label>\n" +
+"      <div class=\"share-url\" id=\"invite-url\">—</div>\n" +
+"      <div class=\"row\" style=\"margin-top:8px;gap:8px;\">\n" +
+"        <button class=\"btn secondary\" data-i18n=\"invite.modal_whatsapp_btn\" onclick=\"App.shareInviteViaWhatsapp()\">Enviar por WhatsApp</button>\n" +
+"        <button class=\"btn secondary\" data-i18n=\"invite.modal_copy_btn\" onclick=\"App.copyInviteUrl()\">Copiar link</button>\n" +
+"      </div>\n" +
+"    </div>\n" +
+"  </div>\n" +
+"</div>\n" +
+"<!-- Modal próprio de confirmação/entrada de valor, substituindo window.confirm()/\n" +
+"     window.prompt() em todo o app. Motivo: relato do Dr. Vitor de que, numa cirurgia\n" +
+"     real no iPad dele, o botão \"Contagem finalizada\" respondeu no primeiro quadrante\n" +
+"     mas pareceu travado (sem nenhum erro) nos seguintes. Causa: o Safari do iOS\n" +
+"     silenciosamente bloqueia TODOS os diálogos nativos (confirm/prompt/alert) numa\n" +
+"     página depois de mostrar vários deles na mesma sessão — sem avisar o usuário, sem\n" +
+"     erro no console, o confirm() só passa a retornar false direto. Como App.editCount\n" +
+"     (tocar pra editar valor de categoria) usa window.prompt() dezenas de vezes por\n" +
+"     quadrante, era praticamente garantido disparar esse bloqueio antes do médico\n" +
+"     chegar no confirm() de finalizar o segundo/terceiro quadrante. Substituindo por\n" +
+"     um modal HTML próprio (mesmo componente visual do modal de compartilhar\n" +
+"     cirurgia), esse comportamento do navegador deixa de existir — o app nunca mais\n" +
+"     chama window.confirm()/window.prompt() em lugar nenhum. -->\n" +
+"<div class=\"modal-overlay\" id=\"dialog-modal-overlay\" onclick=\"if(event.target===this) App.dialogModalCancel();\">\n" +
+"  <div class=\"modal-box\">\n" +
+"    <p id=\"dialog-modal-message\" style=\"margin:0;white-space:pre-line;\"></p>\n" +
+"    <div class=\"field\" id=\"dialog-modal-input-wrap\" style=\"display:none;margin-top:10px;margin-bottom:0;\">\n" +
+"      <input type=\"number\" id=\"dialog-modal-input\" inputmode=\"numeric\" onkeydown=\"if(event.key==='Enter'){event.preventDefault();App.dialogModalOk();}\">\n" +
+"    </div>\n" +
+"    <div class=\"row\" style=\"justify-content:flex-end;gap:8px;margin-top:16px;\">\n" +
+"      <button class=\"btn secondary\" data-i18n=\"common.cancel\" onclick=\"App.dialogModalCancel()\">Cancelar</button>\n" +
+"      <button class=\"btn\" data-i18n=\"common.ok\" onclick=\"App.dialogModalOk()\">OK</button>\n" +
+"    </div>\n" +
+"  </div>\n" +
+"</div>\n" +

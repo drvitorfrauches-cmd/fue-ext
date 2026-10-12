@@ -1,0 +1,369 @@
+"<script>\n" +
+"(function(){\n" +
+"'use strict';\n" +
+"var STRINGS = __STRINGS_JSON__;\n" +
+"function t(key, vars){\n" +
+"  var dict = STRINGS[state.lang] || STRINGS.pt;\n" +
+"  var str = dict[key] || STRINGS.pt[key] || key;\n" +
+"  if (vars){ Object.keys(vars).forEach(function(k){ str = str.split('{'+k+'}').join(vars[k]); }); }\n" +
+"  return str;\n" +
+"}\n" +
+"function getCookie(name){\n" +
+"  var m = document.cookie.match(new RegExp('(?:^|; )'+name+'=([^;]*)'));\n" +
+"  return m ? decodeURIComponent(m[1]) : null;\n" +
+"}\n" +
+"// Aplica o idioma atual (state.lang) em todo elemento estático marcado com\n" +
+"// data-i18n / data-i18n-placeholder. Escopo de hoje: telas de login, cadastro\n" +
+"// e redefinição de senha — o resto do app ainda é só em português, migrado aos\n" +
+"// poucos (o texto em português continua funcionando como estava, sem chave).\n" +
+"function applyI18n(){\n" +
+"  document.documentElement.lang = state.lang;\n" +
+"  document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent = t(el.getAttribute('data-i18n')); });\n" +
+"  document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el){ el.placeholder = t(el.getAttribute('data-i18n-placeholder')); });\n" +
+"  document.querySelectorAll('[data-i18n-title]').forEach(function(el){ el.title = t(el.getAttribute('data-i18n-title')); });\n" +
+"  document.querySelectorAll('.lang-switch-btn').forEach(function(btn){\n" +
+"    btn.className = (btn.getAttribute('data-lang')===state.lang) ? 'btn lang-switch-btn' : 'btn secondary lang-switch-btn';\n" +
+"  });\n" +
+"}\n" +
+"// Detecta o idioma inicial: cookie salvo > localStorage > idioma do navegador >\n" +
+"// português. O cookie é o que o servidor lê pra responder erros de API no\n" +
+"// idioma certo — por isso App.setLanguage grava nos dois lugares.\n" +
+"function initLanguage(){\n" +
+"  var saved = getCookie('fue_lang') || localStorage.getItem('fue_lang');\n" +
+"  if (!saved){\n" +
+"    var nav = (navigator.language||'pt').slice(0,2).toLowerCase();\n" +
+"    saved = STRINGS[nav] ? nav : 'pt';\n" +
+"  }\n" +
+"  state.lang = STRINGS[saved] ? saved : 'pt';\n" +
+"  applyI18n();\n" +
+"}\n" +
+"var CATS = [\n" +
+"  {id:'f1',get label(){return t('cat.f1');},hairs:1,group:'integro'},\n" +
+"  {id:'f2',get label(){return t('cat.f2');},hairs:2,group:'integro'},\n" +
+"  {id:'f3',get label(){return t('cat.f3');},hairs:3,group:'integro'},\n" +
+"  {id:'f4',get label(){return t('cat.f4');},hairs:4,group:'integro'},\n" +
+"  {id:'f1fino',get label(){return t('cat.f1fino');},hairs:1,group:'integro'},\n" +
+"  {id:'f2fino',get label(){return t('cat.f2fino');},hairs:2,group:'integro'},\n" +
+"  {id:'t2_1',get label(){return t('cat.t2_1');},hairs:1,group:'parcial'},\n" +
+"  {id:'t3_2',get label(){return t('cat.t3_2');},hairs:2,group:'parcial'},\n" +
+"  {id:'t3_1',get label(){return t('cat.t3_1');},hairs:1,group:'parcial'},\n" +
+"  {id:'t4_3',get label(){return t('cat.t4_3');},hairs:3,group:'parcial'},\n" +
+"  {id:'t4_2',get label(){return t('cat.t4_2');},hairs:2,group:'parcial'},\n" +
+"  {id:'t4_1',get label(){return t('cat.t4_1');},hairs:1,group:'parcial'},\n" +
+"  {id:'parcial_geral',get label(){return t('cat.parcial_geral');},hairs:0,group:'parcial_reduzida'},\n" +
+"  {id:'ttotal',get label(){return t('cat.ttotal');},hairs:0,group:'total'},\n" +
+"  {id:'mini',get label(){return t('cat.mini');},hairs:0,group:'mini'}\n" +
+"];\n" +
+"var SESSION_MODES = ['completo','reduzido'];\n" +
+"var QUADRANTS = [\n" +
+"  {id:'occipital_dir',get label(){return t('quad.occipital_dir');}},\n" +
+"  {id:'occipital_esq',get label(){return t('quad.occipital_esq');}},\n" +
+"  {id:'temporal_esq',get label(){return t('quad.temporal_esq');}},\n" +
+"  {id:'temporal_dir',get label(){return t('quad.temporal_dir');}}\n" +
+"];\n" +
+"var PREINC_AREAS = [\n" +
+"  {id:'recesso_dir',get label(){return t('preinc.recesso_dir');}},{id:'recesso_esq',get label(){return t('preinc.recesso_esq');}},\n" +
+"  {id:'linha',get label(){return t('preinc.linha');}},{id:'sublinha',get label(){return t('preinc.sublinha');}},\n" +
+"  {id:'entrada_dir1',get label(){return t('preinc.entrada_dir1');}},{id:'entrada_dir2',get label(){return t('preinc.entrada_dir2');}},\n" +
+"  {id:'entrada_esq1',get label(){return t('preinc.entrada_esq1');}},{id:'entrada_esq2',get label(){return t('preinc.entrada_esq2');}},\n" +
+"  {id:'topete1',get label(){return t('preinc.topete1');}},{id:'topete2',get label(){return t('preinc.topete2');}},\n" +
+"  {id:'scalp',get label(){return t('preinc.scalp');}},{id:'coroa',get label(){return t('preinc.coroa');}}\n" +
+"];\n" +
+"var DIST_FIOS = [{id:'f1',get label(){return t('cat.f1');}},{id:'f2',get label(){return t('cat.f2');}},{id:'f3',get label(){return t('cat.f3');}}];\n" +
+"var DEFAULT_INCREMENTS = [10,50,100];\n" +
+"function quadrantById(id){ for (var i=0;i<QUADRANTS.length;i++){ if (QUADRANTS[i].id===id) return QUADRANTS[i]; } return null; }\n" +
+"function computeSummary(counts, mode){\n" +
+"  var integros=0, parciais=0, totalPerdidos=0, totalFios=0, miniTotal=0, parcialGeral=counts['parcial_geral']||0;\n" +
+"  CATS.forEach(function(c){\n" +
+"    var n = counts[c.id]||0;\n" +
+"    if (c.group==='integro'){ integros+=n; totalFios+=n*c.hairs; }\n" +
+"    else if (c.group==='parcial'){ parciais+=n; totalFios+=n*c.hairs; }\n" +
+"    else if (c.group==='total'){ totalPerdidos+=n; }\n" +
+"    else if (c.group==='mini'){ miniTotal+=n; }\n" +
+"  });\n" +
+"  var reduzido = mode==='reduzido';\n" +
+"  var parcialParaTaxa = reduzido ? parcialGeral : parciais;\n" +
+"  var foliculosExtraidos = reduzido ? integros : (integros+parciais);\n" +
+"  var foliculosManipulados = reduzido ? (integros+totalPerdidos) : (integros+parciais+totalPerdidos);\n" +
+"  var indice = foliculosExtraidos>0 ? totalFios/foliculosExtraidos : 0;\n" +
+"  var taxaParcialDenom = reduzido ? integros : foliculosManipulados;\n" +
+"  var taxaParcial = taxaParcialDenom>0 ? parcialParaTaxa/taxaParcialDenom*100 : 0;\n" +
+"  var taxaTotal = foliculosManipulados>0 ? totalPerdidos/foliculosManipulados*100 : 0;\n" +
+"  return {integros:integros,parciais:parciais,parcialGeral:parcialGeral,totalPerdidos:totalPerdidos,miniTotal:miniTotal,foliculosExtraidos:foliculosExtraidos,foliculosManipulados:foliculosManipulados,totalFios:totalFios,indice:indice,taxaParcial:taxaParcial,taxaTotal:taxaTotal};\n" +
+"}\n" +
+"function combinedExtractionCounts(s){\n" +
+"  var combined = {}; CATS.forEach(function(c){ combined[c.id]=0; });\n" +
+"  QUADRANTS.forEach(function(qd){\n" +
+"    var qc = s.quadrants[qd.id].counts;\n" +
+"    CATS.forEach(function(c){ combined[c.id] = (combined[c.id]||0) + (qc[c.id]||0); });\n" +
+"  });\n" +
+"  return combined;\n" +
+"}\n" +
+"// Encontra o quadrante marcado (Mamba preenchido) mais recente ANTES do quadrante\n" +
+"// atual, usando o RELÓGIO REAL de quando cada um foi marcado (mambaMarkedAtMs) — não\n" +
+"// a ordem fixa da lista de quadrantes, e não o tempo decorrido do cronômetro de\n" +
+"// extração (mambaMarkTimeMs), que fica PARADO sempre que o cronômetro é pausado e\n" +
+"// por isso pode empatar entre dois quadrantes marcados durante a mesma pausa —\n" +
+"// empate esse que, com comparação estrita, fazia o sistema pular o quadrante\n" +
+"// verdadeiramente anterior e cair, por engano, num quadrante bem mais antigo\n" +
+"// (o primeiro já marcado). Isso é o que permite que cada médico/equipe preencha os\n" +
+"// quadrantes na ordem que quiser (direita, esquerda, temporal, occipital — tanto\n" +
+"// faz), em vez de assumir sempre temporal dir → temporal esq → occipital dir →\n" +
+"// occipital esq. Retorna null se não houver candidato confiável (aí quem chamou cai\n" +
+"// num último recurso baseado na ordem da lista, só pra dado antigo de antes desta\n" +
+"// correção, que não tem relógio real registrado).\n" +
+"function findPrevMarkedQuadrant(s, quadId){\n" +
+"  var current = s.quadrants[quadId];\n" +
+"  if (current.mambaMarkedAtMs===null || current.mambaMarkedAtMs===undefined) return null;\n" +
+"  var best = null;\n" +
+"  QUADRANTS.forEach(function(q){\n" +
+"    if (q.id===quadId) return;\n" +
+"    var qd = s.quadrants[q.id];\n" +
+"    if (qd.mambaMarkedAtMs===null || qd.mambaMarkedAtMs===undefined) return;\n" +
+"    if (qd.mambaMarkedAtMs < current.mambaMarkedAtMs){\n" +
+"      if (!best || qd.mambaMarkedAtMs > best.mambaMarkedAtMs) best = qd;\n" +
+"    }\n" +
+"  });\n" +
+"  return best;\n" +
+"}\n" +
+"function mambaPrevCumulativo(s, quadId){\n" +
+"  var current = s.quadrants[quadId];\n" +
+"  if (current.mambaMarkedAtMs===null || current.mambaMarkedAtMs===undefined){\n" +
+"    // Este quadrante em si não tem timestamp (dado antigo, marcado antes desta\n" +
+"    // correção existir) — não tem como saber a ordem real de preenchimento; cai no\n" +
+"    // último recurso: ordem fixa da lista, igual ao comportamento de antes.\n" +
+"    var idx=-1;\n" +
+"    for (var i=0;i<QUADRANTS.length;i++){ if (QUADRANTS[i].id===quadId){ idx=i; break; } }\n" +
+"    for (var j=idx-1;j>=0;j--){\n" +
+"      var v = s.quadrants[QUADRANTS[j].id].mambaCumulativo;\n" +
+"      if (v!==null && v!==undefined && v!=='') return Number(v);\n" +
+"    }\n" +
+"    return 0;\n" +
+"  }\n" +
+"  // Este quadrante TEM timestamp confiável — usa sempre o horário real. Se não\n" +
+"  // achar nenhum quadrante marcado antes dele, é porque ele genuinamente foi o\n" +
+"  // primeiro (delta a partir de zero) — não cai pra ordem fixa nesse caso, senão\n" +
+"  // volta a acontecer o bug de pegar um quadrante marcado DEPOIS só porque ele\n" +
+"  // aparece antes na lista fixa.\n" +
+"  var prev = findPrevMarkedQuadrant(s, quadId);\n" +
+"  return prev ? Number(prev.mambaCumulativo||0) : 0;\n" +
+"}\n" +
+"function mambaFinalCumulativo(s){\n" +
+"  var withTime = QUADRANTS.map(function(q){ return s.quadrants[q.id]; }).filter(function(qd){\n" +
+"    return qd.mambaCumulativo!==null && qd.mambaCumulativo!==undefined && qd.mambaCumulativo!=='' &&\n" +
+"      qd.mambaMarkedAtMs!==null && qd.mambaMarkedAtMs!==undefined;\n" +
+"  });\n" +
+"  if (withTime.length){\n" +
+"    withTime.sort(function(a,b){ return b.mambaMarkedAtMs - a.mambaMarkedAtMs; });\n" +
+"    return Number(withTime[0].mambaCumulativo);\n" +
+"  }\n" +
+"  // Nenhum quadrante tem relógio real registrado (cirurgia antiga, nunca tocada\n" +
+"  // depois desta correção) — último recurso: ordem fixa da lista, como antes.\n" +
+"  for (var i=QUADRANTS.length-1;i>=0;i--){\n" +
+"    var v = s.quadrants[QUADRANTS[i].id].mambaCumulativo;\n" +
+"    if (v!==null && v!==undefined && v!=='') return Number(v);\n" +
+"  }\n" +
+"  return null;\n" +
+"}\n" +
+"// base = número contra o qual o Mamba é comparado. Em todo o app isso é sempre\n" +
+"// folículos EXTRAÍDOS (íntegros + parciais) — não folículos manipulados (que\n" +
+"// somaria também a transecção total). Ficou assim porque as duas bases quase\n" +
+"// sempre coincidem (só divergem quando há transecção total na cirurgia) e\n" +
+"// comparar contra extraídos é mais direto de entender: 'o Mamba bateu com o que\n" +
+"// eu realmente extraí?'.\n" +
+"function computeMambaDiff(mambaCount, base){\n" +
+"  if (mambaCount===null||mambaCount===undefined||mambaCount==='') return null;\n" +
+"  var mamba = Number(mambaCount);\n" +
+"  var diff = mamba - base;\n" +
+"  var diffPct = mamba>0 ? diff/mamba*100 : 0;\n" +
+"  return {mamba:mamba, base:base, diff:diff, diffPct:diffPct};\n" +
+"}\n" +
+"function mambaPrevMarkTimeMs(s, quadId){\n" +
+"  var prev = findPrevMarkedQuadrant(s, quadId);\n" +
+"  return prev ? Number(prev.mambaMarkTimeMs) : 0;\n" +
+"}\n" +
+"// Duração do quadrante = tempo marcado neste quadrante menos o tempo marcado no\n" +
+"// quadrante marcado imediatamente antes dele por horário real (não por posição na\n" +
+"// lista). Só existe se o Mamba deste quadrante foi preenchido; se dois quadrantes\n" +
+"// forem marcados fora de ordem (ou vier de dado antigo sem timestamp confiável), a\n" +
+"// duração pode dar zero ou negativa — nesse caso tratamos como 'sem dado confiável' (null).\n" +
+"function quadrantDurationMs(s, quadId){\n" +
+"  var qd = s.quadrants[quadId];\n" +
+"  var v = qd.mambaMarkTimeMs;\n" +
+"  if (v===null || v===undefined) return null;\n" +
+"  // Sem relógio real registrado não dá pra confiar em qual quadrante veio antes —\n" +
+"  // sem isso, evita calcular uma duração enganosa contra o quadrante errado.\n" +
+"  if (qd.mambaMarkedAtMs===null || qd.mambaMarkedAtMs===undefined) return null;\n" +
+"  var dur = Number(v) - mambaPrevMarkTimeMs(s, quadId);\n" +
+"  return dur>0 ? dur : null;\n" +
+"}\n" +
+"// Ritmo de extração baseado no Mamba (folículos/hora), diferente do ritmo baseado\n" +
+"// na contagem manual de bancada: usa o delta da leitura do Mamba dividido pelo\n" +
+"// tempo marcado pra aquele quadrante.\n" +
+"function mambaRatePerHour(mambaDelta, durationMs){\n" +
+"  if (durationMs===null || durationMs===undefined || durationMs<=0) return null;\n" +
+"  return mambaDelta/(durationMs/3600000);\n" +
+"}\n" +
+"// Contagem em cadeia: soma a contribuição PRÓPRIA deste quadrante (counts[catId],\n" +
+"// nunca mexido por esta função) com o total acumulado do predecessor (carryFromId),\n" +
+"// recursivamente. O link é sempre um elo EXPLÍCITO (criado por 'Contagem\n" +
+"// finalizada' ou pelo seletor manual), nunca inferido por ordem/tempo — é por\n" +
+"// isso que, ao contrário do Mamba, não existe ambiguidade de 'quem vem antes' aqui.\n" +
+"// Dinâmico de propósito: corrigir a contagem de um quadrante anterior já reflete\n" +
+"// automaticamente em todos os que vêm depois dele na cadeia, sem precisar reabrir\n" +
+"// nada. 'seen' protege contra ciclo (não deveria existir, mas por garantia).\n" +
+"function chainCumulativeCat(s, quadId, catId, seen){\n" +
+"  seen = seen || {};\n" +
+"  if (seen[quadId]) return 0;\n" +
+"  seen[quadId] = true;\n" +
+"  var qd = s.quadrants[quadId];\n" +
+"  if (!qd) return 0;\n" +
+"  var own = qd.counts[catId]||0;\n" +
+"  if (!qd.carryFromId || !s.quadrants[qd.carryFromId]) return own;\n" +
+"  return own + chainCumulativeCat(s, qd.carryFromId, catId, seen);\n" +
+"}\n" +
+"// Soma TODAS as categorias que o predecessor traz pra este quadrante — usado pra\n" +
+"// mostrar '(230)' na dica 'Contando a partir de: Occipital direito (230)' e pra\n" +
+"// recalcular o valor próprio quando alguém edita o número acumulado direto (toque\n" +
+"// no número pra digitar).\n" +
+"function chainPredecessorTotalAllCats(s, quadId){\n" +
+"  var qd = s.quadrants[quadId];\n" +
+"  if (!qd || !qd.carryFromId || !s.quadrants[qd.carryFromId]) return 0;\n" +
+"  var total = 0;\n" +
+"  CATS.forEach(function(c){ total += chainCumulativeCat(s, qd.carryFromId, c.id); });\n" +
+"  return total;\n" +
+"}\n" +
+"// Espelho client-side da mesma checagem que o servidor faz — usado só pra já\n" +
+"// esconder do seletor manual as opções que o servidor recusaria de qualquer\n" +
+"// jeito (evita a pessoa escolher algo e levar um erro na cara).\n" +
+"function wouldCreateCarryCycleClient(s, quadId, candidateId){\n" +
+"  if (candidateId===quadId) return true;\n" +
+"  var seen = {}; seen[quadId] = true;\n" +
+"  var cur = candidateId, hops = 0;\n" +
+"  while (cur && hops < QUADRANTS.length+1) {\n" +
+"    if (seen[cur]) return true;\n" +
+"    seen[cur] = true;\n" +
+"    var qd = s.quadrants[cur];\n" +
+"    cur = qd ? qd.carryFromId : null;\n" +
+"    hops++;\n" +
+"  }\n" +
+"  return false;\n" +
+"}\n" +
+"function preincTotal(counts){ var t=0; PREINC_AREAS.forEach(function(a){ t+=counts[a.id]||0; }); return t; }\n" +
+"function fmtHMS(ms){\n" +
+"  var s=Math.floor(ms/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;\n" +
+"  function pad(n){return String(n).padStart(2,'0');}\n" +
+"  return pad(h)+':'+pad(m)+':'+pad(sec);\n" +
+"}\n" +
+"function escapeHtml(str){\n" +
+"  return String(str==null?'':str).replace(/[&<>\"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;','\\'':'&#39;'}[c];});\n" +
+"}\n" +
+"function elapsedMs(timer){ return (timer.accumulatedMs||0) + (timer.running ? (Date.now()-timer.startedAt) : 0); }\n" +
+"// Tempo total do CASO, do primeiro cronômetro iniciado (extração ou pré-incisões,\n" +
+"// o que vier primeiro) até agora — ou até a finalização, se já finalizado. Ao\n" +
+"// contrário de elapsedMs(), não pausa quando os cronômetros individuais pausam.\n" +
+"function globalElapsedMs(s){\n" +
+"  if (!s.globalTimerStartedAt) return null;\n" +
+"  var end = s.globalTimerEndedAt || Date.now();\n" +
+"  return end - s.globalTimerStartedAt;\n" +
+"}\n" +
+"var state = {currentId:null, session:null, pollHandle:null, connOk:true, increments:DEFAULT_INCREMENTS.slice(), activeTab:'extracao', activeQuadrant:QUADRANTS[0].id, audioEnabled:false, audioInterval:100, lastAnnounced:0, preincAudioEnabled:false, preincLastTotal:null, quadFinishAudioEnabled:false, baseUrl:null, alertParcialEnabled:false, alertParcialThreshold:null, alertParcialFired:false, alertTotalEnabled:false, alertTotalThreshold:null, alertTotalFired:false, currentUser:null, resetToken:null, newSessionMode:'reduzido', newPatientInfo:{}, lang:'pt'};\n" +
+"function shareUrlFor(id){ return (state.baseUrl||window.location.origin) + '/s/' + id; }\n" +
+"function resolveBaseUrl(){\n" +
+"  var host = window.location.hostname;\n" +
+"  var isLocalhost = (host === 'localhost' || host === '127.0.0.1');\n" +
+"  if (!isLocalhost){\n" +
+"    // Acessado por um IP de rede ou por um domínio de verdade (nuvem) — já está correto.\n" +
+"    state.baseUrl = window.location.origin;\n" +
+"    return Promise.resolve();\n" +
+"  }\n" +
+"  // Só corrige quando acessado como \"localhost\", que não funciona em outros aparelhos.\n" +
+"  return fetch('/api/network-info').then(function(r){ return r.json(); }).then(function(info){\n" +
+"    var ip = (info.ips && info.ips.length) ? info.ips[0] : null;\n" +
+"    state.baseUrl = ip ? ('http://'+ip+':'+info.port) : window.location.origin;\n" +
+"  }).catch(function(){ state.baseUrl = window.location.origin; });\n" +
+"}\n" +
+"var toastTimer=null;\n" +
+"function toast(msg, dur){ var el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(function(){el.classList.remove('show');}, dur||1800); }\n" +
+"var THEME_PRESETS = {\n" +
+"  padrao:  { label:'Padrão (verde-água)', primary:'#0e7c86', primaryDark:'#0a5c64' },\n" +
+"  azul:    { label:'Azul',                primary:'#1d63c9', primaryDark:'#134a99' },\n" +
+"  roxo:    { label:'Roxo',                primary:'#6a3fc7', primaryDark:'#4e2b99' },\n" +
+"  grafite: { label:'Grafite',             primary:'#4b5563', primaryDark:'#333b45' },\n" +
+"  marinho: { label:'Marinho',             primary:'#1e3a5c', primaryDark:'#14283f' }\n" +
+"};\n" +
+"var THEME_ORDER = ['padrao','azul','roxo','grafite','marinho'];\n" +
+"var LIGHT_VARS = { bg:'#f4f6f7', card:'#fff', text:'#1c2b2e', muted:'#5c6b6e', border:'#dde3e4', tint:'#fafcfc', tintActive:'#e8f4f5', surface2:'#e8edee', toastBg:'#1c2b2e', toastText:'#fff' };\n" +
+"var DARK_VARS  = { bg:'#12181a', card:'#1c2528', text:'#e7edee', muted:'#9aa8ab', border:'#313d40', tint:'#222c2f', tintActive:'#2a3d40', surface2:'#2a3336', toastBg:'#e7edee', toastText:'#1c2528' };\n" +
+"function applyBranding(branding){\n" +
+"  var b = branding || { theme:'padrao', darkMode:false, logoFilename:null };\n" +
+"  state.activeBranding = b;\n" +
+"  var preset = THEME_PRESETS[b.theme] || THEME_PRESETS.padrao;\n" +
+"  var v = b.darkMode ? DARK_VARS : LIGHT_VARS;\n" +
+"  var root = document.documentElement.style;\n" +
+"  root.setProperty('--c-primary', preset.primary);\n" +
+"  root.setProperty('--c-primary-dark', preset.primaryDark);\n" +
+"  root.setProperty('--c-bg', v.bg);\n" +
+"  root.setProperty('--c-card', v.card);\n" +
+"  root.setProperty('--c-text', v.text);\n" +
+"  root.setProperty('--c-muted', v.muted);\n" +
+"  root.setProperty('--c-border', v.border);\n" +
+"  root.setProperty('--c-tint', v.tint);\n" +
+"  root.setProperty('--c-tint-active', v.tintActive);\n" +
+"  root.setProperty('--c-surface2', v.surface2);\n" +
+"  root.setProperty('--c-toast-bg', v.toastBg);\n" +
+"  root.setProperty('--c-toast-text', v.toastText);\n" +
+"  document.documentElement.classList.toggle('dark', !!b.darkMode);\n" +
+"  var logoEls = document.querySelectorAll('.brand-logo');\n" +
+"  logoEls.forEach(function(el){\n" +
+"    if (b.logoFilename && b.ownerId){\n" +
+"      el.src = '/api/user/'+b.ownerId+'/logo?v='+encodeURIComponent(b.logoFilename);\n" +
+"      el.style.display = 'inline-block';\n" +
+"    } else {\n" +
+"      el.style.display = 'none';\n" +
+"    }\n" +
+"  });\n" +
+"}\n" +
+"function setConn(ok){ state.connOk = ok; document.getElementById('conn-dot').className = 'conn-dot ' + (ok?'ok':'bad'); document.getElementById('conn-banner').className = 'conn-banner' + (ok?'':' show'); }\n" +
+"function api(p, method, body){\n" +
+"  return fetch(p, {method:method||'GET', credentials:'same-origin', headers: body?{'Content-Type':'application/json'}:undefined, body: body?JSON.stringify(body):undefined})\n" +
+"    .then(function(r){ setConn(true); if (!r.ok) return r.json().then(function(e){ throw new Error(e.error||('HTTP '+r.status)); }); return r.json(); })\n" +
+"    .catch(function(err){ setConn(false); throw err; });\n" +
+"}\n" +
+"function showScreen(name){ document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');}); document.getElementById('screen-'+name).classList.add('active'); }\n" +
+"var INCREMENTS_KEY = 'fue_live_increments';\n" +
+"function loadIncrementSettings(){\n" +
+"  try{\n" +
+"    var raw = localStorage.getItem(INCREMENTS_KEY);\n" +
+"    var arr = raw ? JSON.parse(raw) : null;\n" +
+"    state.increments = (Array.isArray(arr) && arr.length) ? arr : DEFAULT_INCREMENTS.slice();\n" +
+"  }catch(e){ state.increments = DEFAULT_INCREMENTS.slice(); }\n" +
+"}\n" +
+"function saveIncrementSettings(){ localStorage.setItem(INCREMENTS_KEY, JSON.stringify(state.increments)); }\n" +
+"function renderSettingsScreen(){\n" +
+"  var editor = document.getElementById('increments-editor');\n" +
+"  editor.innerHTML = state.increments.map(function(v, idx){\n" +
+"    return '<div class=\"inc-row\"><input type=\"number\" min=\"1\" value=\"'+v+'\" data-idx=\"'+idx+'\" onchange=\"App.updateIncrementField(this)\">'+\n" +
+"      '<button class=\"btn secondary\" onclick=\"App.removeIncrementField('+idx+')\">'+escapeHtml(t('common.remove'))+'</button></div>';\n" +
+"  }).join('');\n" +
+"  var b = (state.currentUser && state.currentUser.branding) || { theme:'padrao', darkMode:false, logoFilename:null, ownerId:null };\n" +
+"  var preview = document.getElementById('settings-logo-preview');\n" +
+"  var empty = document.getElementById('settings-logo-empty');\n" +
+"  var removeBtn = document.getElementById('settings-logo-remove-btn');\n" +
+"  if (b.logoFilename && b.ownerId){\n" +
+"    preview.src = '/api/user/'+b.ownerId+'/logo?v='+encodeURIComponent(b.logoFilename);\n" +
+"    preview.style.display = 'inline-block'; empty.style.display='none'; removeBtn.style.display='inline-block';\n" +
+"  } else {\n" +
+"    preview.style.display = 'none'; empty.style.display=''; removeBtn.style.display='none';\n" +
+"  }\n" +
+"  document.getElementById('settings-theme-swatches').innerHTML = THEME_ORDER.map(function(id){\n" +
+"    var preset = THEME_PRESETS[id];\n" +
+"    var active = (b.theme===id);\n" +
+"    return '<button type=\"button\" onclick=\"App.setTheme(\\''+id+'\\')\" title=\"'+escapeHtml(preset.label)+'\" style=\"width:38px;height:38px;border-radius:50%;cursor:pointer;background:'+preset.primary+';border:'+(active?'3px solid var(--c-text)':'1px solid var(--c-border)')+';\"></button>';\n" +
+"  }).join('');\n" +
+"  document.getElementById('settings-darkmode-toggle').checked = !!b.darkMode;\n" +
+"  document.getElementById('settings-security-card').style.display = state.currentUser ? 'block' : 'none';\n" +
+"  var isAdminUser = !!(state.currentUser && state.currentUser.isAdmin);\n" +
+"  document.getElementById('settings-invites-card').style.display = isAdminUser ? 'block' : 'none';\n" +
+"  if (isAdminUser){ App.loadInvitesList(); App.loadBackupStatus(); }\n" +
+"}\n" +

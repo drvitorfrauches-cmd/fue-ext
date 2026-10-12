@@ -1,0 +1,276 @@
+// ---------- limitador de tentativas em memória (sem dependências externas) ----------
+// Protege login, cadastro, recuperação de senha e varredura de IDs de cirurgia contra
+// automação em rajada. Guarda só em memória (reinicia se o servidor reiniciar) — o
+// objetivo é atrapalhar ataques automatizados, não é uma lista negra permanente.
+var rateBuckets = {};
+function clientIp(req) {
+  var xf = req.headers["x-forwarded-for"];
+  if (xf) return String(xf).split(",")[0].trim();
+  return (req.socket && req.socket.remoteAddress) || "desconhecido";
+}
+// Retorna true se este "bucket" (ex: "login:1.2.3.4") já estourou o limite de
+// tentativas na janela de tempo atual. Cada chamada conta como uma tentativa.
+function rateLimited(bucketName, key, maxHits, windowMs) {
+  var now = Date.now();
+  var bucketKey = bucketName + ":" + key;
+  var entry = rateBuckets[bucketKey];
+  if (!entry || now > entry.resetAt) {
+    entry = { count: 0, resetAt: now + windowMs };
+    rateBuckets[bucketKey] = entry;
+  }
+  entry.count++;
+  return entry.count > maxHits;
+}
+setInterval(function () {
+  var now = Date.now();
+  Object.keys(rateBuckets).forEach(function (k) { if (rateBuckets[k].resetAt < now) delete rateBuckets[k]; });
+}, 5 * 60 * 1000);
+
+// ---------- autenticação (senha com hash local — sem dependências externas) ----------
+function hashPassword(password) {
+  var salt = crypto.randomBytes(16).toString("hex");
+  var hash = crypto.scryptSync(password, salt, 64).toString("hex");
+  return salt + ":" + hash;
+}
+function verifyPassword(password, stored) {
+  if (!stored || stored.indexOf(":") === -1) return false;
+  var parts = stored.split(":");
+  var salt = parts[0], hash = parts[1];
+  var check = crypto.scryptSync(password, salt, 64).toString("hex");
+  var a = Buffer.from(hash, "hex"), b = Buffer.from(check, "hex");
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
+// Tokens de login (cookie fue_auth) e de redefinição de senha nunca são salvos em
+// texto puro no data.json — só o hash SHA-256 fica no disco. O valor real (que vai
+// no cookie do navegador / no link do e-mail) nunca é gravado em lugar nenhum;
+// existe só na memória de quem está com a sessão aberta. Se o data.json vazar (backup
+// mal guardado, disco da nuvem comprometido), quem pegar o arquivo não consegue
+// logar como nenhum médico — só teria o hash, que não dá pra "usar de volta" como
+// cookie (diferente de senha, o token não precisa de salt por usuário: já nasce
+// aleatório com 24 bytes de entropia, então um hash simples e rápido já é seguro
+// contra os ataques que importam aqui — força-bruta não é viável).
+function hashToken(token) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+function publicUser(u) {
+  var b = u.branding || emptyBranding();
+  return { id: u.id, nomeCompleto: u.nomeCompleto, crm: u.crm, email: u.email, telefone: u.telefone, createdAt: u.createdAt, isAdmin: !!u.isAdmin, onboardingPending: !!u.onboardingPending, branding: { logoFilename: b.logoFilename || null, theme: THEME_IDS.has(b.theme) ? b.theme : "padrao", darkMode: !!b.darkMode, language: LANG_IDS.has(b.language) ? b.language : "pt", ownerId: u.id } };
+}
+// Identidade visual de quem é dono de uma cirurgia — usado pra que auxiliares que só
+// têm o link (sem login) também vejam a marca/tema do médico responsável por aquela
+// cirurgia. Só expõe o necessário pra pintar a tela (nunca nome/e-mail/telefone do
+// médico pra quem acessa sem login).
+function brandingForUser(ownerId) {
+  var u = ownerId ? db.users[ownerId] : null;
+  var b = (u && u.branding) ? u.branding : emptyBranding();
+  // nomeCompleto/crm: nome do médico não é dado sensível do paciente (é o próprio
+  // profissional se identificando) — adicionado pro Relatório para o paciente, que
+  // precisa mostrar de qual médico/clínica é o documento entregue ao paciente.
+  return { logoFilename: b.logoFilename || null, theme: THEME_IDS.has(b.theme) ? b.theme : "padrao", darkMode: !!b.darkMode, ownerId: ownerId || null, nomeCompleto: u ? u.nomeCompleto : null, crm: u ? u.crm : null };
+}
+function withOwnerBranding(s) {
+  var out = Object.assign({}, s);
+  out.ownerBranding = brandingForUser(s.ownerId);
+  return out;
+}
+function findUserByEmail(email) {
+  var found = null;
+  Object.keys(db.users).forEach(function (uid) { if (db.users[uid].email === email) found = db.users[uid]; });
+  return found;
+}
+function parseCookies(req) {
+  var out = {};
+  var raw = req.headers.cookie;
+  if (!raw) return out;
+  raw.split(";").forEach(function (part) {
+    var idx = part.indexOf("=");
+    if (idx === -1) return;
+    var k = part.slice(0, idx).trim();
+    var v = part.slice(idx + 1).trim();
+    try { out[k] = decodeURIComponent(v); } catch (e) { out[k] = v; }
+  });
+  return out;
+}
+// Descobre o idioma da pessoa que está fazendo a requisição — usado pra escolher
+// em qual idioma responder mensagens de erro da API (ainda não tem conta logada
+// nesse ponto, então não dá pra usar a preferência salva no cadastro; olha pro
+// cookie "fue_lang" que o cliente grava assim que a pessoa escolhe um idioma).
+function requestLang(req) {
+  var lang = parseCookies(req)["fue_lang"];
+  return LANG_IDS.has(lang) ? lang : "pt";
+}
+// Descobre o endereço "de fora" pra montar links (e-mail de redefinição, etc.).
+// Se o host da requisição for um domínio público (nuvem, ex: meuapp.up.railway.app),
+// usa esse domínio direto. Se for localhost/IP privado (rede local), escaneia os
+// adaptadores de rede pra achar o IP do wifi, evitando gerar um link com "localhost"
+// que só funciona no próprio computador.
+function isUnusableHost(host) {
+  var h = (host || "").split(":")[0];
+  return h === "localhost" || h === "127.0.0.1" || h === "";
+}
+function externalBaseUrl(req) {
+  var hostHeader = req.headers.host || "";
+  if (!isUnusableHost(hostHeader)) {
+    // Já é um endereço que funciona pra outros aparelhos: IP de rede local pelo qual
+    // o próprio pedido chegou, ou um domínio público de verdade (nuvem). Usa direto.
+    var proto = req.headers["x-forwarded-proto"] || (SECURE_COOKIES ? "https" : "http");
+    return proto + "://" + hostHeader;
+  }
+  // Só cai aqui quando o pedido chegou via "localhost", que não serve pra outros aparelhos.
+  var ips = [];
+  var nets = os.networkInterfaces();
+  Object.keys(nets).forEach(function (name) { (nets[name] || []).forEach(function (net) { if (net.family === "IPv4" && !net.internal) ips.push(net.address); }); });
+  var host = ips.length ? ips[0] : "localhost";
+  return "http://" + host + ":" + PORT;
+}
+function getAuthedUser(req) {
+  var cookies = parseCookies(req);
+  var token = cookies["fue_auth"];
+  if (!token) return null;
+  var entry = db.authTokens[hashToken(token)];
+  if (!entry) return null;
+  // Token expira no servidor depois de AUTH_TOKEN_TTL_MS (mesmo prazo do cookie).
+  // Antes desta checagem, um token roubado (ex: notebook compartilhado da clínica)
+  // continuava válido pra sempre — só o logout explícito invalidava.
+  if (Date.now() - entry.createdAt > AUTH_TOKEN_TTL_MS) { delete db.authTokens[hashToken(token)]; return null; }
+  return db.users[entry.userId] || null;
+}
+// Limpeza periódica de tokens expirados — evita que db.authTokens cresça pra sempre
+// com entradas mortas de gente que nunca mais voltou a logar.
+setInterval(function () {
+  var now = Date.now();
+  var changed = false;
+  Object.keys(db.authTokens).forEach(function (tok) {
+    if (now - db.authTokens[tok].createdAt > AUTH_TOKEN_TTL_MS) { delete db.authTokens[tok]; changed = true; }
+  });
+  if (changed) saveIndex();
+}, 60 * 60 * 1000);
+function setAuthCookie(res, token) {
+  var secure = SECURE_COOKIES ? "; Secure" : "";
+  res.setHeader("Set-Cookie", "fue_auth=" + token + "; HttpOnly; Path=/; Max-Age=2592000; SameSite=Lax" + secure);
+}
+function clearAuthCookie(res) {
+  var secure = SECURE_COOKIES ? "; Secure" : "";
+  res.setHeader("Set-Cookie", "fue_auth=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax" + secure);
+}
+
+// ---------- envio de e-mail via SMTP puro (TLS implícito, porta 465) — sem nenhuma biblioteca externa ----------
+function smtpSendMail(opts) {
+  return new Promise(function (resolve, reject) {
+    if (!SMTP_CONFIG.enabled) { reject(new Error("Envio de e-mail não está configurado neste servidor (SMTP_CONFIG.enabled = false).")); return; }
+    var settled = false;
+    var buf = "";
+    var pending = null;
+    var socket = tls.connect({ host: SMTP_CONFIG.host, port: SMTP_CONFIG.port, servername: SMTP_CONFIG.host });
+    var timer = setTimeout(function () { finish(new Error("Tempo esgotado ao falar com o servidor de e-mail.")); }, 20000);
+
+    function finish(err) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      try { socket.end(); } catch (e) {}
+      if (err) reject(err); else resolve();
+    }
+    function checkBuffer() {
+      if (!pending) return;
+      var idx = buf.indexOf("\r\n");
+      while (idx !== -1) {
+        var line = buf.slice(0, idx);
+        buf = buf.slice(idx + 2);
+        if (/^\d{3} /.test(line)) {
+          var code = parseInt(line.slice(0, 3), 10);
+          var p = pending; pending = null;
+          if (code >= 200 && code < 400) p.res(line); else p.rej(new Error("Servidor de e-mail respondeu: " + line));
+          return;
+        }
+        idx = buf.indexOf("\r\n");
+      }
+    }
+    function waitReply() { return new Promise(function (res2, rej2) { pending = { res: res2, rej: rej2 }; checkBuffer(); }); }
+    function cmd(line) { socket.write(line + "\r\n"); return waitReply(); }
+
+    socket.on("data", function (chunk) { buf += chunk.toString("utf8"); checkBuffer(); });
+    socket.on("error", function (err) { finish(err); });
+    socket.on("close", function () { if (!settled) finish(new Error("Conexão com o servidor de e-mail encerrada inesperadamente.")); });
+
+    socket.once("secureConnect", function () {
+      waitReply()
+        .then(function () { return cmd("EHLO localhost"); })
+        .then(function () { return cmd("AUTH LOGIN"); })
+        .then(function () { return cmd(Buffer.from(SMTP_CONFIG.user, "utf8").toString("base64")); })
+        .then(function () { return cmd(Buffer.from(SMTP_CONFIG.pass, "utf8").toString("base64")); })
+        .then(function () { return cmd("MAIL FROM:<" + SMTP_CONFIG.user + ">"); })
+        .then(function () { return cmd("RCPT TO:<" + opts.to + ">"); })
+        .then(function () { return cmd("DATA"); })
+        .then(function () {
+          var fromHeader = SMTP_CONFIG.fromName ? (SMTP_CONFIG.fromName + " <" + SMTP_CONFIG.user + ">") : SMTP_CONFIG.user;
+          var lines = [
+            "From: " + fromHeader,
+            "To: " + opts.to,
+            "Subject: " + opts.subject,
+            "MIME-Version: 1.0",
+            "Content-Type: text/plain; charset=utf-8",
+            ""
+          ];
+          var bodyEscaped = String(opts.text).replace(/\r\n/g, "\n").split("\n").map(function (l) {
+            return l.charAt(0) === "." ? "." + l : l;
+          }).join("\r\n");
+          return cmd(lines.join("\r\n") + "\r\n" + bodyEscaped + "\r\n.");
+        })
+        .then(function () { return cmd("QUIT"); })
+        .then(function () { finish(null); })
+        .catch(function (err) { finish(err); });
+    });
+  });
+}
+
+// ---------- helpers HTTP ----------
+function send(res, status, obj) {
+  // Sem cabeçalho de CORS de propósito: o app é same-origin (o próprio servidor
+  // serve o HTML/JS do cliente e a API), então nenhuma chamada legítima do
+  // navegador precisa de CORS liberado. Um "Access-Control-Allow-Origin: *"
+  // aqui só serviria pra permitir que QUALQUER site de terceiros usasse o
+  // navegador de um visitante pra varrer IDs de sessão (8 chars hex) distribuindo
+  // a varredura entre vários IPs de vítimas — driblando o rate-limit por IP
+  // (session-miss) que existe justamente pra dificultar esse tipo de ataque.
+  var body = JSON.stringify(obj);
+  res.writeHead(status, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store"
+  });
+  res.end(body);
+}
+function readBody(req) {
+  return new Promise(function (resolve, reject) {
+    var chunks = [];
+    var total = 0;
+    var tooBig = false;
+    req.on("data", function (c) {
+      total += c.length;
+      if (total > MAX_BODY_BYTES) { tooBig = true; req.destroy(); return; }
+      chunks.push(c);
+    });
+    req.on("end", function () {
+      if (tooBig) { reject(new Error("Corpo da requisição grande demais.")); return; }
+      try {
+        var raw = Buffer.concat(chunks).toString("utf8");
+        resolve(raw ? JSON.parse(raw) : {});
+      } catch (e) {
+        reject(e);
+      }
+    });
+    req.on("error", reject);
+  });
+}
+function findPhotoCategory(s, photoId) {
+  for (var i = 0; i < PHOTO_CATS.length; i++) {
+    var cat = PHOTO_CATS[i];
+    var list = s.photos[cat] || [];
+    for (var j = 0; j < list.length; j++) {
+      if (list[j].id === photoId) return { cat: cat, idx: j, photo: list[j] };
+    }
+  }
+  return null;
+}
+

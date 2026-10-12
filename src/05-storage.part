@@ -1,0 +1,353 @@
+// ---------- persistência dividida por médico (Fase 2) ----------
+// Cada médico tem seu próprio arquivo (data/doctors/<id>.json) — uma escrita
+// de um médico nunca disputa recurso com a escrita de outro. Auth (usuários,
+// tokens) fica num índice pequeno à parte (data/index.json), e cirurgias sem
+// dono (casos legados) ficam em data/orfaos.json. O objeto `db` em memória
+// continua com a MESMA forma de sempre ({sessions, users, authTokens,
+// resetTokens}) — só a gravação em disco é que ficou dividida.
+var SPLIT_DIR = path.join(DATA_DIR, "data");
+var INDEX_FILE = path.join(SPLIT_DIR, "index.json");
+var DOCTORS_DIR = path.join(SPLIT_DIR, "doctors");
+var ORFAOS_FILE = path.join(SPLIT_DIR, "orfaos.json");
+
+function atomicWriteJson(filePath, obj) {
+  // Escreve num arquivo temporário e só troca de nome no final (rename é atômico
+  // no sistema de arquivos). Se o processo cair no meio da escrita, o pior caso é
+  // perder o arquivo temporário — o arquivo de verdade nunca fica pela metade.
+  // Garante a pasta de destino antes de escrever: depois de uma migração
+  // abortada (que apaga SPLIT_DIR pra não deixar lixo pela metade), a
+  // próxima gravação não pode quebrar só porque a pasta não existe mais.
+  var dir = path.dirname(filePath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  var tmpFile = filePath + ".tmp" + process.pid;
+  fs.writeFileSync(tmpFile, JSON.stringify(obj, null, 2));
+  fs.renameSync(tmpFile, filePath);
+}
+
+function loadData() {
+  // Formato antigo (arquivo único) — usado só como último recurso, se por
+  // algum motivo a migração ainda não rodou nem existe instalação nova.
+  try {
+    return JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+  } catch (e) {
+    return { sessions: {} };
+  }
+}
+
+function loadSplitData() {
+  var idx;
+  try { idx = JSON.parse(fs.readFileSync(INDEX_FILE, "utf8")); } catch (e) { idx = { users: {}, authTokens: {}, resetTokens: {}, inviteTokens: {} }; }
+  var sessions = {};
+  if (fs.existsSync(DOCTORS_DIR)) {
+    fs.readdirSync(DOCTORS_DIR).forEach(function (fname) {
+      if (!fname.endsWith(".json") || fname.indexOf(".tmp") !== -1) return;
+      try {
+        var doc = JSON.parse(fs.readFileSync(path.join(DOCTORS_DIR, fname), "utf8"));
+        Object.assign(sessions, doc.sessions || {});
+      } catch (e) {
+        // Um arquivo de médico corrompido não pode derrubar os outros —
+        // registra e segue (esse médico especificamente perderia acesso às
+        // próprias cirurgias até o arquivo ser investigado, mas todo o
+        // resto do sistema continua de pé).
+        console.log("[Fase 2] aviso: não consegui ler " + fname + " (" + e.message + ") — pulando esse arquivo.");
+      }
+    });
+  }
+  try {
+    var orf = JSON.parse(fs.readFileSync(ORFAOS_FILE, "utf8"));
+    Object.assign(sessions, orf.sessions || {});
+  } catch (e) {}
+  return {
+    users: idx.users || {},
+    authTokens: idx.authTokens || {},
+    resetTokens: idx.resetTokens || {},
+    inviteTokens: idx.inviteTokens || {},
+    sessions: sessions
+  };
+}
+
+function countSessionsAndUsers(dataLike) {
+  return {
+    sessionCount: Object.keys(dataLike.sessions || {}).length,
+    userCount: Object.keys(dataLike.users || {}).length
+  };
+}
+
+function runMigrationIfNeeded() {
+  if (fs.existsSync(INDEX_FILE)) return; // já migrado, nada a fazer
+  if (!fs.existsSync(DATA_FILE)) return; // instalação nova, sem data.json antigo pra migrar
+
+  console.log("[Fase 2] data.json antigo encontrado — iniciando divisão por médico...");
+  var old;
+  try {
+    old = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+  } catch (e) {
+    console.log("[Fase 2] ERRO lendo data.json antigo (" + e.message + ") — abortando migração, servidor segue com o arquivo único.");
+    return;
+  }
+  var oldCounts = countSessionsAndUsers(old);
+
+  if (!fs.existsSync(DOCTORS_DIR)) fs.mkdirSync(DOCTORS_DIR, { recursive: true });
+
+  var byOwner = {};
+  var orfaosSessions = {};
+  Object.keys(old.sessions || {}).forEach(function (id) {
+    var s = old.sessions[id];
+    var owner = s.ownerId;
+    if (owner && old.users && old.users[owner]) {
+      if (!byOwner[owner]) byOwner[owner] = {};
+      byOwner[owner][id] = s;
+    } else {
+      // Sem dono, ou dono que não existe mais em users — vira órfã, nunca é perdida.
+      orfaosSessions[id] = s;
+    }
+  });
+
+  // Seam de teste — só ativa com a env var explícita, nunca em produção.
+  // Simula um bug de migração derrubando uma sessão de propósito, pra
+  // conseguir testar de verdade o caminho de "abortar com segurança".
+  if (process.env.TEST_BREAK_MIGRATION === "true") {
+    var firstOwner = Object.keys(byOwner)[0];
+    if (firstOwner) {
+      var firstSessId = Object.keys(byOwner[firstOwner])[0];
+      if (firstSessId) delete byOwner[firstOwner][firstSessId];
+    }
+  }
+
+  Object.keys(byOwner).forEach(function (ownerId) {
+    atomicWriteJson(path.join(DOCTORS_DIR, ownerId + ".json"), { sessions: byOwner[ownerId] });
+  });
+  atomicWriteJson(ORFAOS_FILE, { sessions: orfaosSessions });
+  atomicWriteJson(INDEX_FILE, {
+    users: old.users || {},
+    authTokens: old.authTokens || {},
+    resetTokens: old.resetTokens || {}
+  });
+
+  var newData = loadSplitData();
+  var newCounts = countSessionsAndUsers(newData);
+
+  if (newCounts.sessionCount !== oldCounts.sessionCount || newCounts.userCount !== oldCounts.userCount) {
+    console.log(
+      "[Fase 2] DIVERGÊNCIA na migração (antigo: " + oldCounts.userCount + " médicos / " + oldCounts.sessionCount +
+      " cirurgias — novo: " + newCounts.userCount + " médicos / " + newCounts.sessionCount +
+      " cirurgias). Abortando migração e mantendo o data.json antigo intacto."
+    );
+    fs.rmSync(SPLIT_DIR, { recursive: true, force: true });
+    return;
+  }
+
+  var backupName = DATA_FILE + ".bak-migrado-" + Date.now();
+  fs.renameSync(DATA_FILE, backupName);
+  console.log(
+    "[Fase 2] migração concluída — " + newCounts.userCount + " médicos, " + newCounts.sessionCount +
+    " cirurgias. Backup do arquivo antigo em: " + backupName
+  );
+}
+
+runMigrationIfNeeded();
+// Modo de armazenamento decidido uma vez, no boot:
+// - Instalação nova (nem data.json nem data/index.json existem ainda): já
+//   nasce em modo dividido, não tem dado legado pra preservar.
+// - Migração rodou com sucesso (index.json existe): modo dividido.
+// - data.json antigo existe mas a migração abortou por divergência: modo
+//   legado — continua tudo num arquivo só até o problema ser investigado,
+//   exatamente como pedido (nunca aplicar a divisão parcialmente).
+var usingSplitStorage = fs.existsSync(INDEX_FILE) || !fs.existsSync(DATA_FILE);
+var dataFileExistedAtStartup = fs.existsSync(INDEX_FILE) || fs.existsSync(DATA_FILE);
+var db = usingSplitStorage ? loadSplitData() : loadData();
+if (!db.sessions) db.sessions = {};
+if (!db.users) db.users = {};
+if (!db.authTokens) db.authTokens = {};
+if (!db.resetTokens) db.resetTokens = {};
+if (!db.inviteTokens) db.inviteTokens = {};
+
+// ---------- funções de salvar, escopadas por médico (Fase 2) ----------
+// Cada uma grava só o arquivo relevante — uma escrita do médico A nunca
+// disputa recurso com uma escrita do médico B. `saveForSession` decide
+// automaticamente qual arquivo gravar a partir do dono da cirurgia.
+// Todas caem de volta pro arquivo único (`saveDataLegacy`) quando o servidor
+// está em modo legado (migração abortada) — nunca escrevem arquivo dividido
+// pela metade nesse caso.
+function saveDataLegacy() {
+  atomicWriteJson(DATA_FILE, db);
+}
+function saveIndex() {
+  if (!usingSplitStorage) { saveDataLegacy(); return; }
+  atomicWriteJson(INDEX_FILE, { users: db.users, authTokens: db.authTokens, resetTokens: db.resetTokens, inviteTokens: db.inviteTokens });
+}
+function saveDoctorFile(ownerId) {
+  if (!usingSplitStorage) { saveDataLegacy(); return; }
+  if (!ownerId) { saveOrfaos(); return; }
+  var sessions = {};
+  Object.keys(db.sessions).forEach(function (id) {
+    if (db.sessions[id].ownerId === ownerId) sessions[id] = db.sessions[id];
+  });
+  atomicWriteJson(path.join(DOCTORS_DIR, ownerId + ".json"), { sessions: sessions });
+}
+function saveOrfaos() {
+  if (!usingSplitStorage) { saveDataLegacy(); return; }
+  var sessions = {};
+  Object.keys(db.sessions).forEach(function (id) {
+    if (!db.sessions[id].ownerId) sessions[id] = db.sessions[id];
+  });
+  atomicWriteJson(ORFAOS_FILE, { sessions: sessions });
+}
+function saveForSession(session) {
+  if (session.ownerId) saveDoctorFile(session.ownerId); else saveOrfaos();
+}
+function saveAllScoped() {
+  // Salva tudo de uma vez — usada só no boot, na normalização de dados
+  // antigos (que ainda mexe em cirurgias/médicos de vários donos ao mesmo
+  // tempo). O resto do código usa saveIndex/saveDoctorFile/saveOrfaos/
+  // saveForSession, que gravam só o arquivo relevante a cada ação.
+  if (!usingSplitStorage) { saveDataLegacy(); return; }
+  saveIndex();
+  var ownerIds = {};
+  Object.keys(db.sessions).forEach(function (id) {
+    var o = db.sessions[id].ownerId;
+    if (o) ownerIds[o] = true;
+  });
+  Object.keys(ownerIds).forEach(function (id) { saveDoctorFile(id); });
+  saveOrfaos();
+}
+
+// Normaliza cirurgias salvas antes desta atualização (migra pro formato com quadrantes).
+Object.keys(db.sessions).forEach(function (id) {
+  var s = db.sessions[id];
+  if (s.ownerId === undefined) s.ownerId = null;
+  if (!SESSION_MODES.has(s.mode)) s.mode = "completo";
+  if (!s.quadrants) {
+    s.quadrants = emptyQuadrants();
+    // Cirurgia salva antes dos quadrantes existirem — os dados antigos (contagem única)
+    // viram o quadrante "Temporal direito" por padrão, igual à migração do app v1.
+    if (s.counts) {
+      s.quadrants[QUADRANTS[0].id].counts = s.counts;
+      delete s.counts;
+    }
+    if (s.mambaCount !== undefined) {
+      if (s.mambaCount !== null) s.quadrants[QUADRANTS[0].id].mambaCumulativo = s.mambaCount;
+      delete s.mambaCount;
+    }
+  } else {
+    QUADRANTS.forEach(function (q) {
+      if (!s.quadrants[q.id]) s.quadrants[q.id] = emptyQuadrant();
+      if (!s.quadrants[q.id].counts) s.quadrants[q.id].counts = emptyCounts();
+      CATS.forEach(function (c) { if (s.quadrants[q.id].counts[c.id] === undefined) s.quadrants[q.id].counts[c.id] = 0; });
+      if (s.quadrants[q.id].mambaCumulativo === undefined) s.quadrants[q.id].mambaCumulativo = null;
+      if (s.quadrants[q.id].mambaMarkTimeMs === undefined) s.quadrants[q.id].mambaMarkTimeMs = null;
+      // Dado de cirurgias antigas (antes desta correção) não tem relógio real —
+      // fica null e cai no último recurso de ordem fixa, igual já acontecia antes.
+      if (s.quadrants[q.id].mambaMarkedAtMs === undefined) s.quadrants[q.id].mambaMarkedAtMs = null;
+      if (s.quadrants[q.id].carryFromId === undefined) s.quadrants[q.id].carryFromId = null;
+      if (s.quadrants[q.id].locked === undefined) s.quadrants[q.id].locked = false;
+    });
+  }
+  if (!s.patientInfo) {
+    s.patientInfo = emptyPatientInfo();
+  } else {
+    var epi = emptyPatientInfo();
+    Object.keys(epi).forEach(function (k) { if (s.patientInfo[k] === undefined) s.patientInfo[k] = epi[k]; });
+  }
+  if (!s.schedule) {
+    s.schedule = emptySchedule();
+  } else {
+    var esch = emptySchedule();
+    Object.keys(esch).forEach(function (k) { if (s.schedule[k] === undefined) s.schedule[k] = esch[k]; });
+  }
+  if (!s.implant || !Array.isArray(s.implant.withdrawals)) s.implant = emptyImplant();
+  if (!s.preincCounts) s.preincCounts = emptyPreinc();
+  if (!s.preincDist) {
+    s.preincDist = emptyPreincDist();
+  } else {
+    PREINC_AREAS.forEach(function (a) {
+      if (!s.preincDist[a.id]) s.preincDist[a.id] = {};
+      DIST_FIOS.forEach(function (f) { if (s.preincDist[a.id][f.id] === undefined) s.preincDist[a.id][f.id] = 0; });
+    });
+  }
+  if (!s.photos) s.photos = { marcacao: [], posop: [] };
+  if (!s.timer) s.timer = emptyTimer();
+  if (!s.preincTimer) s.preincTimer = emptyTimer();
+  // Tempo GLOBAL da cirurgia: começa a contar sozinho no instante em que QUALQUER UM
+  // dos dois cronômetros (extração ou pré-incisões) é iniciado pela primeira vez —
+  // não importa qual dos dois. Diferente dos outros dois, não pausa: reflete o tempo
+  // total de caso, do início ao fim. Cirurgias já em andamento antes desta atualização
+  // não têm como recuperar o instante exato do primeiro início — ficam com o tempo
+  // global "não iniciado" até o próximo Iniciar de um dos dois cronômetros.
+  if (s.globalTimerStartedAt === undefined) s.globalTimerStartedAt = null;
+  if (s.globalTimerEndedAt === undefined) s.globalTimerEndedAt = null;
+  // finalizedAt: marca quando a cirurgia foi finalizada, usado só pra saber
+  // quando o link (sem login) deve parar de servir as FOTOS (ver PHOTO_LINK_TTL_MS).
+  // Cirurgias já finalizadas antes desta atualização não têm o instante exato —
+  // usamos updatedAt como aproximação conservadora (não "perdoa" essas cirurgias
+  // com acesso vitalício, só começa a contar o prazo a partir da última alteração
+  // conhecida).
+  if (s.finalizedAt === undefined) s.finalizedAt = (s.status === "finalizada") ? s.updatedAt : null;
+});
+// Migra médicos cadastrados antes da identidade visual existir.
+Object.keys(db.users).forEach(function (id) {
+  var u = db.users[id];
+  if (!u.branding) {
+    u.branding = emptyBranding();
+  } else {
+    if (u.branding.logoFilename === undefined) u.branding.logoFilename = null;
+    if (!THEME_IDS.has(u.branding.theme)) u.branding.theme = "padrao";
+    if (u.branding.darkMode === undefined) u.branding.darkMode = false;
+    if (!LANG_IDS.has(u.branding.language)) u.branding.language = "pt";
+  }
+  // Migra médicos cadastrados antes do papel de administrador existir — só a
+  // conta do Dr. Vitor (ADMIN_EMAIL) vira admin, todas as outras ficam false.
+  if (u.isAdmin === undefined) u.isAdmin = (String(u.email || "").toLowerCase() === ADMIN_EMAIL);
+  // Guia de boas-vindas: médicos que já existiam não devem vê-lo de surpresa.
+  if (u.onboardingPending === undefined) u.onboardingPending = false;
+});
+saveAllScoped();
+
+// ---------- diagnóstico de persistência ----------
+// Mostra no log, toda vez que o servidor inicia, de onde os dados foram carregados —
+// pra você conseguir confirmar (olhando o log do deploy) se o volume persistente está
+// realmente sendo usado, em vez de descobrir só depois de perder um cadastro.
+console.log("");
+console.log("---- Diagnóstico de armazenamento ----");
+console.log(" DATA_DIR: " + DATA_DIR);
+if (usingSplitStorage) {
+  console.log(" Modo: dividido por médico (Fase 2)");
+  console.log(" Índice (auth): " + INDEX_FILE);
+  console.log(" Pasta por médico: " + DOCTORS_DIR);
+  console.log(" Órfãs (sem dono): " + ORFAOS_FILE);
+  console.log(" data.json antigo ainda presente (não deveria, se já migrou): " + (fs.existsSync(DATA_FILE) ? "SIM — verificar" : "não"));
+} else {
+  console.log(" Modo: arquivo único (legado) — " + DATA_FILE);
+  console.log(" Se isso for inesperado (você esperava já estar no modo dividido), procure");
+  console.log(" acima nesse mesmo log por uma linha \"[Fase 2] DIVERGÊNCIA na migração\" —");
+  console.log(" ela explica por que a divisão foi abortada e o app ficou no formato antigo.");
+}
+console.log(" Arquivo já existia ao iniciar: " + (dataFileExistedAtStartup ? "sim" : "não — começando do zero"));
+console.log(" Médicos cadastrados carregados: " + Object.keys(db.users).length);
+console.log(" Cirurgias carregadas: " + Object.keys(db.sessions).length);
+if (!process.env.DATA_DIR) {
+  console.log(" ATENÇÃO: a variável de ambiente DATA_DIR não está definida. Os dados estão sendo");
+  console.log(" salvos do lado do server.js (" + __dirname + "). Se este servidor está rodando");
+  console.log(" na nuvem (Railway ou parecido), ISSO SIGNIFICA QUE OS DADOS SOMEM A CADA NOVO");
+  console.log(" DEPLOY — o disco do container é recriado do zero a cada publicação, só o que");
+  console.log(" está num volume persistente sobrevive. Defina DATA_DIR apontando pro caminho");
+  console.log(" do volume (ex: DATA_DIR=/data) nas variáveis de ambiente do serviço. Veja a");
+  console.log(" seção \"Nuvem (Railway)\" do LEIA-ME.md, passos 6 e 7.");
+} else if (!dataFileExistedAtStartup) {
+  console.log(" ATENÇÃO: DATA_DIR está definida (" + DATA_DIR + "), mas não havia nenhum");
+  console.log(" data.json ali — ou é a primeira vez que este servidor roda, ou o volume não");
+  console.log(" está de fato montado nesse caminho (confira no painel do serviço se o volume");
+  console.log(" existe e está montado exatamente em \"" + DATA_DIR + "\").");
+}
+console.log("---------------------------------------");
+console.log("");
+
+function newId(bytes) {
+  return crypto.randomBytes(bytes || 4).toString("hex");
+}
+function newSessionId() {
+  var id;
+  do { id = newId(4); } while (db.sessions[id]);
+  return id;
+}
+

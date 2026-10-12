@@ -60,12 +60,13 @@ if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 //   4. Copie a senha de 16 letras gerada e use como SMTP_PASS (ou cole em "pass" abaixo)
 //   5. "enabled" já vem true por padrão (só desliga se definir SMTP_ENABLED=false)
 //      — reinicie o servidor depois de preencher user/pass pra valer
+// Sem senha no código: e-mail só liga se SMTP_ENABLED=true E SMTP_PASS estiver no ambiente.
 const SMTP_CONFIG = {
-  enabled: process.env.SMTP_ENABLED === "false" ? false : true,
+  enabled: process.env.SMTP_ENABLED === "true" && !!process.env.SMTP_PASS,
   host: process.env.SMTP_HOST || "smtp.gmail.com",
   port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 465,
   user: process.env.SMTP_USER || "drvitorfrauches@gmail.com",
-  pass: process.env.SMTP_PASS || "ajfn tmxk cvya dlxx",
+  pass: process.env.SMTP_PASS || "",
   fromName: process.env.SMTP_FROM_NAME || "Graftis"
 };
 
@@ -520,6 +521,54 @@ const STRINGS = {
     "dash.col_texture": "Textura",
     "dash.col_shaving": "Raspagem",
     "dash.col_age": "Idade",
+    "nav.menu": "Menu",
+    "cnt.tab_horarios": "Horários",
+    "cnt.tab_implantacao": "Implantação",
+    "sched.title": "Horários da cirurgia",
+    "sched.hint": "Preencha na hora com \"Agora\" ou digite o horário. Início e fim de cada etapa, como na lousa da sala.",
+    "sched.stage_entrada": "Entrada do paciente",
+    "sched.stage_bloqueio": "Bloqueio",
+    "sched.stage_anest_doadora": "Anestesia doadora",
+    "sched.stage_pre_frontal": "Pré-incisão frontal",
+    "sched.stage_pre_coroa": "Pré-incisão coroa",
+    "sched.stage_extracao": "Extração",
+    "sched.stage_imp_coroa": "Implantação coroa",
+    "sched.stage_imp_frente": "Implantação frente",
+    "sched.stage_finalizacao": "Finalização",
+    "sched.start": "Início",
+    "sched.end": "Fim",
+    "sched.now": "Agora",
+    "sched.clear": "Limpar",
+    "sched.duration": "Duração",
+    "sched.wrap_warning": "fim antes do início — confira (virou o dia?)",
+    "sched.use_timer": "Usar cronômetro ({time})",
+    "sched.total_stay": "Da entrada à finalização",
+    "errors.invalid_time": "Horário inválido (use HH:MM).",
+    "errors.login_required_implant": "Faça login pra registrar retiradas do chiller.",
+    "errors.invalid_withdrawal": "Quantidade inválida.",
+    "errors.withdrawal_not_found": "Retirada não encontrada.",
+    "impl.title": "Implantação — estoque no chiller",
+    "impl.hint": "Total de folículos íntegros extraídos menos o que já foi retirado do chiller.",
+    "impl.total": "Extraídos (total)",
+    "impl.withdrawn": "Já retirados",
+    "impl.remaining": "Restam no chiller",
+    "impl.custom_placeholder": "Ex: 250",
+    "impl.withdraw_btn": "Retirar",
+    "impl.history_title": "Retiradas",
+    "impl.history_empty": "Nenhuma retirada registrada ainda.",
+    "impl.col_time": "Hora",
+    "impl.col_qty": "Retirados",
+    "impl.col_left": "Restam",
+    "impl.remove_btn": "Apagar retirada",
+    "impl.remove_confirm": "Apagar esta retirada de {n} folículos?",
+    "impl.over_balance": "Só restam {n} no chiller — não dá pra retirar mais que isso.",
+    "impl.owner_only_hint": "Só o médico responsável (logado) registra as retiradas.",
+    "impl.login_needed": "Faça login pra registrar retiradas.",
+    "impl.invalid_qty": "Digite uma quantidade válida.",
+    "impl.count_changed_warning": "Atenção: já foram retirados {w}, mas a contagem atual tem só {total}. A contagem foi alterada?",
+    "impl.withdrawn_toast": "Retirados {n}. Restam {left} no chiller.",
+    "impl.removed_toast": "Retirada apagada.",
+    "impl.done": "Chiller zerado: todos os folículos foram retirados.",
     "cnt.fix_duration_btn": "Corrigir duração",
     "cnt.fix_duration_prompt": "Quantos minutos a cirurgia durou de verdade? (ex: 200 para 3h20)",
     "share.title": "Compartilhar cirurgia",
@@ -1004,6 +1053,54 @@ const STRINGS = {
     "dash.col_texture": "Texture",
     "dash.col_shaving": "Shaving",
     "dash.col_age": "Age",
+    "nav.menu": "Menu",
+    "cnt.tab_horarios": "Times",
+    "cnt.tab_implantacao": "Implantation",
+    "sched.title": "Surgery times",
+    "sched.hint": "Fill in on the spot with \"Now\" or type the time. Start and end of each stage, like the whiteboard in the room.",
+    "sched.stage_entrada": "Patient arrival",
+    "sched.stage_bloqueio": "Nerve block",
+    "sched.stage_anest_doadora": "Donor anesthesia",
+    "sched.stage_pre_frontal": "Frontal pre-incision",
+    "sched.stage_pre_coroa": "Crown pre-incision",
+    "sched.stage_extracao": "Extraction",
+    "sched.stage_imp_coroa": "Crown implantation",
+    "sched.stage_imp_frente": "Frontal implantation",
+    "sched.stage_finalizacao": "Finish",
+    "sched.start": "Start",
+    "sched.end": "End",
+    "sched.now": "Now",
+    "sched.clear": "Clear",
+    "sched.duration": "Duration",
+    "sched.wrap_warning": "end before start — please check (past midnight?)",
+    "sched.use_timer": "Use timer ({time})",
+    "sched.total_stay": "Arrival to finish",
+    "errors.invalid_time": "Invalid time (use HH:MM).",
+    "errors.login_required_implant": "Log in to record chiller withdrawals.",
+    "errors.invalid_withdrawal": "Invalid quantity.",
+    "errors.withdrawal_not_found": "Withdrawal not found.",
+    "impl.title": "Implantation — chiller stock",
+    "impl.hint": "Total intact follicles extracted minus what has already been taken from the chiller.",
+    "impl.total": "Extracted (total)",
+    "impl.withdrawn": "Already withdrawn",
+    "impl.remaining": "Left in the chiller",
+    "impl.custom_placeholder": "e.g. 250",
+    "impl.withdraw_btn": "Withdraw",
+    "impl.history_title": "Withdrawals",
+    "impl.history_empty": "No withdrawals recorded yet.",
+    "impl.col_time": "Time",
+    "impl.col_qty": "Withdrawn",
+    "impl.col_left": "Left",
+    "impl.remove_btn": "Delete withdrawal",
+    "impl.remove_confirm": "Delete this withdrawal of {n} follicles?",
+    "impl.over_balance": "Only {n} left in the chiller — can't withdraw more than that.",
+    "impl.owner_only_hint": "Only the responsible doctor (logged in) records withdrawals.",
+    "impl.login_needed": "Log in to record withdrawals.",
+    "impl.invalid_qty": "Enter a valid quantity.",
+    "impl.count_changed_warning": "Warning: {w} already withdrawn, but the current count has only {total}. Was the count changed?",
+    "impl.withdrawn_toast": "Withdrew {n}. {left} left in the chiller.",
+    "impl.removed_toast": "Withdrawal deleted.",
+    "impl.done": "Chiller empty: all follicles have been withdrawn.",
     "cnt.fix_duration_btn": "Correct duration",
     "cnt.fix_duration_prompt": "How many minutes did the surgery actually take? (e.g. 200 for 3h20)",
     "share.title": "Share surgery",
@@ -1488,6 +1585,54 @@ const STRINGS = {
     "dash.col_texture": "Textura",
     "dash.col_shaving": "Rapado",
     "dash.col_age": "Edad",
+    "nav.menu": "Menú",
+    "cnt.tab_horarios": "Horarios",
+    "cnt.tab_implantacao": "Implantación",
+    "sched.title": "Horarios de la cirugía",
+    "sched.hint": "Complete en el momento con \"Ahora\" o escriba la hora. Inicio y fin de cada etapa, como en la pizarra de la sala.",
+    "sched.stage_entrada": "Entrada del paciente",
+    "sched.stage_bloqueio": "Bloqueo",
+    "sched.stage_anest_doadora": "Anestesia donante",
+    "sched.stage_pre_frontal": "Preincisión frontal",
+    "sched.stage_pre_coroa": "Preincisión corona",
+    "sched.stage_extracao": "Extracción",
+    "sched.stage_imp_coroa": "Implantación corona",
+    "sched.stage_imp_frente": "Implantación frente",
+    "sched.stage_finalizacao": "Finalización",
+    "sched.start": "Inicio",
+    "sched.end": "Fin",
+    "sched.now": "Ahora",
+    "sched.clear": "Borrar",
+    "sched.duration": "Duración",
+    "sched.wrap_warning": "fin antes del inicio — revise (¿pasó la medianoche?)",
+    "sched.use_timer": "Usar cronómetro ({time})",
+    "sched.total_stay": "De la entrada a la finalización",
+    "errors.invalid_time": "Hora inválida (use HH:MM).",
+    "errors.login_required_implant": "Inicia sesión para registrar retiros del chiller.",
+    "errors.invalid_withdrawal": "Cantidad inválida.",
+    "errors.withdrawal_not_found": "Retiro no encontrado.",
+    "impl.title": "Implantación — stock en el chiller",
+    "impl.hint": "Total de folículos íntegros extraídos menos lo que ya se retiró del chiller.",
+    "impl.total": "Extraídos (total)",
+    "impl.withdrawn": "Ya retirados",
+    "impl.remaining": "Quedan en el chiller",
+    "impl.custom_placeholder": "Ej: 250",
+    "impl.withdraw_btn": "Retirar",
+    "impl.history_title": "Retiros",
+    "impl.history_empty": "Aún no hay retiros registrados.",
+    "impl.col_time": "Hora",
+    "impl.col_qty": "Retirados",
+    "impl.col_left": "Quedan",
+    "impl.remove_btn": "Borrar retiro",
+    "impl.remove_confirm": "¿Borrar este retiro de {n} folículos?",
+    "impl.over_balance": "Solo quedan {n} en el chiller — no se puede retirar más que eso.",
+    "impl.owner_only_hint": "Solo el médico responsable (con sesión iniciada) registra los retiros.",
+    "impl.login_needed": "Inicia sesión para registrar retiros.",
+    "impl.invalid_qty": "Ingrese una cantidad válida.",
+    "impl.count_changed_warning": "Atención: ya se retiraron {w}, pero el conteo actual solo tiene {total}. ¿Se modificó el conteo?",
+    "impl.withdrawn_toast": "Retirados {n}. Quedan {left} en el chiller.",
+    "impl.removed_toast": "Retiro borrado.",
+    "impl.done": "Chiller vacío: se retiraron todos los folículos.",
     "cnt.fix_duration_btn": "Corregir duración",
     "cnt.fix_duration_prompt": "¿Cuántos minutos duró realmente la cirugía? (ej: 200 para 3h20)",
     "share.title": "Compartir cirugía",
@@ -1674,6 +1819,40 @@ function sanitizePatientInfoFields(body) {
   if (body.punchMm !== undefined) { var v7 = enumOrNull(body.punchMm, PATIENT_PUNCH); if (v7 !== undefined) out.punchMm = v7; }
   return out;
 }
+// Horários de cada etapa (como na lousa da sala), guardados como texto "HH:MM".
+// Entrada e Finalização são horário único; as demais etapas têm início (Ini) e fim (Fim).
+var SCHEDULE_STAGES = ["bloqueio", "preFrontal", "anestDoadora", "preCoroa", "extracao", "impCoroa", "impFrente"];
+function emptySchedule() {
+  var o = { entrada: null, finalizacao: null };
+  SCHEDULE_STAGES.forEach(function (st) { o[st + "Ini"] = null; o[st + "Fim"] = null; });
+  return o;
+}
+var SCHEDULE_FIELDS = Object.keys(emptySchedule());
+var SCHEDULE_TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+// Devolve {fields, invalid}: só chaves conhecidas; vazio/null limpa; formato ruim => invalid.
+function sanitizeScheduleFields(body) {
+  var out = {}, invalid = false;
+  SCHEDULE_FIELDS.forEach(function (k) {
+    if (body[k] === undefined) return;
+    var v = body[k];
+    if (v === null || v === "") { out[k] = null; return; }
+    if (typeof v === "string" && SCHEDULE_TIME_RE.test(v)) { out[k] = v; return; }
+    invalid = true;
+  });
+  return { fields: out, invalid: invalid };
+}
+// Carimba um horário automático (ex.: ao iniciar cronômetro / finalizar). O HH:MM vem do
+// RELÓGIO DO APARELHO (localTime) — o servidor roda em UTC e não conhece o fuso do
+// Brasil. Sem localTime válido (cliente antigo), não carimba nada em vez de gravar
+// hora errada. overwrite=false só preenche se o campo estiver vazio.
+function stampSchedule(session, field, localTime, overwrite) {
+  if (typeof localTime !== "string" || !SCHEDULE_TIME_RE.test(localTime)) return;
+  if (!session.schedule) session.schedule = emptySchedule();
+  if (overwrite || !session.schedule[field]) session.schedule[field] = localTime;
+}
+// Implantação: retiradas de folículos do chiller (id, qty, at). O saldo NÃO é guardado —
+// é sempre calculado (íntegros extraídos − soma das retiradas) pra nunca ficar fora de sincronia.
+function emptyImplant() { return { withdrawals: [] }; }
 // Confere se ligar quadId.carryFromId = candidateId criaria um ciclo (ex: A vem de B,
 // que vem de A) — percorre a cadeia a partir do candidato e vê se volta pro próprio
 // quadId. Com só 4 quadrantes um ciclo nunca deveria acontecer na prática, mas o
@@ -1974,6 +2153,13 @@ Object.keys(db.sessions).forEach(function (id) {
     var epi = emptyPatientInfo();
     Object.keys(epi).forEach(function (k) { if (s.patientInfo[k] === undefined) s.patientInfo[k] = epi[k]; });
   }
+  if (!s.schedule) {
+    s.schedule = emptySchedule();
+  } else {
+    var esch = emptySchedule();
+    Object.keys(esch).forEach(function (k) { if (s.schedule[k] === undefined) s.schedule[k] = esch[k]; });
+  }
+  if (!s.implant || !Array.isArray(s.implant.withdrawals)) s.implant = emptyImplant();
   if (!s.preincCounts) s.preincCounts = emptyPreinc();
   if (!s.preincDist) {
     s.preincDist = emptyPreincDist();
@@ -2514,6 +2700,14 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    #print-patient-report .pr-footer{padding:8px 14px;text-align:center;border-top:1px solid #DDD3C2;}\n" +
 "    #print-patient-report .pr-sig{display:inline-flex;align-items:center;gap:5px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:8px;letter-spacing:.4px;text-transform:uppercase;color:#B8804A;}\n" +
 "  }\n" +
+"  .nav-bar{display:flex;align-items:center;gap:10px;margin-top:14px;}\n" +
+"  .nav-title{font-size:16px;font-weight:700;color:var(--c-primary-dark);}\n" +
+"  .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:55;}\n" +
+"  .drawer-overlay.show{display:block;}\n" +
+"  .drawer{position:absolute;top:0;left:0;bottom:0;width:min(280px,82vw);background:var(--c-card);box-shadow:var(--shadow);padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;}\n" +
+"  .drawer .btn{width:100%;text-align:left;}\n" +
+"  .impl-big{font-size:34px;font-weight:800;color:var(--c-primary-dark);line-height:1.1;}\n" +
+"  .impl-bar{height:12px;background:var(--c-border);border-radius:6px;overflow:hidden;margin:10px 0;} .impl-bar i{display:block;height:12px;background:var(--c-primary);width:0;}\n" +
 "</style>\n" +
 "</head>\n" +
 "<body>\n" +
@@ -2832,14 +3026,25 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      </div>\n" +
 "    </div>\n" +
 "\n" +
-"    <div class=\"row\" style=\"gap:8px;margin-top:14px;\">\n" +
-"      <button class=\"btn\" id=\"tab-extracao-btn\" data-i18n=\"cnt.tab_extracao\" onclick=\"App.switchTab('extracao')\">Extração</button>\n" +
-"      <button class=\"btn secondary\" id=\"tab-preinc-btn\" data-i18n=\"cnt.tab_preinc\" onclick=\"App.switchTab('preincisoes')\">Pré-incisões</button>\n" +
-"      <button class=\"btn secondary\" id=\"tab-fotos-btn\" data-i18n=\"cnt.tab_fotos\" onclick=\"App.switchTab('fotos')\">Fotos</button>\n" +
-"      <button class=\"btn secondary\" id=\"tab-paciente-btn\" data-i18n=\"cnt.tab_paciente\" onclick=\"App.switchTab('paciente')\">Paciente</button>\n" +
-"      <button class=\"btn secondary\" id=\"tab-resumo-btn\" data-i18n=\"cnt.tab_resumo\" onclick=\"App.switchTab('resumofinal')\">Resumo Final</button>\n" +
+"    <div class=\"nav-bar\">\n" +
+"      <button type=\"button\" class=\"icon-btn\" id=\"nav-toggle-btn\" style=\"background:var(--c-surface2);color:var(--c-text);font-size:20px;\" data-i18n-title=\"nav.menu\" title=\"Menu\" onclick=\"App.openNav()\">☰</button>\n" +
+"      <div class=\"nav-title\" id=\"cnt-tab-title\">Extração</div>\n" +
 "    </div>\n" +
-"\n" +
+"    <div class=\"drawer-overlay\" id=\"nav-drawer-overlay\" onclick=\"if(event.target===this) App.closeNav();\">\n" +
+"      <nav class=\"drawer\">\n" +
+"        <div class=\"row\" style=\"justify-content:space-between;align-items:center;margin-bottom:6px;\">\n" +
+"          <b data-i18n=\"nav.menu\">Menu</b>\n" +
+"          <button type=\"button\" class=\"icon-btn\" style=\"background:var(--c-surface2);color:var(--c-text);\" onclick=\"App.closeNav()\">✕</button>\n" +
+"        </div>\n" +
+"        <button class=\"btn\" id=\"tab-extracao-btn\" data-i18n=\"cnt.tab_extracao\" onclick=\"App.switchTab('extracao')\">Extração</button>\n" +
+"        <button class=\"btn secondary\" id=\"tab-preinc-btn\" data-i18n=\"cnt.tab_preinc\" onclick=\"App.switchTab('preincisoes')\">Pré-incisões</button>\n" +
+"        <button class=\"btn secondary\" id=\"tab-horarios-btn\" data-i18n=\"cnt.tab_horarios\" onclick=\"App.switchTab('horarios')\">Horários</button>\n" +
+"        <button class=\"btn secondary\" id=\"tab-implantacao-btn\" data-i18n=\"cnt.tab_implantacao\" onclick=\"App.switchTab('implantacao')\">Implantação</button>\n" +
+"        <button class=\"btn secondary\" id=\"tab-fotos-btn\" data-i18n=\"cnt.tab_fotos\" onclick=\"App.switchTab('fotos')\">Fotos</button>\n" +
+"        <button class=\"btn secondary\" id=\"tab-paciente-btn\" data-i18n=\"cnt.tab_paciente\" onclick=\"App.switchTab('paciente')\">Paciente</button>\n" +
+"        <button class=\"btn secondary\" id=\"tab-resumo-btn\" data-i18n=\"cnt.tab_resumo\" onclick=\"App.switchTab('resumofinal')\">Resumo Final</button>\n" +
+"      </nav>\n" +
+"    </div>\n" +
 "    <div id=\"panel-extracao\">\n" +
 "      <div class=\"card\">\n" +
 "        <h2 style=\"font-size:15px;margin:0 0 10px;\" data-i18n=\"cnt.extraction_time_title\">Tempo de extração</h2>\n" +
@@ -2939,6 +3144,46 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "      <div class=\"summary-bar static\" id=\"preinc-dist-totals\"></div>\n" +
 "    </div>\n" +
 "\n" +
+"    <div id=\"panel-horarios\" style=\"display:none;\">\n" +
+"      <div class=\"card\">\n" +
+"        <h2 style=\"font-size:15px;margin:0 0 4px;\" data-i18n=\"sched.title\">Horários da cirurgia</h2>\n" +
+"        <p class=\"hint\" style=\"margin-bottom:10px;\" data-i18n=\"sched.hint\">Preencha na hora com \"Agora\" ou digite o horário. Início e fim de cada etapa, como na lousa da sala.</p>\n" +
+"        <div id=\"sched-rows\"></div>\n" +
+"      </div>\n" +
+"    </div>\n" +
+"\n" +
+"    <div id=\"panel-implantacao\" style=\"display:none;\">\n" +
+"      <div class=\"card\">\n" +
+"        <h2 style=\"font-size:15px;margin:0 0 4px;\" data-i18n=\"impl.title\">Implantação — estoque no chiller</h2>\n" +
+"        <p class=\"hint\" style=\"margin-bottom:10px;\" data-i18n=\"impl.hint\">Total de folículos íntegros extraídos menos o que já foi retirado do chiller.</p>\n" +
+"        <div class=\"summary-bar static\">\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"impl-total\">0</div><div class=\"lbl\" data-i18n=\"impl.total\">Extraídos (total)</div></div>\n" +
+"          <div class=\"summary-item\"><div class=\"val\" id=\"impl-withdrawn\">0</div><div class=\"lbl\" data-i18n=\"impl.withdrawn\">Já retirados</div></div>\n" +
+"        </div>\n" +
+"        <div style=\"text-align:center;margin-top:14px;\">\n" +
+"          <div class=\"lbl\" style=\"font-size:12px;color:var(--c-muted);text-transform:uppercase;letter-spacing:.3px;\" data-i18n=\"impl.remaining\">Restam no chiller</div>\n" +
+"          <div class=\"impl-big\" id=\"impl-remaining\">0</div>\n" +
+"        </div>\n" +
+"        <div class=\"impl-bar\"><i id=\"impl-progress\"></i></div>\n" +
+"        <p class=\"hint\" id=\"impl-warning\" style=\"display:none;font-weight:700;\"></p>\n" +
+"        <div id=\"impl-controls\" style=\"display:none;margin-top:10px;\">\n" +
+"          <div class=\"row\" style=\"gap:8px;flex-wrap:wrap;\">\n" +
+"            <button type=\"button\" class=\"btn\" style=\"font-size:18px;padding:12px 18px;\" onclick=\"App.implWithdraw(100)\">−100</button>\n" +
+"            <button type=\"button\" class=\"btn\" style=\"font-size:18px;padding:12px 18px;\" onclick=\"App.implWithdraw(200)\">−200</button>\n" +
+"            <button type=\"button\" class=\"btn\" style=\"font-size:18px;padding:12px 18px;\" onclick=\"App.implWithdraw(300)\">−300</button>\n" +
+"          </div>\n" +
+"          <div class=\"row\" style=\"gap:8px;margin-top:10px;align-items:center;\">\n" +
+"            <input type=\"number\" id=\"impl-custom\" inputmode=\"numeric\" min=\"1\" style=\"width:130px;\" placeholder=\"Ex: 250\" data-i18n-placeholder=\"impl.custom_placeholder\" onkeydown=\"if(event.key==='Enter'){event.preventDefault();App.implWithdrawCustom();}\">\n" +
+"            <button type=\"button\" class=\"btn secondary\" data-i18n=\"impl.withdraw_btn\" onclick=\"App.implWithdrawCustom()\">Retirar</button>\n" +
+"          </div>\n" +
+"        </div>\n" +
+"        <p class=\"hint\" id=\"impl-readonly-hint\" style=\"display:none;margin-top:10px;\" data-i18n=\"impl.owner_only_hint\">Só o médico responsável (logado) registra as retiradas.</p>\n" +
+"      </div>\n" +
+"      <div class=\"card\">\n" +
+"        <h3 class=\"section-title\" style=\"margin-top:0;\"><span class=\"dot\" style=\"background:var(--c-primary)\"></span><span data-i18n=\"impl.history_title\">Retiradas</span></h3>\n" +
+"        <div id=\"impl-history\"></div>\n" +
+"      </div>\n" +
+"    </div>\n" +
 "    <div id=\"panel-fotos\" style=\"display:none;\">\n" +
 "      <div class=\"card\">\n" +
 "        <h2 style=\"font-size:15px;margin:0 0 4px;\" data-i18n=\"photos.marcacao_title\">Marcação cirúrgica</h2>\n" +
@@ -4093,12 +4338,14 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "function stopPolling(){ if (state.pollHandle){ clearInterval(state.pollHandle); state.pollHandle=null; } }\n" +
 "App.switchTab = function(tab){\n" +
 "  state.activeTab = tab;\n" +
-"  var panels = {extracao:'panel-extracao', preincisoes:'panel-preincisoes', fotos:'panel-fotos', paciente:'panel-paciente', resumofinal:'panel-resumofinal'};\n" +
-"  var btns = {extracao:'tab-extracao-btn', preincisoes:'tab-preinc-btn', fotos:'tab-fotos-btn', paciente:'tab-paciente-btn', resumofinal:'tab-resumo-btn'};\n" +
+"  var panels = {extracao:'panel-extracao', preincisoes:'panel-preincisoes', horarios:'panel-horarios', implantacao:'panel-implantacao', fotos:'panel-fotos', paciente:'panel-paciente', resumofinal:'panel-resumofinal'};\n" +
+"  var btns = {extracao:'tab-extracao-btn', preincisoes:'tab-preinc-btn', horarios:'tab-horarios-btn', implantacao:'tab-implantacao-btn', fotos:'tab-fotos-btn', paciente:'tab-paciente-btn', resumofinal:'tab-resumo-btn'};\n" +
 "  Object.keys(panels).forEach(function(key){\n" +
 "    document.getElementById(panels[key]).style.display = (key===tab) ? '' : 'none';\n" +
 "    document.getElementById(btns[key]).className = (key===tab) ? 'btn' : 'btn secondary';\n" +
 "  });\n" +
+"  document.getElementById('cnt-tab-title').textContent = t(TAB_TITLE_KEYS[tab] || 'cnt.tab_extracao');\n" +
+"  App.closeNav();\n" +
 "};\n" +
 "App.switchQuadrant = function(quadId){ state.activeQuadrant = quadId; render(); };\n" +
 "function render(){\n" +
@@ -4123,6 +4370,9 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "\n" +
 "  var combined = combinedExtractionCounts(s);\n" +
 "  var sum = computeSummary(combined, s.mode||'completo');\n" +
+"  document.getElementById('cnt-tab-title').textContent = t(TAB_TITLE_KEYS[state.activeTab||'extracao'] || 'cnt.tab_extracao');\n" +
+"  renderSchedule(s);\n" +
+"  renderImplant(s);\n" +
 "  document.getElementById('geral-extraidos').textContent = sum.foliculosExtraidos;\n" +
 "  document.getElementById('geral-fios').textContent = sum.totalFios;\n" +
 "  document.getElementById('geral-indice').textContent = sum.indice.toFixed(2);\n" +
@@ -4298,6 +4548,161 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  renderPreinc(s);\n" +
 "  renderPhotos(s);\n" +
 "  renderPatientInfo(s);\n" +
+"}\n" +
+"// ---------- menu recolhível (gaveta) ----------\n" +
+"var TAB_TITLE_KEYS = {extracao:'cnt.tab_extracao', preincisoes:'cnt.tab_preinc', horarios:'cnt.tab_horarios', implantacao:'cnt.tab_implantacao', fotos:'cnt.tab_fotos', paciente:'cnt.tab_paciente', resumofinal:'cnt.tab_resumo'};\n" +
+"App.openNav = function(){ document.getElementById('nav-drawer-overlay').classList.add('show'); };\n" +
+"App.closeNav = function(){ document.getElementById('nav-drawer-overlay').classList.remove('show'); };\n" +
+"document.addEventListener('keydown', function(ev){ if (ev && ev.key==='Escape') App.closeNav(); });\n" +
+"\n" +
+"// ---------- aba Horários (etapas da cirurgia, como na lousa da sala) ----------\n" +
+"// Horários são guardados como texto HH:MM (sem data/fuso): é exatamente o que a lousa\n" +
+"// mostra, e não depende do fuso do aparelho. Duração = fim − início; se o fim for\n" +
+"// menor que o início, entende-se que virou a meia-noite e avisa pra conferir.\n" +
+"var SCHED_STAGES = [\n" +
+"  {id:'bloqueio',     key:'sched.stage_bloqueio'},\n" +
+"  {id:'preFrontal',   key:'sched.stage_pre_frontal'},\n" +
+"  {id:'anestDoadora', key:'sched.stage_anest_doadora'},\n" +
+"  {id:'preCoroa',     key:'sched.stage_pre_coroa'},\n" +
+"  {id:'extracao',     key:'sched.stage_extracao'},\n" +
+"  {id:'impCoroa',     key:'sched.stage_imp_coroa'},\n" +
+"  {id:'impFrente',    key:'sched.stage_imp_frente'}\n" +
+"];\n" +
+"function schedToMin(hhmm){\n" +
+"  if (!hhmm || !/^([01]\\d|2[0-3]):[0-5]\\d$/.test(hhmm)) return null;\n" +
+"  return parseInt(hhmm.slice(0,2),10)*60 + parseInt(hhmm.slice(3,5),10);\n" +
+"}\n" +
+"function schedDuration(ini, fim){\n" +
+"  var a = schedToMin(ini), b = schedToMin(fim);\n" +
+"  if (a===null || b===null) return null;\n" +
+"  return { minutes: (b - a + 1440) % 1440, wrapped: b < a };\n" +
+"}\n" +
+"function schedFmtMinutes(m){\n" +
+"  var h = Math.floor(m/60), r = m % 60;\n" +
+"  return h>0 ? (h+'h'+String(r).padStart(2,'0')) : (r+' min');\n" +
+"}\n" +
+"function schedFromTs(ts){\n" +
+"  var d = new Date(ts);\n" +
+"  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');\n" +
+"}\n" +
+"App.setSchedule = function(field, value){\n" +
+"  var payload = {}; payload[field] = value;\n" +
+"  api('/api/session/'+state.currentId+'/schedule','POST',payload).then(function(s){\n" +
+"    state.session = s; state.schedSig = null; render();\n" +
+"  }).catch(function(err){\n" +
+"    toast(t('toast.generic_error',{msg:err.message})); state.schedSig = null; render();\n" +
+"  });\n" +
+"};\n" +
+"App.schedNow = function(field){ App.setSchedule(field, schedFromTs(Date.now())); };\n" +
+"App.schedClear = function(field){ App.setSchedule(field, ''); };\n" +
+"function schedTimeCell(field, val, hintTs){\n" +
+"  var hint = '';\n" +
+"  if (!val && hintTs){\n" +
+"    var hhmm = schedFromTs(hintTs);\n" +
+"    hint = '<button type=\"button\" class=\"btn secondary\" style=\"padding:4px 8px;font-size:11px;\" onclick=\"App.setSchedule(\\''+field+'\\',\\''+hhmm+'\\')\">'+escapeHtml(t('sched.use_timer',{time:hhmm}))+'</button>';\n" +
+"  }\n" +
+"  return '<div style=\"display:flex;gap:6px;align-items:center;flex-wrap:wrap;\">'+\n" +
+"    '<input type=\"time\" id=\"sched-'+field+'\" value=\"'+escapeHtml(val||'')+'\" style=\"width:120px;\" onchange=\"App.setSchedule(\\''+field+'\\', this.value)\">'+\n" +
+"    '<button type=\"button\" class=\"btn secondary\" style=\"padding:6px 10px;font-size:12px;\" onclick=\"App.schedNow(\\''+field+'\\')\">'+escapeHtml(t('sched.now'))+'</button>'+\n" +
+"    (val ? '<button type=\"button\" class=\"icon-btn\" style=\"background:var(--c-surface2);color:var(--c-text);\" title=\"'+escapeHtml(t('sched.clear'))+'\" onclick=\"App.schedClear(\\''+field+'\\')\">✕</button>' : '')+\n" +
+"    hint+'</div>';\n" +
+"}\n" +
+"function renderSchedule(s){\n" +
+"  var box = document.getElementById('sched-rows'); if (!box) return;\n" +
+"  var sch = s.schedule || {};\n" +
+"  var sig = JSON.stringify(sch)+'|'+state.lang+'|'+(s.globalTimerStartedAt||'')+'|'+(s.globalTimerEndedAt||'');\n" +
+"  var ae = document.activeElement;\n" +
+"  if (state.schedSig === sig) return;\n" +
+"  if (ae && ae.id && String(ae.id).indexOf('sched-')===0) return; // não mexe enquanto alguém digita\n" +
+"  state.schedSig = sig;\n" +
+"  var html = '<div class=\"field\"><label>'+escapeHtml(t('sched.stage_entrada'))+'</label>'+schedTimeCell('entrada', sch.entrada, null)+'</div>';\n" +
+"  SCHED_STAGES.forEach(function(st){\n" +
+"    var ini = sch[st.id+'Ini'], fim = sch[st.id+'Fim'];\n" +
+"    var dur = schedDuration(ini, fim);\n" +
+"    var durTxt = dur ? ('<div class=\"hint\" style=\"margin-top:4px;\">'+escapeHtml(t('sched.duration'))+': <b>'+escapeHtml(schedFmtMinutes(dur.minutes))+'</b>'+(dur.wrapped ? ' ⚠ '+escapeHtml(t('sched.wrap_warning')) : '')+'</div>') : '';\n" +
+"    var hintIni = null, hintFim = null;\n" +
+"    if (st.id==='extracao'){ hintIni = s.globalTimerStartedAt || null; hintFim = s.globalTimerEndedAt || null; }\n" +
+"    html += '<div class=\"field\"><label>'+escapeHtml(t(st.key))+'</label>'+\n" +
+"      '<div class=\"row\" style=\"gap:14px;flex-wrap:wrap;\">'+\n" +
+"        '<div><div class=\"hint\" style=\"margin:0 0 2px;\">'+escapeHtml(t('sched.start'))+'</div>'+schedTimeCell(st.id+'Ini', ini, hintIni)+'</div>'+\n" +
+"        '<div><div class=\"hint\" style=\"margin:0 0 2px;\">'+escapeHtml(t('sched.end'))+'</div>'+schedTimeCell(st.id+'Fim', fim, hintFim)+'</div>'+\n" +
+"      '</div>'+durTxt+'</div>';\n" +
+"  });\n" +
+"  html += '<div class=\"field\"><label>'+escapeHtml(t('sched.stage_finalizacao'))+'</label>'+schedTimeCell('finalizacao', sch.finalizacao, s.globalTimerEndedAt || null)+'</div>';\n" +
+"  var total = schedDuration(sch.entrada, sch.finalizacao);\n" +
+"  if (total){\n" +
+"    html += '<div class=\"summary-bar static\" style=\"margin-top:6px;\"><div class=\"summary-item\"><div class=\"val\">'+escapeHtml(schedFmtMinutes(total.minutes))+(total.wrapped?' ⚠':'')+'</div><div class=\"lbl\">'+escapeHtml(t('sched.total_stay'))+'</div></div></div>';\n" +
+"  }\n" +
+"  box.innerHTML = html;\n" +
+"}\n" +
+"\n" +
+"// ---------- aba Implantação (estoque de folículos no chiller) ----------\n" +
+"// Saldo = folículos íntegros extraídos (mesma conta do Resumo) − soma das retiradas.\n" +
+"// Só o médico dono da cirurgia, logado, registra/apaga retirada (servidor confere).\n" +
+"function implantIsOwner(s){\n" +
+"  return !!(state.currentUser && s && s.ownerBranding && s.ownerBranding.ownerId === state.currentUser.id);\n" +
+"}\n" +
+"function implantStats(s){\n" +
+"  var total = computeSummary(combinedExtractionCounts(s), s.mode||'completo').foliculosExtraidos;\n" +
+"  var list = (s.implant && s.implant.withdrawals) || [];\n" +
+"  var withdrawn = 0; list.forEach(function(w){ withdrawn += w.qty; });\n" +
+"  return { total: total, withdrawn: withdrawn, remaining: Math.max(0, total - withdrawn), over: withdrawn > total, list: list };\n" +
+"}\n" +
+"App.implWithdraw = function(qty){\n" +
+"  var s = state.session; if (!s) return;\n" +
+"  if (!state.currentUser){ toast(t('impl.login_needed')); return; }\n" +
+"  if (!implantIsOwner(s)){ toast(t('impl.owner_only_hint')); return; }\n" +
+"  qty = Math.round(Number(qty));\n" +
+"  if (!isFinite(qty) || qty <= 0){ toast(t('impl.invalid_qty')); return; }\n" +
+"  var st = implantStats(s);\n" +
+"  if (qty > st.remaining){ toast(t('impl.over_balance',{n:fmtBig(st.remaining)})); return; }\n" +
+"  api('/api/session/'+state.currentId+'/implant/withdraw','POST',{qty:qty}).then(function(r){\n" +
+"    state.session = r; render();\n" +
+"    toast(t('impl.withdrawn_toast',{n:fmtBig(qty), left:fmtBig(implantStats(r).remaining)}));\n" +
+"  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"};\n" +
+"App.implWithdrawCustom = function(){\n" +
+"  var el = document.getElementById('impl-custom');\n" +
+"  var v = el ? el.value : '';\n" +
+"  App.implWithdraw(v);\n" +
+"  if (el) el.value = '';\n" +
+"};\n" +
+"App.implRemove = function(id){\n" +
+"  var w = (((state.session||{}).implant||{}).withdrawals||[]).filter(function(x){ return x.id===id; })[0];\n" +
+"  confirmDialog(t('impl.remove_confirm',{n:w ? fmtBig(w.qty) : ''})).then(function(ok){\n" +
+"    if (!ok) return;\n" +
+"    api('/api/session/'+state.currentId+'/implant/remove','POST',{id:id}).then(function(r){\n" +
+"      state.session = r; render(); toast(t('impl.removed_toast'));\n" +
+"    }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  });\n" +
+"};\n" +
+"function renderImplant(s){\n" +
+"  var st = implantStats(s);\n" +
+"  var owner = implantIsOwner(s);\n" +
+"  document.getElementById('impl-total').textContent = fmtBig(st.total);\n" +
+"  document.getElementById('impl-withdrawn').textContent = fmtBig(st.withdrawn);\n" +
+"  document.getElementById('impl-remaining').textContent = fmtBig(st.remaining);\n" +
+"  var pct = st.total>0 ? Math.min(100, st.withdrawn/st.total*100) : 0;\n" +
+"  document.getElementById('impl-progress').style.width = pct.toFixed(1)+'%';\n" +
+"  var warn = document.getElementById('impl-warning');\n" +
+"  if (st.over){ warn.style.display = 'block'; warn.textContent = t('impl.count_changed_warning',{w:fmtBig(st.withdrawn), total:fmtBig(st.total)}); }\n" +
+"  else if (st.total>0 && st.remaining===0){ warn.style.display = 'block'; warn.textContent = t('impl.done'); }\n" +
+"  else { warn.style.display = 'none'; }\n" +
+"  document.getElementById('impl-controls').style.display = owner ? 'block' : 'none';\n" +
+"  document.getElementById('impl-readonly-hint').style.display = owner ? 'none' : 'block';\n" +
+"  var running = 0;\n" +
+"  var rows = st.list.map(function(w){\n" +
+"    running += w.qty;\n" +
+"    return {w:w, left: Math.max(0, st.total - running)};\n" +
+"  }).reverse();\n" +
+"  var hist = document.getElementById('impl-history');\n" +
+"  if (!rows.length){ hist.innerHTML = '<p class=\"hint\">'+escapeHtml(t('impl.history_empty'))+'</p>'; return; }\n" +
+"  hist.innerHTML = '<div class=\"dash-table-wrap\"><table class=\"dash-table\">'+\n" +
+"    '<tr><th>'+escapeHtml(t('impl.col_time'))+'</th><th>'+escapeHtml(t('impl.col_qty'))+'</th><th>'+escapeHtml(t('impl.col_left'))+'</th>'+(owner?'<th></th>':'')+'</tr>'+\n" +
+"    rows.map(function(r){\n" +
+"      return '<tr><td>'+escapeHtml(schedFromTs(r.w.at))+'</td><td>'+fmtBig(r.w.qty)+'</td><td>'+fmtBig(r.left)+'</td>'+\n" +
+"        (owner ? '<td><button type=\"button\" class=\"icon-btn\" style=\"background:var(--c-surface2);color:var(--c-text);\" title=\"'+escapeHtml(t('impl.remove_btn'))+'\" onclick=\"App.implRemove(\\''+escapeHtml(r.w.id)+'\\')\">✕</button></td>' : '')+'</tr>';\n" +
+"    }).join('')+'</table></div>';\n" +
 "}\n" +
 "function incBtns(catId){\n" +
 "  var html = '<button class=\"cat-btn minus\" onclick=\"App.adjust(\\''+catId+'\\',-1)\">-1</button>';\n" +
@@ -4571,16 +4976,16 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "App.toggleTimer = function(){\n" +
 "  if (!state.currentId || !state.session) return;\n" +
 "  var action = state.session.timer.running ? 'pause' : 'start';\n" +
-"  api('/api/session/'+state.currentId+'/timer','POST',{action:action}).then(function(s){ state.session=s; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  api('/api/session/'+state.currentId+'/timer','POST',{action:action, localTime:schedFromTs(Date.now())}).then(function(s){ state.session=s; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
 "};\n" +
 "App.resetTimer = function(){ confirmDialog(t('confirm.reset_extraction_timer')).then(function(ok){ if (!ok) return; api('/api/session/'+state.currentId+'/timer','POST',{action:'reset'}).then(function(s){ state.session=s; render(); }); }); };\n" +
 "App.togglePreincTimer = function(){\n" +
 "  if (!state.currentId || !state.session) return;\n" +
 "  var action = state.session.preincTimer.running ? 'pause' : 'start';\n" +
-"  api('/api/session/'+state.currentId+'/preinc-timer','POST',{action:action}).then(function(s){ state.session=s; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"  api('/api/session/'+state.currentId+'/preinc-timer','POST',{action:action, localTime:schedFromTs(Date.now())}).then(function(s){ state.session=s; render(); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
 "};\n" +
 "App.resetPreincTimer = function(){ confirmDialog(t('confirm.reset_preinc_timer')).then(function(ok){ if (!ok) return; api('/api/session/'+state.currentId+'/preinc-timer','POST',{action:'reset'}).then(function(s){ state.session=s; render(); }); }); };\n" +
-"App.finalizeSession = function(){ confirmDialog(t('confirm.finalize_surgery')).then(function(ok){ if (!ok) return; api('/api/session/'+state.currentId+'/finalize','POST',{}).then(function(s){ state.session=s; render(); App.switchTab('resumofinal'); toast(t('toast.surgery_finalized')); }); }); };\n" +
+"App.finalizeSession = function(){ confirmDialog(t('confirm.finalize_surgery')).then(function(ok){ if (!ok) return; api('/api/session/'+state.currentId+'/finalize','POST',{localTime:schedFromTs(Date.now())}).then(function(s){ state.session=s; render(); App.switchTab('resumofinal'); toast(t('toast.surgery_finalized')); }); }); };\n" +
 "App.reopenSession = function(){ api('/api/session/'+state.currentId+'/reopen','POST',{}).then(function(s){ state.session=s; render(); toast(t('toast.surgery_reopened')); }); };\n" +
 "// App.fixDuration: corrige a duração da cirurgia quando alguém esqueceu de\n" +
 "// apertar \"Finalizar cirurgia\" na hora certa (o tempo global fica contando ao\n" +
@@ -4592,7 +4997,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    if (v === null || v === '') return;\n" +
 "    var minutes = Number(v);\n" +
 "    if (!isFinite(minutes) || minutes <= 0) { toast(t('toast.generic_error',{msg:t('errors.fix_duration_invalid')})); return; }\n" +
-"    api('/api/session/'+state.currentId+'/fix-duration','POST',{minutes:minutes}).then(function(s){ state.session=s; render(); toast(t('toast.duration_fixed')); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
+"    api('/api/session/'+state.currentId+'/fix-duration','POST',{minutes:minutes, localTime:schedFromTs((state.session.globalTimerStartedAt||Date.now()) + Math.round(minutes*60000))}).then(function(s){ state.session=s; render(); toast(t('toast.duration_fixed')); }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
 "  });\n" +
 "};\n" +
 "App.renamePatient = function(){\n" +
@@ -5619,6 +6024,8 @@ var server = http.createServer(function (req, res) {
         mode: mode,
         quadrants: emptyQuadrants(),
         patientInfo: newPatientInfo,
+        schedule: emptySchedule(),
+        implant: emptyImplant(),
         preincCounts: emptyPreinc(),
         preincDist: emptyPreincDist(),
         photos: { marcacao: [], posop: [] },
@@ -5649,6 +6056,54 @@ var server = http.createServer(function (req, res) {
       saveForSession(sPat);
       send(res, 200, withOwnerBranding(sPat));
     }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sPatLang) }); });
+    return;
+  }
+
+  // Horários das etapas da cirurgia — como patient-info, qualquer pessoa com o link
+  // da cirurgia (equipe) pode preencher. Atualização parcial; vazio limpa o campo.
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/schedule$/);
+  if (m && req.method === "POST") {
+    var sSch = db.sessions[m[1]];
+    var sSchLang = requestLang(req);
+    if (!sSch) { send(res, 404, { error: t("errors.surgery_not_found", sSchLang) }); return; }
+    readBody(req).then(function (body) {
+      var parsed = sanitizeScheduleFields(body || {});
+      if (parsed.invalid) { send(res, 400, { error: t("errors.invalid_time", sSchLang) }); return; }
+      if (!sSch.schedule) sSch.schedule = emptySchedule();
+      Object.assign(sSch.schedule, parsed.fields);
+      sSch.updatedAt = Date.now();
+      saveForSession(sSch);
+      send(res, 200, withOwnerBranding(sSch));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sSchLang) }); });
+    return;
+  }
+
+  // Implantação: registrar / apagar retirada do chiller — SÓ o médico dono, logado.
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/implant\/(withdraw|remove)$/);
+  if (m && req.method === "POST") {
+    var implAction = m[2];
+    var implLang = requestLang(req);
+    var implUser = getAuthedUser(req);
+    if (!implUser) { send(res, 401, { error: t("errors.login_required_implant", implLang) }); return; }
+    var sImpl = db.sessions[m[1]];
+    if (!sImpl) { send(res, 404, { error: t("errors.surgery_not_found", implLang) }); return; }
+    if (sImpl.ownerId !== implUser.id) { send(res, 403, { error: t("errors.surgery_not_yours", implLang) }); return; }
+    readBody(req).then(function (body) {
+      body = body || {};
+      if (!sImpl.implant || !Array.isArray(sImpl.implant.withdrawals)) sImpl.implant = emptyImplant();
+      if (implAction === "withdraw") {
+        var qty = Number(body.qty);
+        if (!Number.isInteger(qty) || qty < 1 || qty > 100000 || sImpl.implant.withdrawals.length >= 2000) { send(res, 400, { error: t("errors.invalid_withdrawal", implLang) }); return; }
+        sImpl.implant.withdrawals.push({ id: newId(6), qty: qty, at: Date.now() });
+      } else {
+        var before = sImpl.implant.withdrawals.length;
+        sImpl.implant.withdrawals = sImpl.implant.withdrawals.filter(function (w) { return w.id !== String(body.id || ""); });
+        if (sImpl.implant.withdrawals.length === before) { send(res, 404, { error: t("errors.withdrawal_not_found", implLang) }); return; }
+      }
+      sImpl.updatedAt = Date.now();
+      saveForSession(sImpl);
+      send(res, 200, withOwnerBranding(sImpl));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", implLang) }); });
     return;
   }
 
@@ -5962,6 +6417,7 @@ var server = http.createServer(function (req, res) {
       if (action === "start" && !s4.timer.running) {
         s4.timer.running = true; s4.timer.startedAt = Date.now();
         if (!s4.globalTimerStartedAt) s4.globalTimerStartedAt = s4.timer.startedAt;
+        stampSchedule(s4, "extracaoIni", body.localTime, false); // 1º início da extração vira o horário da etapa
       }
       else if (action === "pause" && s4.timer.running) { s4.timer.accumulatedMs += Date.now() - s4.timer.startedAt; s4.timer.running = false; s4.timer.startedAt = null; }
       else if (action === "reset") { s4.timer.accumulatedMs = 0; s4.timer.running = false; s4.timer.startedAt = null; }
@@ -5984,6 +6440,7 @@ var server = http.createServer(function (req, res) {
       if (action === "start" && !ptTimer.running) {
         ptTimer.running = true; ptTimer.startedAt = Date.now();
         if (!s4b.globalTimerStartedAt) s4b.globalTimerStartedAt = ptTimer.startedAt;
+        stampSchedule(s4b, "preFrontalIni", body.localTime, false); // 1º início das pré-incisões = início da pré-incisão frontal
       }
       else if (action === "pause" && ptTimer.running) { ptTimer.accumulatedMs += Date.now() - ptTimer.startedAt; ptTimer.running = false; ptTimer.startedAt = null; }
       else if (action === "reset") { ptTimer.accumulatedMs = 0; ptTimer.running = false; ptTimer.startedAt = null; }
@@ -5997,26 +6454,35 @@ var server = http.createServer(function (req, res) {
   m = p.match(/^\/api\/session\/([a-f0-9]+)\/(finalize|reopen)$/);
   if (m && req.method === "POST") {
     var s5 = db.sessions[m[1]];
-    if (!s5) { send(res, 404, { error: t("errors.surgery_not_found", requestLang(req)) }); return; }
-    s5.status = (m[2] === "finalize") ? "finalizada" : "andamento";
-    if (s5.status === "finalizada") {
-      if (s5.timer.running) { s5.timer.accumulatedMs += Date.now() - s5.timer.startedAt; s5.timer.running = false; s5.timer.startedAt = null; }
-      if (s5.preincTimer.running) { s5.preincTimer.accumulatedMs += Date.now() - s5.preincTimer.startedAt; s5.preincTimer.running = false; s5.preincTimer.startedAt = null; }
-      // Congela o tempo global no instante da finalização — só na primeira vez (se
-      // reabrir e finalizar de novo, não estica o relógio do meio, só continua dele).
-      if (s5.globalTimerStartedAt && !s5.globalTimerEndedAt) s5.globalTimerEndedAt = Date.now();
-      // Marca o instante de finalização — é a partir daqui que o prazo de acesso
-      // às fotos via link (PHOTO_LINK_TTL_MS) começa a contar.
-      s5.finalizedAt = Date.now();
-    } else {
-      // Reabriu: o caso volta a estar "em andamento", o tempo global volta a contar,
-      // e o prazo de acesso às fotos via link é cancelado até finalizar de novo.
-      s5.globalTimerEndedAt = null;
-      s5.finalizedAt = null;
-    }
-    s5.updatedAt = Date.now();
-    saveForSession(s5);
-    send(res, 200, withOwnerBranding(s5));
+    var s5Lang = requestLang(req);
+    var s5Action = m[2];
+    if (!s5) { send(res, 404, { error: t("errors.surgery_not_found", s5Lang) }); return; }
+    readBody(req).then(function (body5) {
+      body5 = body5 || {};
+      s5.status = (s5Action === "finalize") ? "finalizada" : "andamento";
+      if (s5.status === "finalizada") {
+        if (s5.timer.running) { s5.timer.accumulatedMs += Date.now() - s5.timer.startedAt; s5.timer.running = false; s5.timer.startedAt = null; }
+        if (s5.preincTimer.running) { s5.preincTimer.accumulatedMs += Date.now() - s5.preincTimer.startedAt; s5.preincTimer.running = false; s5.preincTimer.startedAt = null; }
+        // Congela o tempo global no instante da finalização — só na primeira vez (se
+        // reabrir e finalizar de novo, não estica o relógio do meio, só continua dele).
+        if (s5.globalTimerStartedAt && !s5.globalTimerEndedAt) s5.globalTimerEndedAt = Date.now();
+        // Marca o instante de finalização — é a partir daqui que o prazo de acesso
+        // às fotos via link (PHOTO_LINK_TTL_MS) começa a contar.
+        s5.finalizedAt = Date.now();
+        // Horário da aba Horários > Finalização: automático ao finalizar (sempre atualiza).
+        stampSchedule(s5, "finalizacao", body5.localTime, true);
+      } else {
+        // Reabriu: o caso volta a estar "em andamento", o tempo global volta a contar,
+        // e o prazo de acesso às fotos via link é cancelado até finalizar de novo.
+        s5.globalTimerEndedAt = null;
+        s5.finalizedAt = null;
+        // O horário de finalização era automático e deixa de valer enquanto reaberta.
+        if (s5.schedule) s5.schedule.finalizacao = null;
+      }
+      s5.updatedAt = Date.now();
+      saveForSession(s5);
+      send(res, 200, withOwnerBranding(s5));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", s5Lang) }); });
     return;
   }
 
@@ -6043,6 +6509,8 @@ var server = http.createServer(function (req, res) {
       if (newEnd > Date.now()) { send(res, 400, { error: t("errors.fix_duration_future", sFixLang) }); return; }
       sFix.globalTimerEndedAt = newEnd;
       sFix.finalizedAt = newEnd;
+      // O horário de Finalização acompanha a correção (o cliente manda o HH:MM local do novo término).
+      stampSchedule(sFix, "finalizacao", body.localTime, true);
       sFix.updatedAt = Date.now();
       saveForSession(sFix);
       send(res, 200, withOwnerBranding(sFix));
