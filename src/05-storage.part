@@ -257,6 +257,7 @@ Object.keys(db.sessions).forEach(function (id) {
   }
   if (!s.implant || !Array.isArray(s.implant.withdrawals)) s.implant = emptyImplant();
   if (!s.preincCounts) s.preincCounts = emptyPreinc();
+  if (!s.preincLocks) s.preincLocks = {};
   if (!s.preincDist) {
     s.preincDist = emptyPreincDist();
   } else {

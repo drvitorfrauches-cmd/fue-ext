@@ -415,6 +415,18 @@
 "    </div>\n" +
 "\n" +
 "    <div id=\"panel-preincisoes\" style=\"display:none;\">\n" +
+"<div class='row' style='margin-bottom:12px;align-items:center;gap:10px;flex-wrap:wrap;'><button class='btn primary' data-i18n='ctr.open_btn' onclick='App.counterOpen()'>Contador de incisões</button><span class='hint' id='ctr-queue-hint'></span></div>\n" +
+"<div id='ctr-overlay' class='ctr-overlay' style='display:none;'>\n" +
+"  <div class='ctr-head'><button class='btn secondary' data-i18n='ctr.close' onclick='App.counterClose()'>Fechar</button><b data-i18n='ctr.title'>Contador de incisões</b><button class='btn secondary' id='ctr-sound-btn' onclick='App.counterSoundToggle()'>Som: ligado</button></div>\n" +
+"  <div id='ctr-list' class='ctr-body'></div>\n" +
+"  <div id='ctr-count' class='ctr-body' style='display:none;'>\n" +
+"    <div class='ctr-area-name' id='ctr-area-name'></div>\n" +
+"    <div class='ctr-display'><div id='ctr-live' class='ctr-live'>0</div><div class='hint' data-i18n='ctr.count_sub'>toques nesta área</div></div>\n" +
+"    <button class='ctr-tap' data-i18n='ctr.plus' onclick='App.counterTap(event)'>+1</button>\n" +
+"    <div class='ctr-row'><button class='btn' data-i18n='ctr.undo' onclick='App.counterUndo()'>−1</button><button class='btn' data-i18n='ctr.reset' onclick='App.counterReset()'>Zerar</button><button class='btn primary' data-i18n='ctr.finish' onclick='App.counterFinish()'>Finalizar área</button></div>\n" +
+"    <button class='btn secondary' data-i18n='ctr.cancel' onclick='App.counterCancel()'>Voltar sem gravar</button>\n" +
+"  </div>\n" +
+"</div>\n" +
 "      <div class=\"card\">\n" +
 "        <h2 style=\"font-size:15px;margin:0 0 10px;\" data-i18n=\"preinc.time_title\">Tempo de pré-incisões</h2>\n" +
 "        <div class=\"row\" style=\"align-items:center;gap:16px;flex-wrap:wrap;\">\n" +

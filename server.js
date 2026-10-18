@@ -37,6 +37,9 @@ const ADMIN_EMAIL = "drvitorfrauches@gmail.com"; // única conta com acesso à s
 // continua vendo. Escolhido pra cobrir o acompanhamento pós-operatório usual
 // de transplante capilar sem deixar a foto exposta por um link vazado pra sempre.
 const PHOTO_LINK_TTL_MS = 90 * 24 * 60 * 60 * 1000;
+// Trava de área no contador de incisões: expira sozinha depois de 1h sem atualização
+// (ex.: aparelho desligado no meio da contagem), para ninguém ficar travado para sempre.
+const PREINC_LOCK_TTL_MS = 60 * 60 * 1000;
 // SECURE_COOKIES: marca o cookie de login como "Secure" (só trafega em HTTPS). Deixe
 // desligado (padrão) pra uso na rede local, que roda em HTTP puro. Ligue definindo a
 // variável de ambiente SECURE_COOKIES=true quando estiver atrás de HTTPS (nuvem).
@@ -245,6 +248,7 @@ const STRINGS = {
     "errors.invalid_parameters": "Parâmetros inválidos.",
     "errors.invalid_quadrant": "Quadrante inválido.",
     "errors.invalid_value": "Valor inválido.",
+    "errors.preinc_area_locked": "Esta área está sendo contada em outro aparelho agora.",
     "errors.invalid_category": "Categoria inválida.",
     "errors.photo_processing_error_prefix": "Erro ao processar foto: ",
     "errors.photo_not_found": "Foto não encontrada.",
@@ -570,6 +574,32 @@ const STRINGS = {
     "impl.withdrawn_toast": "Retirados {n}. Restam {left} no chiller.",
     "impl.removed_toast": "Retirada apagada.",
     "impl.done": "Chiller zerado: todos os folículos foram retirados.",
+    "ctr.open_btn": "Contador de incisões",
+    "ctr.title": "Contador de incisões",
+    "ctr.close": "Fechar",
+    "ctr.count_sub": "toques nesta área",
+    "ctr.plus": "+1",
+    "ctr.undo": "−1",
+    "ctr.reset": "Zerar",
+    "ctr.finish": "Finalizar área",
+    "ctr.cancel": "Voltar sem gravar",
+    "ctr.status_free": "não contada",
+    "ctr.status_done": "gravado: {n}",
+    "ctr.status_partial": "em andamento: {n}",
+    "ctr.status_locked": "contando em outro aparelho",
+    "ctr.status_queued": "aguardando internet",
+    "ctr.status_conflict": "não gravado (conflito)",
+    "ctr.queue_hint": "{n} na fila para enviar",
+    "ctr.discard": "Descartar",
+    "ctr.conflict_note": "{label} não foi gravado: outro aparelho estava contando essa área. Confira a aba.",
+    "ctr.locked_other": "Esta área está sendo contada em outro aparelho.",
+    "ctr.offline_nolock": "Sem internet: contando sem trava. O total vai para a fila.",
+    "ctr.recount_warn": "{label} já tem {n} gravado. Contar de novo substitui esse valor. Continuar?",
+    "ctr.finish_zero": "{label} está com 0. Gravar 0 mesmo assim?",
+    "ctr.finished_toast": "{label}: {n} enviado",
+    "ctr.reset_confirm": "Zerar os {n} toques desta contagem?",
+    "ctr.sound_on": "Som: ligado",
+    "ctr.sound_off": "Som: desligado",
     "cnt.fix_duration_btn": "Corrigir duração",
     "cnt.fix_duration_prompt": "Quantos minutos a cirurgia durou de verdade? (ex: 200 para 3h20)",
     "share.title": "Compartilhar cirurgia",
@@ -778,6 +808,7 @@ const STRINGS = {
     "errors.invalid_parameters": "Invalid parameters.",
     "errors.invalid_quadrant": "Invalid quadrant.",
     "errors.invalid_value": "Invalid value.",
+    "errors.preinc_area_locked": "This area is being counted on another device right now.",
     "errors.invalid_category": "Invalid category.",
     "errors.photo_processing_error_prefix": "Error processing photo: ",
     "errors.photo_not_found": "Photo not found.",
@@ -1103,6 +1134,32 @@ const STRINGS = {
     "impl.withdrawn_toast": "Withdrew {n}. {left} left in the chiller.",
     "impl.removed_toast": "Withdrawal deleted.",
     "impl.done": "Chiller empty: all follicles have been withdrawn.",
+    "ctr.open_btn": "Incision counter",
+    "ctr.title": "Incision counter",
+    "ctr.close": "Close",
+    "ctr.count_sub": "taps in this area",
+    "ctr.plus": "+1",
+    "ctr.undo": "−1",
+    "ctr.reset": "Reset",
+    "ctr.finish": "Finish area",
+    "ctr.cancel": "Back without saving",
+    "ctr.status_free": "not counted",
+    "ctr.status_done": "saved: {n}",
+    "ctr.status_partial": "in progress: {n}",
+    "ctr.status_locked": "counting on another device",
+    "ctr.status_queued": "waiting for internet",
+    "ctr.status_conflict": "not saved (conflict)",
+    "ctr.queue_hint": "{n} queued to send",
+    "ctr.discard": "Discard",
+    "ctr.conflict_note": "{label} was not saved: another device was counting that area. Check the tab.",
+    "ctr.locked_other": "This area is being counted on another device.",
+    "ctr.offline_nolock": "No internet: counting without a lock. The total goes to the queue.",
+    "ctr.recount_warn": "{label} already has {n} saved. Counting again replaces that value. Continue?",
+    "ctr.finish_zero": "{label} is at 0. Save 0 anyway?",
+    "ctr.finished_toast": "{label}: {n} sent",
+    "ctr.reset_confirm": "Reset the {n} taps in this count?",
+    "ctr.sound_on": "Sound: on",
+    "ctr.sound_off": "Sound: off",
     "cnt.fix_duration_btn": "Correct duration",
     "cnt.fix_duration_prompt": "How many minutes did the surgery actually take? (e.g. 200 for 3h20)",
     "share.title": "Share surgery",
@@ -1311,6 +1368,7 @@ const STRINGS = {
     "errors.invalid_parameters": "Parámetros inválidos.",
     "errors.invalid_quadrant": "Cuadrante inválido.",
     "errors.invalid_value": "Valor inválido.",
+    "errors.preinc_area_locked": "Esta área se está contando ahora en otro dispositivo.",
     "errors.invalid_category": "Categoría inválida.",
     "errors.photo_processing_error_prefix": "Error al procesar la foto: ",
     "errors.photo_not_found": "Foto no encontrada.",
@@ -1636,6 +1694,32 @@ const STRINGS = {
     "impl.withdrawn_toast": "Retirados {n}. Quedan {left} en el chiller.",
     "impl.removed_toast": "Retiro borrado.",
     "impl.done": "Chiller vacío: se retiraron todos los folículos.",
+    "ctr.open_btn": "Contador de incisiones",
+    "ctr.title": "Contador de incisiones",
+    "ctr.close": "Cerrar",
+    "ctr.count_sub": "toques en esta área",
+    "ctr.plus": "+1",
+    "ctr.undo": "−1",
+    "ctr.reset": "Reiniciar",
+    "ctr.finish": "Finalizar área",
+    "ctr.cancel": "Volver sin guardar",
+    "ctr.status_free": "sin contar",
+    "ctr.status_done": "guardado: {n}",
+    "ctr.status_partial": "en curso: {n}",
+    "ctr.status_locked": "contándose en otro dispositivo",
+    "ctr.status_queued": "esperando internet",
+    "ctr.status_conflict": "no guardado (conflicto)",
+    "ctr.queue_hint": "{n} en cola para enviar",
+    "ctr.discard": "Descartar",
+    "ctr.conflict_note": "{label} no se guardó: otro dispositivo contaba esa área. Revise la pestaña.",
+    "ctr.locked_other": "Esta área se está contando en otro dispositivo.",
+    "ctr.offline_nolock": "Sin internet: contando sin bloqueo. El total va a la cola.",
+    "ctr.recount_warn": "{label} ya tiene {n} guardado. Contar de nuevo reemplaza ese valor. ¿Continuar?",
+    "ctr.finish_zero": "{label} está en 0. ¿Guardar 0 de todos modos?",
+    "ctr.finished_toast": "{label}: {n} enviado",
+    "ctr.reset_confirm": "¿Reiniciar los {n} toques de esta cuenta?",
+    "ctr.sound_on": "Sonido: activado",
+    "ctr.sound_off": "Sonido: desactivado",
     "cnt.fix_duration_btn": "Corregir duración",
     "cnt.fix_duration_prompt": "¿Cuántos minutos duró realmente la cirugía? (ej: 200 para 3h20)",
     "share.title": "Compartir cirugía",
@@ -1855,6 +1939,14 @@ function stampSchedule(session, field, localTime, overwrite) {
 }
 // Implantação: retiradas de folículos do chiller (id, qty, at). O saldo NÃO é guardado —
 // é sempre calculado (íntegros extraídos − soma das retiradas) pra nunca ficar fora de sincronia.
+// Trava ativa da área (ou null). Trava expirada é apagada aqui mesmo.
+function activePreincLock(session, area) {
+  var locks = session.preincLocks || {};
+  var lk = locks[area];
+  if (!lk) return null;
+  if (Date.now() - lk.since > PREINC_LOCK_TTL_MS) { delete locks[area]; return null; }
+  return lk;
+}
 function emptyImplant() { return { withdrawals: [] }; }
 // Confere se ligar quadId.carryFromId = candidateId criaria um ciclo (ex: A vem de B,
 // que vem de A) — percorre a cadeia a partir do candidato e vê se volta pro próprio
@@ -2164,6 +2256,7 @@ Object.keys(db.sessions).forEach(function (id) {
   }
   if (!s.implant || !Array.isArray(s.implant.withdrawals)) s.implant = emptyImplant();
   if (!s.preincCounts) s.preincCounts = emptyPreinc();
+  if (!s.preincLocks) s.preincLocks = {};
   if (!s.preincDist) {
     s.preincDist = emptyPreincDist();
   } else {
@@ -2735,6 +2828,21 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  .drawer .btn{width:100%;text-align:left;}\n" +
 "  .impl-big{font-size:34px;font-weight:800;color:var(--c-primary-dark);line-height:1.1;}\n" +
 "  .impl-bar{height:12px;background:var(--c-border);border-radius:6px;overflow:hidden;margin:10px 0;} .impl-bar i{display:block;height:12px;background:var(--c-primary);width:0;}\n" +
+"  .ctr-overlay{position:fixed;inset:0;background:var(--c-bg,#fff);z-index:60;display:flex;flex-direction:column;padding:12px 14px;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:manipulation;user-select:none;-webkit-user-select:none;}\n" +
+"  .ctr-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;}\n" +
+"  .ctr-body{display:flex;flex-direction:column;gap:10px;min-height:0;flex:1;}\n" +
+"  .ctr-areas{display:grid;grid-template-columns:1fr 1fr;gap:10px;}\n" +
+"  .ctr-area-btn{min-height:76px;border:1px solid var(--c-border);border-radius:14px;background:var(--c-card);padding:10px 12px;text-align:left;font:inherit;font-size:16px;font-weight:700;color:var(--c-text);cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;gap:4px;}\n" +
+"  .ctr-area-btn small{font-size:12px;font-weight:600;color:var(--c-muted,#6b7780);}\n" +
+"  .ctr-area-btn.locked{opacity:.55;}\n" +
+"  .ctr-note{border:1px solid var(--c-border);border-radius:14px;padding:10px 12px;font-size:14px;display:flex;flex-direction:column;gap:8px;}\n" +
+"  .ctr-area-name{font-size:20px;font-weight:800;text-align:center;}\n" +
+"  .ctr-display{text-align:center;}\n" +
+"  .ctr-live{font-size:min(24vw,140px);font-weight:800;font-variant-numeric:tabular-nums;line-height:1.05;}\n" +
+"  .ctr-tap{flex:1;min-height:42vh;border:0;border-radius:28px;font:inherit;font-size:64px;font-weight:800;background:var(--c-primary);color:#fff;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer;}\n" +
+"  .ctr-tap:active{transform:translateY(4px);}\n" +
+"  .ctr-row{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:10px;}\n" +
+"  .ctr-row .btn{min-height:60px;}\n" +
 "</style>\n" +
 "</head>\n" +
 "<body>\n" +
@@ -3154,6 +3262,18 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    </div>\n" +
 "\n" +
 "    <div id=\"panel-preincisoes\" style=\"display:none;\">\n" +
+"<div class='row' style='margin-bottom:12px;align-items:center;gap:10px;flex-wrap:wrap;'><button class='btn primary' data-i18n='ctr.open_btn' onclick='App.counterOpen()'>Contador de incisões</button><span class='hint' id='ctr-queue-hint'></span></div>\n" +
+"<div id='ctr-overlay' class='ctr-overlay' style='display:none;'>\n" +
+"  <div class='ctr-head'><button class='btn secondary' data-i18n='ctr.close' onclick='App.counterClose()'>Fechar</button><b data-i18n='ctr.title'>Contador de incisões</b><button class='btn secondary' id='ctr-sound-btn' onclick='App.counterSoundToggle()'>Som: ligado</button></div>\n" +
+"  <div id='ctr-list' class='ctr-body'></div>\n" +
+"  <div id='ctr-count' class='ctr-body' style='display:none;'>\n" +
+"    <div class='ctr-area-name' id='ctr-area-name'></div>\n" +
+"    <div class='ctr-display'><div id='ctr-live' class='ctr-live'>0</div><div class='hint' data-i18n='ctr.count_sub'>toques nesta área</div></div>\n" +
+"    <button class='ctr-tap' data-i18n='ctr.plus' onclick='App.counterTap(event)'>+1</button>\n" +
+"    <div class='ctr-row'><button class='btn' data-i18n='ctr.undo' onclick='App.counterUndo()'>−1</button><button class='btn' data-i18n='ctr.reset' onclick='App.counterReset()'>Zerar</button><button class='btn primary' data-i18n='ctr.finish' onclick='App.counterFinish()'>Finalizar área</button></div>\n" +
+"    <button class='btn secondary' data-i18n='ctr.cancel' onclick='App.counterCancel()'>Voltar sem gravar</button>\n" +
+"  </div>\n" +
+"</div>\n" +
 "      <div class=\"card\">\n" +
 "        <h2 style=\"font-size:15px;margin:0 0 10px;\" data-i18n=\"preinc.time_title\">Tempo de pré-incisões</h2>\n" +
 "        <div class=\"row\" style=\"align-items:center;gap:16px;flex-wrap:wrap;\">\n" +
@@ -3728,8 +3848,8 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "function setConn(ok){ state.connOk = ok; document.getElementById('conn-dot').className = 'conn-dot ' + (ok?'ok':'bad'); document.getElementById('conn-banner').className = 'conn-banner' + (ok?'':' show'); }\n" +
 "function api(p, method, body){\n" +
 "  return fetch(p, {method:method||'GET', credentials:'same-origin', headers: body?{'Content-Type':'application/json'}:undefined, body: body?JSON.stringify(body):undefined})\n" +
-"    .then(function(r){ setConn(true); if (!r.ok) return r.json().then(function(e){ throw new Error(e.error||('HTTP '+r.status)); }); return r.json(); })\n" +
-"    .catch(function(err){ setConn(false); throw err; });\n" +
+"    .then(function(r){ setConn(true); if (!r.ok) return r.json().then(function(e){ var er = new Error(e.error||('HTTP '+r.status)); er.status = r.status; throw er; }); return r.json(); })\n" +
+"    .catch(function(err){ if (!err || !err.status) setConn(false); throw err; });\n" +
 "}\n" +
 "function showScreen(name){ document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');}); document.getElementById('screen-'+name).classList.add('active'); }\n" +
 "var INCREMENTS_KEY = 'fue_live_increments';\n" +
@@ -4731,6 +4851,292 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        (owner ? '<td><button type=\"button\" class=\"icon-btn\" style=\"background:var(--c-surface2);color:var(--c-text);\" title=\"'+escapeHtml(t('impl.remove_btn'))+'\" onclick=\"App.implRemove(\\''+escapeHtml(r.w.id)+'\\')\">✕</button></td>' : '')+'</tr>';\n" +
 "    }).join('')+'</table></div>';\n" +
 "}\n" +
+"// ---------- contador de incisões (dentro da aba Pré-incisões) ----------\n" +
+"// A contagem roda no aparelho: cada toque responde na hora, mesmo sem internet.\n" +
+"// Ao finalizar a área, o total vai para a aba pelo mesmo endpoint de pré-incisões.\n" +
+"// Se a internet cair, o total fica numa fila local e é enviado depois.\n" +
+"// Enquanto um aparelho conta uma área, os outros veem a área travada.\n" +
+"var CTR_KEY = 'fue_counter_v1';\n" +
+"var CTR_LOCK_REFRESH_MS = 10 * 60 * 1000;\n" +
+"var CTR_LOCK_TTL_MS = 60 * 60 * 1000; // mesmo valor de PREINC_LOCK_TTL_MS no servidor\n" +
+"var CTR_FLUSH_MS = 20 * 1000;\n" +
+"var CTR_STOP = {};\n" +
+"var CTR_SOUND_KEY = 'fue_counter_sound';\n" +
+"var CTR_MILESTONE = 100;\n" +
+"var CTR_MILESTONES_LOG = []; // marcos anunciados (também usado nos testes)\n" +
+"var CTR_AUDIO = null;\n" +
+"var CTR = { area: null, live: 0, timers: [] };\n" +
+"\n" +
+"function ctrStore(){\n" +
+"  var d = null;\n" +
+"  try { d = JSON.parse(localStorage.getItem(CTR_KEY) || 'null'); } catch (e) { d = null; }\n" +
+"  if (!d || typeof d !== 'object') d = {};\n" +
+"  if (!d.holder) { d.holder = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10); ctrSave(d); }\n" +
+"  if (!Array.isArray(d.queue)) d.queue = [];\n" +
+"  if (!d.partials || typeof d.partials !== 'object') d.partials = {};\n" +
+"  return d;\n" +
+"}\n" +
+"function ctrSave(d){ try { localStorage.setItem(CTR_KEY, JSON.stringify(d)); } catch (e) {} }\n" +
+"function ctrAreaLabel(id){ var a = PREINC_AREAS.filter(function(x){ return x.id===id; })[0]; return a ? a.label : id; }\n" +
+"function ctrLockOf(s, area){\n" +
+"  var lk = (s && s.preincLocks) ? s.preincLocks[area] : null;\n" +
+"  if (!lk) return null;\n" +
+"  if (Date.now() - lk.since > CTR_LOCK_TTL_MS) return null;\n" +
+"  return lk;\n" +
+"}\n" +
+"function ctrRemove(store, id){ store.queue = store.queue.filter(function(q){ return q.id!==id; }); ctrSave(store); }\n" +
+"function ctrQueued(store, sid, area){\n" +
+"  return store.queue.filter(function(q){ return q.sessionId===sid && q.area===area; })[0] || null;\n" +
+"}\n" +
+"\n" +
+"// Envia os itens da fila em ordem. Para no primeiro erro de rede (o resto fica para depois).\n" +
+"// 409 = outro aparelho segurou a área: o item fica marcado como conflito e a pessoa decide.\n" +
+"// 404 = a cirurgia não existe mais: o item sai da fila.\n" +
+"App.counterFlush = function(store){\n" +
+"  var items = store.queue.slice();\n" +
+"  var chain = Promise.resolve();\n" +
+"  items.forEach(function(item){\n" +
+"    chain = chain.then(function(){\n" +
+"      if (item.conflict) return;\n" +
+"      return api('/api/session/'+item.sessionId+'/preinc','POST',{area:item.area, value:item.value, holder:item.holder})\n" +
+"        .then(function(s2){\n" +
+"          ctrRemove(store, item.id);\n" +
+"          if (state.currentId===item.sessionId){ state.session=s2; render(); }\n" +
+"        }, function(err){\n" +
+"          if (err && err.status===409){ item.conflict=true; ctrSave(store); return; }\n" +
+"          if (err && err.status===404){ ctrRemove(store, item.id); return; }\n" +
+"          throw CTR_STOP;\n" +
+"        });\n" +
+"    });\n" +
+"  });\n" +
+"  return chain.catch(function(e){ if (e!==CTR_STOP) throw e; });\n" +
+"};\n" +
+"App.counterFlushNow = function(){\n" +
+"  var st = ctrStore();\n" +
+"  App.counterFlush(st).then(ctrRefreshAll, ctrRefreshAll);\n" +
+"};\n" +
+"function ctrRefreshAll(){\n" +
+"  ctrUpdateHint();\n" +
+"  var list = document.getElementById('ctr-list');\n" +
+"  if (list && document.getElementById('ctr-overlay').style.display!=='none' && !CTR.area) ctrRenderList();\n" +
+"}\n" +
+"function ctrUpdateHint(){\n" +
+"  var el = document.getElementById('ctr-queue-hint'); if (!el) return;\n" +
+"  var n = ctrStore().queue.length;\n" +
+"  el.textContent = n ? t('ctr.queue_hint',{n:n}) : '';\n" +
+"}\n" +
+"\n" +
+"// ---------- abrir / fechar ----------\n" +
+"App.counterOpen = function(){\n" +
+"  var s = state.session; if (!s || !state.currentId) return;\n" +
+"  if (s.status==='finalizada'){ toast(t('errors.surgery_already_finalized')); return; }\n" +
+"  CTR.area = null; CTR.live = 0;\n" +
+"  ctrStopTimers();\n" +
+"  document.getElementById('ctr-overlay').style.display='flex';\n" +
+"  document.getElementById('ctr-list').onclick = ctrListClick;\n" +
+"  ctrBackToList();\n" +
+"  App.counterFlushNow();\n" +
+"  CTR.timers.push(setInterval(App.counterFlushNow, CTR_FLUSH_MS));\n" +
+"};\n" +
+"App.counterClose = function(){\n" +
+"  if (CTR.area) App.counterCancel();\n" +
+"  ctrStopTimers();\n" +
+"  document.getElementById('ctr-overlay').style.display='none';\n" +
+"  ctrUpdateHint();\n" +
+"};\n" +
+"function ctrStopTimers(){ CTR.timers.forEach(function(id){ clearInterval(id); }); CTR.timers = []; }\n" +
+"function ctrTimersOn(){\n" +
+"  ctrStopTimers();\n" +
+"  CTR.timers.push(setInterval(function(){ if (CTR.area) ctrLock(CTR.area).catch(function(){}); }, CTR_LOCK_REFRESH_MS));\n" +
+"  CTR.timers.push(setInterval(App.counterFlushNow, CTR_FLUSH_MS));\n" +
+"}\n" +
+"\n" +
+"// ---------- lista de áreas ----------\n" +
+"function ctrBackToList(){\n" +
+"  document.getElementById('ctr-count').style.display='none';\n" +
+"  document.getElementById('ctr-list').style.display='block';\n" +
+"  ctrRenderList();\n" +
+"}\n" +
+"function ctrRenderList(){\n" +
+"  var s = state.session || {}; var st = ctrStore(); var sid = state.currentId;\n" +
+"  var partials = st.partials[sid] || {};\n" +
+"  var counts = s.preincCounts || {};\n" +
+"  var cells = PREINC_AREAS.map(function(a){\n" +
+"    var lk = ctrLockOf(s, a.id);\n" +
+"    var other = !!lk && lk.holder!==st.holder;\n" +
+"    var q = ctrQueued(st, sid, a.id);\n" +
+"    var sub;\n" +
+"    if (q && q.conflict) sub = t('ctr.status_conflict');\n" +
+"    else if (q) sub = t('ctr.status_queued');\n" +
+"    else if (other) sub = t('ctr.status_locked');\n" +
+"    else if (partials[a.id]!==undefined) sub = t('ctr.status_partial',{n:partials[a.id]});\n" +
+"    else if (counts[a.id]>0) sub = t('ctr.status_done',{n:counts[a.id]});\n" +
+"    else sub = t('ctr.status_free');\n" +
+"    return '<button class=\"ctr-area-btn'+(other?' locked':'')+'\" data-area=\"'+a.id+'\"><span>'+escapeHtml(a.label)+'</span><small>'+escapeHtml(sub)+'</small></button>';\n" +
+"  }).join('');\n" +
+"  var conflicts = st.queue.filter(function(q){ return q.sessionId===sid && q.conflict; }).map(function(q){\n" +
+"    return '<div class=\"ctr-note\">'+escapeHtml(t('ctr.conflict_note',{label:ctrAreaLabel(q.area)}))+\n" +
+"      ' <button class=\"btn secondary\" data-discard=\"'+escapeHtml(q.id)+'\">'+escapeHtml(t('ctr.discard'))+'</button></div>';\n" +
+"  }).join('');\n" +
+"  document.getElementById('ctr-list').innerHTML = '<div class=\"ctr-areas\">'+cells+'</div>'+conflicts;\n" +
+"}\n" +
+"function ctrListClick(ev){\n" +
+"  var d = ev.target.closest ? ev.target.closest('[data-discard]') : null;\n" +
+"  if (d){ App.counterDiscard(d.getAttribute('data-discard')); return; }\n" +
+"  var b = ev.target.closest ? ev.target.closest('[data-area]') : null;\n" +
+"  if (b) App.counterPick(b.getAttribute('data-area'));\n" +
+"}\n" +
+"App.counterDiscard = function(id){\n" +
+"  ctrRemove(ctrStore(), id);\n" +
+"  ctrRenderList();\n" +
+"  ctrUpdateHint();\n" +
+"};\n" +
+"\n" +
+"// ---------- escolher área ----------\n" +
+"App.counterPick = function(area){\n" +
+"  var s = state.session; if (!s) return;\n" +
+"  var st = ctrStore(); var sid = state.currentId;\n" +
+"  var lk = ctrLockOf(s, area);\n" +
+"  if (lk && lk.holder!==st.holder){ toast(t('ctr.locked_other')); return; }\n" +
+"  var partial = (st.partials[sid]||{})[area];\n" +
+"  var done = (s.preincCounts||{})[area] || 0;\n" +
+"  if (partial===undefined && done>0){\n" +
+"    confirmDialog(t('ctr.recount_warn',{label:ctrAreaLabel(area), n:done})).then(function(ok){ if (ok) ctrStart(area, 0); });\n" +
+"    return;\n" +
+"  }\n" +
+"  ctrStart(area, partial!==undefined ? partial : 0);\n" +
+"};\n" +
+"function ctrStart(area, start){\n" +
+"  CTR.area = area; CTR.live = start;\n" +
+"  ctrLock(area).then(ctrShowCount, function(err){\n" +
+"    if (err && err.status){\n" +
+"      CTR.area = null;\n" +
+"      toast(err.status===409 ? t('ctr.locked_other') : t('toast.generic_error',{msg:err.message}));\n" +
+"      return;\n" +
+"    }\n" +
+"    toast(t('ctr.offline_nolock'));\n" +
+"    ctrShowCount();\n" +
+"  });\n" +
+"}\n" +
+"function ctrLock(area){\n" +
+"  var st = ctrStore();\n" +
+"  return api('/api/session/'+state.currentId+'/preinc-lock','POST',{area:area, holder:st.holder, action:'start'}).then(function(s2){\n" +
+"    state.session = s2; ctrRenderList();\n" +
+"  });\n" +
+"}\n" +
+"function ctrUnlock(area){\n" +
+"  var st = ctrStore();\n" +
+"  api('/api/session/'+state.currentId+'/preinc-lock','POST',{area:area, holder:st.holder, action:'end'}).then(function(s2){ state.session=s2; }, function(){});\n" +
+"}\n" +
+"\n" +
+"// ---------- contagem ----------\n" +
+"function ctrShowCount(){\n" +
+"  ctrPaintSound();\n" +
+"  document.getElementById('ctr-list').style.display='none';\n" +
+"  document.getElementById('ctr-count').style.display='flex';\n" +
+"  document.getElementById('ctr-area-name').textContent = ctrAreaLabel(CTR.area);\n" +
+"  ctrPaint();\n" +
+"  ctrTimersOn();\n" +
+"}\n" +
+"function ctrPaint(){ document.getElementById('ctr-live').textContent = CTR.live; }\n" +
+"function ctrPartialSave(){\n" +
+"  var st = ctrStore(); var sid = state.currentId;\n" +
+"  if (!st.partials[sid]) st.partials[sid] = {};\n" +
+"  if (CTR.live>0) st.partials[sid][CTR.area] = CTR.live; else delete st.partials[sid][CTR.area];\n" +
+"  ctrSave(st);\n" +
+"}\n" +
+"App.counterTap = function(ev){\n" +
+"  if (ev && ev.preventDefault) ev.preventDefault();\n" +
+"  if (!CTR.area) return;\n" +
+"  CTR.live++; ctrPaint(); ctrPartialSave();\n" +
+"  ctrClick();\n" +
+"  if (CTR.live % CTR_MILESTONE === 0) ctrMilestone(CTR.live);\n" +
+"};\n" +
+"App.counterUndo = function(){\n" +
+"  if (!CTR.area || CTR.live===0) return;\n" +
+"  CTR.live--; ctrPaint(); ctrPartialSave();\n" +
+"};\n" +
+"App.counterReset = function(){\n" +
+"  if (!CTR.area || CTR.live===0) return;\n" +
+"  confirmDialog(t('ctr.reset_confirm',{n:CTR.live})).then(function(ok){\n" +
+"    if (!ok) return;\n" +
+"    CTR.live = 0; ctrPaint(); ctrPartialSave();\n" +
+"  });\n" +
+"};\n" +
+"// Volta à lista sem gravar: o parcial fica salvo no aparelho e a trava é liberada.\n" +
+"App.counterCancel = function(){\n" +
+"  if (!CTR.area) return;\n" +
+"  var area = CTR.area;\n" +
+"  ctrPartialSave();\n" +
+"  ctrUnlock(area);\n" +
+"  CTR.area = null; CTR.live = 0;\n" +
+"  ctrStopTimers();\n" +
+"  ctrBackToList();\n" +
+"};\n" +
+"App.counterFinish = function(){\n" +
+"  if (!CTR.area) return;\n" +
+"  var area = CTR.area, n = CTR.live, sid = state.currentId;\n" +
+"  function doIt(){\n" +
+"    var st = ctrStore();\n" +
+"    var item = { id: 'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,7), sessionId: sid, area: area, value: n, holder: st.holder, ts: Date.now() };\n" +
+"    st.queue.push(item);\n" +
+"    if (st.partials[sid]) delete st.partials[sid][area];\n" +
+"    ctrSave(st);\n" +
+"    CTR.area = null; CTR.live = 0;\n" +
+"    ctrStopTimers();\n" +
+"    ctrBackToList();\n" +
+"    toast(t('ctr.finished_toast',{label:ctrAreaLabel(area), n:n}));\n" +
+"    App.counterFlushNow();\n" +
+"  }\n" +
+"  if (n===0) confirmDialog(t('ctr.finish_zero',{label:ctrAreaLabel(area)})).then(function(ok){ if (ok) doIt(); });\n" +
+"  else doIt();\n" +
+"};\n" +
+"\n" +
+"// ---------- som ----------\n" +
+"// Clique curto a cada toque; a cada 100 toques na mesma contagem, um som de marco e o\n" +
+"// número falado. O áudio começa no primeiro toque (o iOS exige um toque do usuário).\n" +
+"function ctrSoundOn(){ try { return localStorage.getItem(CTR_SOUND_KEY) !== 'off'; } catch (e) { return true; } }\n" +
+"function ctrTone(freq, dur, when, vol){\n" +
+"  try {\n" +
+"    CTR_AUDIO = CTR_AUDIO || new (window.AudioContext || window.webkitAudioContext)();\n" +
+"    var o = CTR_AUDIO.createOscillator(), g = CTR_AUDIO.createGain();\n" +
+"    var t0 = CTR_AUDIO.currentTime + (when || 0);\n" +
+"    o.frequency.value = freq;\n" +
+"    g.gain.setValueAtTime(vol || 0.12, t0);\n" +
+"    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);\n" +
+"    o.connect(g); g.connect(CTR_AUDIO.destination);\n" +
+"    o.start(t0); o.stop(t0 + dur + 0.02);\n" +
+"  } catch (e) { /* sem áudio neste aparelho: segue sem som */ }\n" +
+"}\n" +
+"function ctrClick(){ if (ctrSoundOn()) ctrTone(1200, 0.03, 0, 0.08); }\n" +
+"function ctrMilestone(n){\n" +
+"  CTR_MILESTONES_LOG.push(n);\n" +
+"  if (!ctrSoundOn()) return;\n" +
+"  ctrTone(660, 0.18, 0, 0.2);\n" +
+"  ctrTone(990, 0.28, 0.2, 0.2);\n" +
+"  setTimeout(function(){ ctrAnnounce(n); }, 450);\n" +
+"}\n" +
+"function ctrAnnounce(n){\n" +
+"  if (!('speechSynthesis' in window)) return;\n" +
+"  try {\n" +
+"    var u = new SpeechSynthesisUtterance(String(n));\n" +
+"    u.lang = ({pt:'pt-BR', en:'en-US', es:'es-ES'})[state.lang] || 'pt-BR';\n" +
+"    window.speechSynthesis.cancel();\n" +
+"    window.speechSynthesis.speak(u);\n" +
+"  } catch (e) { /* sem voz: o som do marco já tocou */ }\n" +
+"}\n" +
+"App.counterSoundToggle = function(){\n" +
+"  var on = ctrSoundOn();\n" +
+"  try { localStorage.setItem(CTR_SOUND_KEY, on ? 'off' : 'on'); } catch (e) {}\n" +
+"  ctrPaintSound();\n" +
+"};\n" +
+"function ctrPaintSound(){\n" +
+"  var b = document.getElementById('ctr-sound-btn'); if (!b) return;\n" +
+"  b.textContent = ctrSoundOn() ? t('ctr.sound_on') : t('ctr.sound_off');\n" +
+"}\n" +
+"App.counterMilestoneLog = CTR_MILESTONES_LOG;\n" +
+"\n" +
+"window.addEventListener('online', function(){ App.counterFlushNow(); });\n" +
 "function incBtns(catId){\n" +
 "  var html = '<button class=\"cat-btn minus\" onclick=\"App.adjust(\\''+catId+'\\',-1)\">-1</button>';\n" +
 "  html += '<button class=\"cat-btn\" onclick=\"App.adjust(\\''+catId+'\\',1)\">+1</button>';\n" +
@@ -6054,6 +6460,7 @@ var server = http.createServer(function (req, res) {
         quadrants: emptyQuadrants(),
         patientInfo: newPatientInfo,
         schedule: emptySchedule(),
+        preincLocks: {},
         implant: emptyImplant(),
         preincCounts: emptyPreinc(),
         preincDist: emptyPreincDist(),
@@ -6330,6 +6737,33 @@ var server = http.createServer(function (req, res) {
     return;
   }
 
+  // Trava da área durante a contagem no contador: um aparelho por vez. "start" trava
+  // (ou renova, se for o mesmo aparelho); "end" libera. A trava expira sozinha (PREINC_LOCK_TTL_MS).
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/preinc-lock$/);
+  if (m && req.method === "POST") {
+    var sL = db.sessions[m[1]];
+    var sLLang = requestLang(req);
+    if (!sL) { send(res, 404, { error: t("errors.surgery_not_found", sLLang) }); return; }
+    if (sL.status === "finalizada") { send(res, 409, { error: t("errors.surgery_already_finalized", sLLang) }); return; }
+    readBody(req).then(function (bodyL) {
+      var areaL = bodyL.area;
+      var holderL = (typeof bodyL.holder === "string") ? bodyL.holder.slice(0, 64) : "";
+      if (!PREINC_IDS.has(areaL) || !holderL || (bodyL.action !== "start" && bodyL.action !== "end")) { send(res, 400, { error: t("errors.invalid_parameters", sLLang) }); return; }
+      if (!sL.preincLocks) sL.preincLocks = {};
+      var curL = activePreincLock(sL, areaL);
+      if (bodyL.action === "start") {
+        if (curL && curL.holder !== holderL) { send(res, 409, { error: t("errors.preinc_area_locked", sLLang) }); return; }
+        sL.preincLocks[areaL] = { holder: holderL, since: Date.now() };
+      } else if (curL && curL.holder === holderL) {
+        delete sL.preincLocks[areaL];
+      }
+      sL.updatedAt = Date.now();
+      saveForSession(sL);
+      send(res, 200, withOwnerBranding(sL));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sLLang) }); });
+    return;
+  }
+
   m = p.match(/^\/api\/session\/([a-f0-9]+)\/preinc$/);
   if (m && req.method === "POST") {
     var sP = db.sessions[m[1]];
@@ -6340,7 +6774,13 @@ var server = http.createServer(function (req, res) {
       var area = body.area;
       var value = Number(body.value);
       if (!PREINC_IDS.has(area) || !Number.isFinite(value) || value < 0) { send(res, 400, { error: t("errors.invalid_parameters", sPLang) }); return; }
+      // Se a área está travada por outro aparelho, não grava (409). Quem segura a trava
+      // e grava com o próprio holder libera a trava junto.
+      var holderBody = (typeof body.holder === "string") ? body.holder.slice(0, 64) : null;
+      var lockNow = activePreincLock(sP, area);
+      if (lockNow && lockNow.holder !== holderBody) { send(res, 409, { error: t("errors.preinc_area_locked", sPLang) }); return; }
       sP.preincCounts[area] = Math.floor(value);
+      if (lockNow) delete sP.preincLocks[area];
       sP.updatedAt = Date.now();
       saveForSession(sP);
       send(res, 200, withOwnerBranding(sP));

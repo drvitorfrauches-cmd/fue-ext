@@ -240,6 +240,33 @@
     return;
   }
 
+  // Trava da área durante a contagem no contador: um aparelho por vez. "start" trava
+  // (ou renova, se for o mesmo aparelho); "end" libera. A trava expira sozinha (PREINC_LOCK_TTL_MS).
+  m = p.match(/^\/api\/session\/([a-f0-9]+)\/preinc-lock$/);
+  if (m && req.method === "POST") {
+    var sL = db.sessions[m[1]];
+    var sLLang = requestLang(req);
+    if (!sL) { send(res, 404, { error: t("errors.surgery_not_found", sLLang) }); return; }
+    if (sL.status === "finalizada") { send(res, 409, { error: t("errors.surgery_already_finalized", sLLang) }); return; }
+    readBody(req).then(function (bodyL) {
+      var areaL = bodyL.area;
+      var holderL = (typeof bodyL.holder === "string") ? bodyL.holder.slice(0, 64) : "";
+      if (!PREINC_IDS.has(areaL) || !holderL || (bodyL.action !== "start" && bodyL.action !== "end")) { send(res, 400, { error: t("errors.invalid_parameters", sLLang) }); return; }
+      if (!sL.preincLocks) sL.preincLocks = {};
+      var curL = activePreincLock(sL, areaL);
+      if (bodyL.action === "start") {
+        if (curL && curL.holder !== holderL) { send(res, 409, { error: t("errors.preinc_area_locked", sLLang) }); return; }
+        sL.preincLocks[areaL] = { holder: holderL, since: Date.now() };
+      } else if (curL && curL.holder === holderL) {
+        delete sL.preincLocks[areaL];
+      }
+      sL.updatedAt = Date.now();
+      saveForSession(sL);
+      send(res, 200, withOwnerBranding(sL));
+    }).catch(function () { send(res, 400, { error: t("errors.invalid_body", sLLang) }); });
+    return;
+  }
+
   m = p.match(/^\/api\/session\/([a-f0-9]+)\/preinc$/);
   if (m && req.method === "POST") {
     var sP = db.sessions[m[1]];
@@ -250,7 +277,13 @@
       var area = body.area;
       var value = Number(body.value);
       if (!PREINC_IDS.has(area) || !Number.isFinite(value) || value < 0) { send(res, 400, { error: t("errors.invalid_parameters", sPLang) }); return; }
+      // Se a área está travada por outro aparelho, não grava (409). Quem segura a trava
+      // e grava com o próprio holder libera a trava junto.
+      var holderBody = (typeof body.holder === "string") ? body.holder.slice(0, 64) : null;
+      var lockNow = activePreincLock(sP, area);
+      if (lockNow && lockNow.holder !== holderBody) { send(res, 409, { error: t("errors.preinc_area_locked", sPLang) }); return; }
       sP.preincCounts[area] = Math.floor(value);
+      if (lockNow) delete sP.preincLocks[area];
       sP.updatedAt = Date.now();
       saveForSession(sP);
       send(res, 200, withOwnerBranding(sP));

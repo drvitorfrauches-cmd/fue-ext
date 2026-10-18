@@ -327,8 +327,8 @@
 "function setConn(ok){ state.connOk = ok; document.getElementById('conn-dot').className = 'conn-dot ' + (ok?'ok':'bad'); document.getElementById('conn-banner').className = 'conn-banner' + (ok?'':' show'); }\n" +
 "function api(p, method, body){\n" +
 "  return fetch(p, {method:method||'GET', credentials:'same-origin', headers: body?{'Content-Type':'application/json'}:undefined, body: body?JSON.stringify(body):undefined})\n" +
-"    .then(function(r){ setConn(true); if (!r.ok) return r.json().then(function(e){ throw new Error(e.error||('HTTP '+r.status)); }); return r.json(); })\n" +
-"    .catch(function(err){ setConn(false); throw err; });\n" +
+"    .then(function(r){ setConn(true); if (!r.ok) return r.json().then(function(e){ var er = new Error(e.error||('HTTP '+r.status)); er.status = r.status; throw er; }); return r.json(); })\n" +
+"    .catch(function(err){ if (!err || !err.status) setConn(false); throw err; });\n" +
 "}\n" +
 "function showScreen(name){ document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');}); document.getElementById('screen-'+name).classList.add('active'); }\n" +
 "var INCREMENTS_KEY = 'fue_live_increments';\n" +

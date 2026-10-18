@@ -324,6 +324,7 @@ var server = http.createServer(function (req, res) {
         quadrants: emptyQuadrants(),
         patientInfo: newPatientInfo,
         schedule: emptySchedule(),
+        preincLocks: {},
         implant: emptyImplant(),
         preincCounts: emptyPreinc(),
         preincDist: emptyPreincDist(),

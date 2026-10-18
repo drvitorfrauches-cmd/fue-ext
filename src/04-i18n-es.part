@@ -88,6 +88,7 @@
     "errors.invalid_parameters": "Parámetros inválidos.",
     "errors.invalid_quadrant": "Cuadrante inválido.",
     "errors.invalid_value": "Valor inválido.",
+    "errors.preinc_area_locked": "Esta área se está contando ahora en otro dispositivo.",
     "errors.invalid_category": "Categoría inválida.",
     "errors.photo_processing_error_prefix": "Error al procesar la foto: ",
     "errors.photo_not_found": "Foto no encontrada.",
@@ -413,6 +414,32 @@
     "impl.withdrawn_toast": "Retirados {n}. Quedan {left} en el chiller.",
     "impl.removed_toast": "Retiro borrado.",
     "impl.done": "Chiller vacío: se retiraron todos los folículos.",
+    "ctr.open_btn": "Contador de incisiones",
+    "ctr.title": "Contador de incisiones",
+    "ctr.close": "Cerrar",
+    "ctr.count_sub": "toques en esta área",
+    "ctr.plus": "+1",
+    "ctr.undo": "−1",
+    "ctr.reset": "Reiniciar",
+    "ctr.finish": "Finalizar área",
+    "ctr.cancel": "Volver sin guardar",
+    "ctr.status_free": "sin contar",
+    "ctr.status_done": "guardado: {n}",
+    "ctr.status_partial": "en curso: {n}",
+    "ctr.status_locked": "contándose en otro dispositivo",
+    "ctr.status_queued": "esperando internet",
+    "ctr.status_conflict": "no guardado (conflicto)",
+    "ctr.queue_hint": "{n} en cola para enviar",
+    "ctr.discard": "Descartar",
+    "ctr.conflict_note": "{label} no se guardó: otro dispositivo contaba esa área. Revise la pestaña.",
+    "ctr.locked_other": "Esta área se está contando en otro dispositivo.",
+    "ctr.offline_nolock": "Sin internet: contando sin bloqueo. El total va a la cola.",
+    "ctr.recount_warn": "{label} ya tiene {n} guardado. Contar de nuevo reemplaza ese valor. ¿Continuar?",
+    "ctr.finish_zero": "{label} está en 0. ¿Guardar 0 de todos modos?",
+    "ctr.finished_toast": "{label}: {n} enviado",
+    "ctr.reset_confirm": "¿Reiniciar los {n} toques de esta cuenta?",
+    "ctr.sound_on": "Sonido: activado",
+    "ctr.sound_off": "Sonido: desactivado",
     "cnt.fix_duration_btn": "Corregir duración",
     "cnt.fix_duration_prompt": "¿Cuántos minutos duró realmente la cirugía? (ej: 200 para 3h20)",
     "share.title": "Compartir cirugía",
@@ -632,6 +659,14 @@ function stampSchedule(session, field, localTime, overwrite) {
 }
 // Implantação: retiradas de folículos do chiller (id, qty, at). O saldo NÃO é guardado —
 // é sempre calculado (íntegros extraídos − soma das retiradas) pra nunca ficar fora de sincronia.
+// Trava ativa da área (ou null). Trava expirada é apagada aqui mesmo.
+function activePreincLock(session, area) {
+  var locks = session.preincLocks || {};
+  var lk = locks[area];
+  if (!lk) return null;
+  if (Date.now() - lk.since > PREINC_LOCK_TTL_MS) { delete locks[area]; return null; }
+  return lk;
+}
 function emptyImplant() { return { withdrawals: [] }; }
 // Confere se ligar quadId.carryFromId = candidateId criaria um ciclo (ex: A vem de B,
 // que vem de A) — percorre a cadeia a partir do candidato e vê se volta pro próprio

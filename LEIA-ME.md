@@ -1282,3 +1282,18 @@ e `src/16-routes-sessions.part` (rotas). Testes: `verify_schedule_implant_server
 - **Cookie `Secure` e HSTS** também quando a requisição chega por HTTPS (proxy). Na rede local (http://ip) não muda nada, para o login não quebrar.
 - **Ainda não feito:** revogar/expirar link de cirurgia, 2FA, CSP sem `unsafe-inline`, criptografia dos dados em repouso.
 - Teste: `verify_security_hardening_server.js`.
+
+## Contador de incisões (aba Pré-incisões)
+
+- Botão **Contador de incisões** no topo da aba. Abre uma tela cheia com as 12 áreas da aba de incisões.
+- Escolha a área, toque no botão grande (+1) e depois em **Finalizar área**. O total vai para a área certa da aba, pelo mesmo endpoint de sempre.
+- **Uma contagem por área.** Se a área já tem valor, aparece o aviso "Contar de novo substitui esse valor". Confirmar substitui; cancelar não muda nada.
+- **Funciona sem internet na contagem.** Cada toque é local. Se a internet cair na hora de finalizar, o total fica na **fila** do aparelho (aparece no topo da aba como "N na fila") e é enviado quando a conexão voltar.
+- **Trava por área.** Enquanto um aparelho conta uma área, os outros veem "contando em outro aparelho" e não conseguem contar nem editar a área pela aba. A trava é liberada ao finalizar, ao voltar sem gravar ou sozinha depois de 1 hora sem atualização (aparelho desligado no meio da contagem).
+- **Voltar sem gravar** guarda o parcial no aparelho; ao reabrir a área, a contagem continua de onde parou. Se o Safari for fechado com a contagem em andamento, o parcial continua salvo no aparelho.
+- **Conflito:** se o total não puder ser gravado porque outro aparelho segurou a área, ele aparece em aviso amarelo na lista com botão **Descartar**. Nada é gravado sozinho nesse caso.
+- Quem tem só o link da cirurgia (assistente) pode usar o contador, sem login. A gravação registra qual aparelho enviou o total (campo `holder`), mas não o nome da pessoa.
+- Ao finalizar, o total é gravado com o valor final; não há registro de cada toque.
+- **Som:** clique curto a cada toque. A cada 100 toques na mesma contagem, um som de marco e o número falado (ex.: "cem", "duzentos"). Botão **Som** no cabeçalho liga/desliga e fica salvo no aparelho. Desfazer não dispara marco.
+- Ainda não feito: vibração (o iOS não vibra em páginas web) e teste de desempenho no iPad real.
+- Testes: `verify_preinc_counter_server.js` (trava, conflito, expiração, sessão finalizada) e `verify_preinc_counter_client.js` (fila, reenvio, 409, 404, fluxo de contagem).

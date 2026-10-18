@@ -37,6 +37,9 @@ const ADMIN_EMAIL = "drvitorfrauches@gmail.com"; // única conta com acesso à s
 // continua vendo. Escolhido pra cobrir o acompanhamento pós-operatório usual
 // de transplante capilar sem deixar a foto exposta por um link vazado pra sempre.
 const PHOTO_LINK_TTL_MS = 90 * 24 * 60 * 60 * 1000;
+// Trava de área no contador de incisões: expira sozinha depois de 1h sem atualização
+// (ex.: aparelho desligado no meio da contagem), para ninguém ficar travado para sempre.
+const PREINC_LOCK_TTL_MS = 60 * 60 * 1000;
 // SECURE_COOKIES: marca o cookie de login como "Secure" (só trafega em HTTPS). Deixe
 // desligado (padrão) pra uso na rede local, que roda em HTTP puro. Ligue definindo a
 // variável de ambiente SECURE_COOKIES=true quando estiver atrás de HTTPS (nuvem).

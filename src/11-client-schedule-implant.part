@@ -153,3 +153,289 @@
 "        (owner ? '<td><button type=\"button\" class=\"icon-btn\" style=\"background:var(--c-surface2);color:var(--c-text);\" title=\"'+escapeHtml(t('impl.remove_btn'))+'\" onclick=\"App.implRemove(\\''+escapeHtml(r.w.id)+'\\')\">✕</button></td>' : '')+'</tr>';\n" +
 "    }).join('')+'</table></div>';\n" +
 "}\n" +
+"// ---------- contador de incisões (dentro da aba Pré-incisões) ----------\n" +
+"// A contagem roda no aparelho: cada toque responde na hora, mesmo sem internet.\n" +
+"// Ao finalizar a área, o total vai para a aba pelo mesmo endpoint de pré-incisões.\n" +
+"// Se a internet cair, o total fica numa fila local e é enviado depois.\n" +
+"// Enquanto um aparelho conta uma área, os outros veem a área travada.\n" +
+"var CTR_KEY = 'fue_counter_v1';\n" +
+"var CTR_LOCK_REFRESH_MS = 10 * 60 * 1000;\n" +
+"var CTR_LOCK_TTL_MS = 60 * 60 * 1000; // mesmo valor de PREINC_LOCK_TTL_MS no servidor\n" +
+"var CTR_FLUSH_MS = 20 * 1000;\n" +
+"var CTR_STOP = {};\n" +
+"var CTR_SOUND_KEY = 'fue_counter_sound';\n" +
+"var CTR_MILESTONE = 100;\n" +
+"var CTR_MILESTONES_LOG = []; // marcos anunciados (também usado nos testes)\n" +
+"var CTR_AUDIO = null;\n" +
+"var CTR = { area: null, live: 0, timers: [] };\n" +
+"\n" +
+"function ctrStore(){\n" +
+"  var d = null;\n" +
+"  try { d = JSON.parse(localStorage.getItem(CTR_KEY) || 'null'); } catch (e) { d = null; }\n" +
+"  if (!d || typeof d !== 'object') d = {};\n" +
+"  if (!d.holder) { d.holder = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10); ctrSave(d); }\n" +
+"  if (!Array.isArray(d.queue)) d.queue = [];\n" +
+"  if (!d.partials || typeof d.partials !== 'object') d.partials = {};\n" +
+"  return d;\n" +
+"}\n" +
+"function ctrSave(d){ try { localStorage.setItem(CTR_KEY, JSON.stringify(d)); } catch (e) {} }\n" +
+"function ctrAreaLabel(id){ var a = PREINC_AREAS.filter(function(x){ return x.id===id; })[0]; return a ? a.label : id; }\n" +
+"function ctrLockOf(s, area){\n" +
+"  var lk = (s && s.preincLocks) ? s.preincLocks[area] : null;\n" +
+"  if (!lk) return null;\n" +
+"  if (Date.now() - lk.since > CTR_LOCK_TTL_MS) return null;\n" +
+"  return lk;\n" +
+"}\n" +
+"function ctrRemove(store, id){ store.queue = store.queue.filter(function(q){ return q.id!==id; }); ctrSave(store); }\n" +
+"function ctrQueued(store, sid, area){\n" +
+"  return store.queue.filter(function(q){ return q.sessionId===sid && q.area===area; })[0] || null;\n" +
+"}\n" +
+"\n" +
+"// Envia os itens da fila em ordem. Para no primeiro erro de rede (o resto fica para depois).\n" +
+"// 409 = outro aparelho segurou a área: o item fica marcado como conflito e a pessoa decide.\n" +
+"// 404 = a cirurgia não existe mais: o item sai da fila.\n" +
+"App.counterFlush = function(store){\n" +
+"  var items = store.queue.slice();\n" +
+"  var chain = Promise.resolve();\n" +
+"  items.forEach(function(item){\n" +
+"    chain = chain.then(function(){\n" +
+"      if (item.conflict) return;\n" +
+"      return api('/api/session/'+item.sessionId+'/preinc','POST',{area:item.area, value:item.value, holder:item.holder})\n" +
+"        .then(function(s2){\n" +
+"          ctrRemove(store, item.id);\n" +
+"          if (state.currentId===item.sessionId){ state.session=s2; render(); }\n" +
+"        }, function(err){\n" +
+"          if (err && err.status===409){ item.conflict=true; ctrSave(store); return; }\n" +
+"          if (err && err.status===404){ ctrRemove(store, item.id); return; }\n" +
+"          throw CTR_STOP;\n" +
+"        });\n" +
+"    });\n" +
+"  });\n" +
+"  return chain.catch(function(e){ if (e!==CTR_STOP) throw e; });\n" +
+"};\n" +
+"App.counterFlushNow = function(){\n" +
+"  var st = ctrStore();\n" +
+"  App.counterFlush(st).then(ctrRefreshAll, ctrRefreshAll);\n" +
+"};\n" +
+"function ctrRefreshAll(){\n" +
+"  ctrUpdateHint();\n" +
+"  var list = document.getElementById('ctr-list');\n" +
+"  if (list && document.getElementById('ctr-overlay').style.display!=='none' && !CTR.area) ctrRenderList();\n" +
+"}\n" +
+"function ctrUpdateHint(){\n" +
+"  var el = document.getElementById('ctr-queue-hint'); if (!el) return;\n" +
+"  var n = ctrStore().queue.length;\n" +
+"  el.textContent = n ? t('ctr.queue_hint',{n:n}) : '';\n" +
+"}\n" +
+"\n" +
+"// ---------- abrir / fechar ----------\n" +
+"App.counterOpen = function(){\n" +
+"  var s = state.session; if (!s || !state.currentId) return;\n" +
+"  if (s.status==='finalizada'){ toast(t('errors.surgery_already_finalized')); return; }\n" +
+"  CTR.area = null; CTR.live = 0;\n" +
+"  ctrStopTimers();\n" +
+"  document.getElementById('ctr-overlay').style.display='flex';\n" +
+"  document.getElementById('ctr-list').onclick = ctrListClick;\n" +
+"  ctrBackToList();\n" +
+"  App.counterFlushNow();\n" +
+"  CTR.timers.push(setInterval(App.counterFlushNow, CTR_FLUSH_MS));\n" +
+"};\n" +
+"App.counterClose = function(){\n" +
+"  if (CTR.area) App.counterCancel();\n" +
+"  ctrStopTimers();\n" +
+"  document.getElementById('ctr-overlay').style.display='none';\n" +
+"  ctrUpdateHint();\n" +
+"};\n" +
+"function ctrStopTimers(){ CTR.timers.forEach(function(id){ clearInterval(id); }); CTR.timers = []; }\n" +
+"function ctrTimersOn(){\n" +
+"  ctrStopTimers();\n" +
+"  CTR.timers.push(setInterval(function(){ if (CTR.area) ctrLock(CTR.area).catch(function(){}); }, CTR_LOCK_REFRESH_MS));\n" +
+"  CTR.timers.push(setInterval(App.counterFlushNow, CTR_FLUSH_MS));\n" +
+"}\n" +
+"\n" +
+"// ---------- lista de áreas ----------\n" +
+"function ctrBackToList(){\n" +
+"  document.getElementById('ctr-count').style.display='none';\n" +
+"  document.getElementById('ctr-list').style.display='block';\n" +
+"  ctrRenderList();\n" +
+"}\n" +
+"function ctrRenderList(){\n" +
+"  var s = state.session || {}; var st = ctrStore(); var sid = state.currentId;\n" +
+"  var partials = st.partials[sid] || {};\n" +
+"  var counts = s.preincCounts || {};\n" +
+"  var cells = PREINC_AREAS.map(function(a){\n" +
+"    var lk = ctrLockOf(s, a.id);\n" +
+"    var other = !!lk && lk.holder!==st.holder;\n" +
+"    var q = ctrQueued(st, sid, a.id);\n" +
+"    var sub;\n" +
+"    if (q && q.conflict) sub = t('ctr.status_conflict');\n" +
+"    else if (q) sub = t('ctr.status_queued');\n" +
+"    else if (other) sub = t('ctr.status_locked');\n" +
+"    else if (partials[a.id]!==undefined) sub = t('ctr.status_partial',{n:partials[a.id]});\n" +
+"    else if (counts[a.id]>0) sub = t('ctr.status_done',{n:counts[a.id]});\n" +
+"    else sub = t('ctr.status_free');\n" +
+"    return '<button class=\"ctr-area-btn'+(other?' locked':'')+'\" data-area=\"'+a.id+'\"><span>'+escapeHtml(a.label)+'</span><small>'+escapeHtml(sub)+'</small></button>';\n" +
+"  }).join('');\n" +
+"  var conflicts = st.queue.filter(function(q){ return q.sessionId===sid && q.conflict; }).map(function(q){\n" +
+"    return '<div class=\"ctr-note\">'+escapeHtml(t('ctr.conflict_note',{label:ctrAreaLabel(q.area)}))+\n" +
+"      ' <button class=\"btn secondary\" data-discard=\"'+escapeHtml(q.id)+'\">'+escapeHtml(t('ctr.discard'))+'</button></div>';\n" +
+"  }).join('');\n" +
+"  document.getElementById('ctr-list').innerHTML = '<div class=\"ctr-areas\">'+cells+'</div>'+conflicts;\n" +
+"}\n" +
+"function ctrListClick(ev){\n" +
+"  var d = ev.target.closest ? ev.target.closest('[data-discard]') : null;\n" +
+"  if (d){ App.counterDiscard(d.getAttribute('data-discard')); return; }\n" +
+"  var b = ev.target.closest ? ev.target.closest('[data-area]') : null;\n" +
+"  if (b) App.counterPick(b.getAttribute('data-area'));\n" +
+"}\n" +
+"App.counterDiscard = function(id){\n" +
+"  ctrRemove(ctrStore(), id);\n" +
+"  ctrRenderList();\n" +
+"  ctrUpdateHint();\n" +
+"};\n" +
+"\n" +
+"// ---------- escolher área ----------\n" +
+"App.counterPick = function(area){\n" +
+"  var s = state.session; if (!s) return;\n" +
+"  var st = ctrStore(); var sid = state.currentId;\n" +
+"  var lk = ctrLockOf(s, area);\n" +
+"  if (lk && lk.holder!==st.holder){ toast(t('ctr.locked_other')); return; }\n" +
+"  var partial = (st.partials[sid]||{})[area];\n" +
+"  var done = (s.preincCounts||{})[area] || 0;\n" +
+"  if (partial===undefined && done>0){\n" +
+"    confirmDialog(t('ctr.recount_warn',{label:ctrAreaLabel(area), n:done})).then(function(ok){ if (ok) ctrStart(area, 0); });\n" +
+"    return;\n" +
+"  }\n" +
+"  ctrStart(area, partial!==undefined ? partial : 0);\n" +
+"};\n" +
+"function ctrStart(area, start){\n" +
+"  CTR.area = area; CTR.live = start;\n" +
+"  ctrLock(area).then(ctrShowCount, function(err){\n" +
+"    if (err && err.status){\n" +
+"      CTR.area = null;\n" +
+"      toast(err.status===409 ? t('ctr.locked_other') : t('toast.generic_error',{msg:err.message}));\n" +
+"      return;\n" +
+"    }\n" +
+"    toast(t('ctr.offline_nolock'));\n" +
+"    ctrShowCount();\n" +
+"  });\n" +
+"}\n" +
+"function ctrLock(area){\n" +
+"  var st = ctrStore();\n" +
+"  return api('/api/session/'+state.currentId+'/preinc-lock','POST',{area:area, holder:st.holder, action:'start'}).then(function(s2){\n" +
+"    state.session = s2; ctrRenderList();\n" +
+"  });\n" +
+"}\n" +
+"function ctrUnlock(area){\n" +
+"  var st = ctrStore();\n" +
+"  api('/api/session/'+state.currentId+'/preinc-lock','POST',{area:area, holder:st.holder, action:'end'}).then(function(s2){ state.session=s2; }, function(){});\n" +
+"}\n" +
+"\n" +
+"// ---------- contagem ----------\n" +
+"function ctrShowCount(){\n" +
+"  ctrPaintSound();\n" +
+"  document.getElementById('ctr-list').style.display='none';\n" +
+"  document.getElementById('ctr-count').style.display='flex';\n" +
+"  document.getElementById('ctr-area-name').textContent = ctrAreaLabel(CTR.area);\n" +
+"  ctrPaint();\n" +
+"  ctrTimersOn();\n" +
+"}\n" +
+"function ctrPaint(){ document.getElementById('ctr-live').textContent = CTR.live; }\n" +
+"function ctrPartialSave(){\n" +
+"  var st = ctrStore(); var sid = state.currentId;\n" +
+"  if (!st.partials[sid]) st.partials[sid] = {};\n" +
+"  if (CTR.live>0) st.partials[sid][CTR.area] = CTR.live; else delete st.partials[sid][CTR.area];\n" +
+"  ctrSave(st);\n" +
+"}\n" +
+"App.counterTap = function(ev){\n" +
+"  if (ev && ev.preventDefault) ev.preventDefault();\n" +
+"  if (!CTR.area) return;\n" +
+"  CTR.live++; ctrPaint(); ctrPartialSave();\n" +
+"  ctrClick();\n" +
+"  if (CTR.live % CTR_MILESTONE === 0) ctrMilestone(CTR.live);\n" +
+"};\n" +
+"App.counterUndo = function(){\n" +
+"  if (!CTR.area || CTR.live===0) return;\n" +
+"  CTR.live--; ctrPaint(); ctrPartialSave();\n" +
+"};\n" +
+"App.counterReset = function(){\n" +
+"  if (!CTR.area || CTR.live===0) return;\n" +
+"  confirmDialog(t('ctr.reset_confirm',{n:CTR.live})).then(function(ok){\n" +
+"    if (!ok) return;\n" +
+"    CTR.live = 0; ctrPaint(); ctrPartialSave();\n" +
+"  });\n" +
+"};\n" +
+"// Volta à lista sem gravar: o parcial fica salvo no aparelho e a trava é liberada.\n" +
+"App.counterCancel = function(){\n" +
+"  if (!CTR.area) return;\n" +
+"  var area = CTR.area;\n" +
+"  ctrPartialSave();\n" +
+"  ctrUnlock(area);\n" +
+"  CTR.area = null; CTR.live = 0;\n" +
+"  ctrStopTimers();\n" +
+"  ctrBackToList();\n" +
+"};\n" +
+"App.counterFinish = function(){\n" +
+"  if (!CTR.area) return;\n" +
+"  var area = CTR.area, n = CTR.live, sid = state.currentId;\n" +
+"  function doIt(){\n" +
+"    var st = ctrStore();\n" +
+"    var item = { id: 'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,7), sessionId: sid, area: area, value: n, holder: st.holder, ts: Date.now() };\n" +
+"    st.queue.push(item);\n" +
+"    if (st.partials[sid]) delete st.partials[sid][area];\n" +
+"    ctrSave(st);\n" +
+"    CTR.area = null; CTR.live = 0;\n" +
+"    ctrStopTimers();\n" +
+"    ctrBackToList();\n" +
+"    toast(t('ctr.finished_toast',{label:ctrAreaLabel(area), n:n}));\n" +
+"    App.counterFlushNow();\n" +
+"  }\n" +
+"  if (n===0) confirmDialog(t('ctr.finish_zero',{label:ctrAreaLabel(area)})).then(function(ok){ if (ok) doIt(); });\n" +
+"  else doIt();\n" +
+"};\n" +
+"\n" +
+"// ---------- som ----------\n" +
+"// Clique curto a cada toque; a cada 100 toques na mesma contagem, um som de marco e o\n" +
+"// número falado. O áudio começa no primeiro toque (o iOS exige um toque do usuário).\n" +
+"function ctrSoundOn(){ try { return localStorage.getItem(CTR_SOUND_KEY) !== 'off'; } catch (e) { return true; } }\n" +
+"function ctrTone(freq, dur, when, vol){\n" +
+"  try {\n" +
+"    CTR_AUDIO = CTR_AUDIO || new (window.AudioContext || window.webkitAudioContext)();\n" +
+"    var o = CTR_AUDIO.createOscillator(), g = CTR_AUDIO.createGain();\n" +
+"    var t0 = CTR_AUDIO.currentTime + (when || 0);\n" +
+"    o.frequency.value = freq;\n" +
+"    g.gain.setValueAtTime(vol || 0.12, t0);\n" +
+"    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);\n" +
+"    o.connect(g); g.connect(CTR_AUDIO.destination);\n" +
+"    o.start(t0); o.stop(t0 + dur + 0.02);\n" +
+"  } catch (e) { /* sem áudio neste aparelho: segue sem som */ }\n" +
+"}\n" +
+"function ctrClick(){ if (ctrSoundOn()) ctrTone(1200, 0.03, 0, 0.08); }\n" +
+"function ctrMilestone(n){\n" +
+"  CTR_MILESTONES_LOG.push(n);\n" +
+"  if (!ctrSoundOn()) return;\n" +
+"  ctrTone(660, 0.18, 0, 0.2);\n" +
+"  ctrTone(990, 0.28, 0.2, 0.2);\n" +
+"  setTimeout(function(){ ctrAnnounce(n); }, 450);\n" +
+"}\n" +
+"function ctrAnnounce(n){\n" +
+"  if (!('speechSynthesis' in window)) return;\n" +
+"  try {\n" +
+"    var u = new SpeechSynthesisUtterance(String(n));\n" +
+"    u.lang = ({pt:'pt-BR', en:'en-US', es:'es-ES'})[state.lang] || 'pt-BR';\n" +
+"    window.speechSynthesis.cancel();\n" +
+"    window.speechSynthesis.speak(u);\n" +
+"  } catch (e) { /* sem voz: o som do marco já tocou */ }\n" +
+"}\n" +
+"App.counterSoundToggle = function(){\n" +
+"  var on = ctrSoundOn();\n" +
+"  try { localStorage.setItem(CTR_SOUND_KEY, on ? 'off' : 'on'); } catch (e) {}\n" +
+"  ctrPaintSound();\n" +
+"};\n" +
+"function ctrPaintSound(){\n" +
+"  var b = document.getElementById('ctr-sound-btn'); if (!b) return;\n" +
+"  b.textContent = ctrSoundOn() ? t('ctr.sound_on') : t('ctr.sound_off');\n" +
+"}\n" +
+"App.counterMilestoneLog = CTR_MILESTONES_LOG;\n" +
+"\n" +
+"window.addEventListener('online', function(){ App.counterFlushNow(); });\n" +

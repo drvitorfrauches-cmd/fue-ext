@@ -175,5 +175,20 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  .drawer .btn{width:100%;text-align:left;}\n" +
 "  .impl-big{font-size:34px;font-weight:800;color:var(--c-primary-dark);line-height:1.1;}\n" +
 "  .impl-bar{height:12px;background:var(--c-border);border-radius:6px;overflow:hidden;margin:10px 0;} .impl-bar i{display:block;height:12px;background:var(--c-primary);width:0;}\n" +
+"  .ctr-overlay{position:fixed;inset:0;background:var(--c-bg,#fff);z-index:60;display:flex;flex-direction:column;padding:12px 14px;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:manipulation;user-select:none;-webkit-user-select:none;}\n" +
+"  .ctr-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;}\n" +
+"  .ctr-body{display:flex;flex-direction:column;gap:10px;min-height:0;flex:1;}\n" +
+"  .ctr-areas{display:grid;grid-template-columns:1fr 1fr;gap:10px;}\n" +
+"  .ctr-area-btn{min-height:76px;border:1px solid var(--c-border);border-radius:14px;background:var(--c-card);padding:10px 12px;text-align:left;font:inherit;font-size:16px;font-weight:700;color:var(--c-text);cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;gap:4px;}\n" +
+"  .ctr-area-btn small{font-size:12px;font-weight:600;color:var(--c-muted,#6b7780);}\n" +
+"  .ctr-area-btn.locked{opacity:.55;}\n" +
+"  .ctr-note{border:1px solid var(--c-border);border-radius:14px;padding:10px 12px;font-size:14px;display:flex;flex-direction:column;gap:8px;}\n" +
+"  .ctr-area-name{font-size:20px;font-weight:800;text-align:center;}\n" +
+"  .ctr-display{text-align:center;}\n" +
+"  .ctr-live{font-size:min(24vw,140px);font-weight:800;font-variant-numeric:tabular-nums;line-height:1.05;}\n" +
+"  .ctr-tap{flex:1;min-height:42vh;border:0;border-radius:28px;font:inherit;font-size:64px;font-weight:800;background:var(--c-primary);color:#fff;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer;}\n" +
+"  .ctr-tap:active{transform:translateY(4px);}\n" +
+"  .ctr-row{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:10px;}\n" +
+"  .ctr-row .btn{min-height:60px;}\n" +
 "</style>\n" +
 "</head>\n" +
