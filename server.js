@@ -551,6 +551,7 @@ const STRINGS = {
     "errors.invalid_time": "Horário inválido (use HH:MM).",
     "errors.login_required_implant": "Faça login pra registrar retiradas do chiller.",
     "errors.invalid_withdrawal": "Quantidade inválida.",
+    "errors.implant_over_balance": "Não dá para retirar mais do que restam desse grupo no chiller.",
     "errors.withdrawal_not_found": "Retirada não encontrada.",
     "impl.title": "Implantação — estoque no chiller",
     "impl.hint": "Total de folículos íntegros extraídos menos o que já foi retirado do chiller.",
@@ -570,9 +571,18 @@ const STRINGS = {
     "impl.owner_only_hint": "Só o médico responsável (logado) registra as retiradas.",
     "impl.login_needed": "Faça login pra registrar retiradas.",
     "impl.invalid_qty": "Digite uma quantidade válida.",
-    "impl.count_changed_warning": "Atenção: já foram retirados {w}, mas a contagem atual tem só {total}. A contagem foi alterada?",
+    "impl.count_changed_warning": "Atenção: um grupo tem mais retirados que extraídos. A contagem foi alterada?",
     "impl.withdrawn_toast": "Retirados {n}. Restam {left} no chiller.",
     "impl.removed_toast": "Retirada apagada.",
+    "impl.col_group": "Grupo",
+    "impl.col_extracted": "Extraídos",
+    "impl.col_withdrawn": "Retirados",
+    "impl.col_remaining": "Restam",
+    "impl.col_withdraw": "Retirar",
+    "impl.over_group": "Só restam {n} de {label} no chiller.",
+    "impl.withdrawn_group_toast": "{label}: retirados {n}. Restam {left}.",
+    "impl.legacy_label": "sem grupo (antiga)",
+    "impl.legacy_note": "Retiradas antigas sem grupo: {n} (não entram no saldo por grupo).",
     "impl.done": "Chiller zerado: todos os folículos foram retirados.",
     "ctr.open_btn": "Contador de incisões",
     "ctr.title": "Contador de incisões",
@@ -1111,6 +1121,7 @@ const STRINGS = {
     "errors.invalid_time": "Invalid time (use HH:MM).",
     "errors.login_required_implant": "Log in to record chiller withdrawals.",
     "errors.invalid_withdrawal": "Invalid quantity.",
+    "errors.implant_over_balance": "You cannot withdraw more than what remains in this group.",
     "errors.withdrawal_not_found": "Withdrawal not found.",
     "impl.title": "Implantation — chiller stock",
     "impl.hint": "Total intact follicles extracted minus what has already been taken from the chiller.",
@@ -1130,9 +1141,18 @@ const STRINGS = {
     "impl.owner_only_hint": "Only the responsible doctor (logged in) records withdrawals.",
     "impl.login_needed": "Log in to record withdrawals.",
     "impl.invalid_qty": "Enter a valid quantity.",
-    "impl.count_changed_warning": "Warning: {w} already withdrawn, but the current count has only {total}. Was the count changed?",
+    "impl.count_changed_warning": "Warning: a group has more withdrawn than extracted. Did the count change?",
     "impl.withdrawn_toast": "Withdrew {n}. {left} left in the chiller.",
     "impl.removed_toast": "Withdrawal deleted.",
+    "impl.col_group": "Group",
+    "impl.col_extracted": "Extracted",
+    "impl.col_withdrawn": "Withdrawn",
+    "impl.col_remaining": "Remaining",
+    "impl.col_withdraw": "Withdraw",
+    "impl.over_group": "Only {n} of {label} remain in the chiller.",
+    "impl.withdrawn_group_toast": "{label}: withdrew {n}. {left} remain.",
+    "impl.legacy_label": "no group (old)",
+    "impl.legacy_note": "Old withdrawals without a group: {n} (not counted in the group balance).",
     "impl.done": "Chiller empty: all follicles have been withdrawn.",
     "ctr.open_btn": "Incision counter",
     "ctr.title": "Incision counter",
@@ -1671,6 +1691,7 @@ const STRINGS = {
     "errors.invalid_time": "Hora inválida (use HH:MM).",
     "errors.login_required_implant": "Inicia sesión para registrar retiros del chiller.",
     "errors.invalid_withdrawal": "Cantidad inválida.",
+    "errors.implant_over_balance": "No se puede retirar más de lo que queda de este grupo.",
     "errors.withdrawal_not_found": "Retiro no encontrado.",
     "impl.title": "Implantación — stock en el chiller",
     "impl.hint": "Total de folículos íntegros extraídos menos lo que ya se retiró del chiller.",
@@ -1690,9 +1711,18 @@ const STRINGS = {
     "impl.owner_only_hint": "Solo el médico responsable (con sesión iniciada) registra los retiros.",
     "impl.login_needed": "Inicia sesión para registrar retiros.",
     "impl.invalid_qty": "Ingrese una cantidad válida.",
-    "impl.count_changed_warning": "Atención: ya se retiraron {w}, pero el conteo actual solo tiene {total}. ¿Se modificó el conteo?",
+    "impl.count_changed_warning": "Atención: un grupo tiene más retirados que extraídos. ¿Cambió la cuenta?",
     "impl.withdrawn_toast": "Retirados {n}. Quedan {left} en el chiller.",
     "impl.removed_toast": "Retiro borrado.",
+    "impl.col_group": "Grupo",
+    "impl.col_extracted": "Extraídos",
+    "impl.col_withdrawn": "Retirados",
+    "impl.col_remaining": "Quedan",
+    "impl.col_withdraw": "Retirar",
+    "impl.over_group": "Solo quedan {n} de {label} en el chiller.",
+    "impl.withdrawn_group_toast": "{label}: retirados {n}. Quedan {left}.",
+    "impl.legacy_label": "sin grupo (antigua)",
+    "impl.legacy_note": "Retiradas antiguas sin grupo: {n} (no cuentan en el saldo por grupo).",
     "impl.done": "Chiller vacío: se retiraron todos los folículos.",
     "ctr.open_btn": "Contador de incisiones",
     "ctr.title": "Contador de incisiones",
@@ -1946,6 +1976,28 @@ function activePreincLock(session, area) {
   if (!lk) return null;
   if (Date.now() - lk.since > PREINC_LOCK_TTL_MS) { delete locks[area]; return null; }
   return lk;
+}
+// Grupos de folículo do chiller (os 6 íntegros) — mesma contagem da aba de implantação.
+var IMPLANT_GROUP_IDS = ["f1", "f2", "f3", "f4", "f1fino", "f2fino"];
+// Íntegros extraídos por grupo: soma dos 4 quadrantes.
+function implantExtractedByGroup(session) {
+  var out = {};
+  IMPLANT_GROUP_IDS.forEach(function (g) { out[g] = 0; });
+  QUADRANTS.forEach(function (qd) {
+    var q = session.quadrants && session.quadrants[qd.id];
+    var c = (q && q.counts) ? q.counts : {};
+    IMPLANT_GROUP_IDS.forEach(function (g) { out[g] += (c[g] || 0); });
+  });
+  return out;
+}
+// Já retirado por grupo (só retiradas com grupo; antigas sem grupo ficam de fora).
+function implantWithdrawnByGroup(session) {
+  var out = {};
+  IMPLANT_GROUP_IDS.forEach(function (g) { out[g] = 0; });
+  ((session.implant && session.implant.withdrawals) || []).forEach(function (w) {
+    if (Object.prototype.hasOwnProperty.call(out, w.group)) out[w.group] += w.qty;
+  });
+  return out;
 }
 function emptyImplant() { return { withdrawals: [] }; }
 // Confere se ligar quadId.carryFromId = candidateId criaria um ciclo (ex: A vem de B,
@@ -3313,17 +3365,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        </div>\n" +
 "        <div class=\"impl-bar\"><i id=\"impl-progress\"></i></div>\n" +
 "        <p class=\"hint\" id=\"impl-warning\" style=\"display:none;font-weight:700;\"></p>\n" +
-"        <div id=\"impl-controls\" style=\"display:none;margin-top:10px;\">\n" +
-"          <div class=\"row\" style=\"gap:8px;flex-wrap:wrap;\">\n" +
-"            <button type=\"button\" class=\"btn\" style=\"font-size:18px;padding:12px 18px;\" onclick=\"App.implWithdraw(100)\">−100</button>\n" +
-"            <button type=\"button\" class=\"btn\" style=\"font-size:18px;padding:12px 18px;\" onclick=\"App.implWithdraw(200)\">−200</button>\n" +
-"            <button type=\"button\" class=\"btn\" style=\"font-size:18px;padding:12px 18px;\" onclick=\"App.implWithdraw(300)\">−300</button>\n" +
-"          </div>\n" +
-"          <div class=\"row\" style=\"gap:8px;margin-top:10px;align-items:center;\">\n" +
-"            <input type=\"number\" id=\"impl-custom\" inputmode=\"numeric\" min=\"1\" style=\"width:130px;\" placeholder=\"Ex: 250\" data-i18n-placeholder=\"impl.custom_placeholder\" onkeydown=\"if(event.key==='Enter'){event.preventDefault();App.implWithdrawCustom();}\">\n" +
-"            <button type=\"button\" class=\"btn secondary\" data-i18n=\"impl.withdraw_btn\" onclick=\"App.implWithdrawCustom()\">Retirar</button>\n" +
-"          </div>\n" +
-"        </div>\n" +
+"<div id='impl-controls' style='display:none;margin-top:10px;'><div id='impl-groups'></div></div>\n" +
 "        <p class=\"hint\" id=\"impl-readonly-hint\" style=\"display:none;margin-top:10px;\" data-i18n=\"impl.owner_only_hint\">Só o médico responsável (logado) registra as retiradas.</p>\n" +
 "      </div>\n" +
 "      <div class=\"card\">\n" +
@@ -4789,30 +4831,40 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "function implantIsOwner(s){\n" +
 "  return !!(state.currentUser && s && s.ownerBranding && s.ownerBranding.ownerId === state.currentUser.id);\n" +
 "}\n" +
+"// Saldo por grupo de folículo (os 6 grupos íntegros). Cada grupo tem o seu saldo:\n" +
+"// extraídos do grupo − retirados do grupo. Retiradas antigas (sem grupo) não entram\n" +
+"// no saldo por grupo; aparecem só como observação.\n" +
+"var IMPLANT_GROUP_IDS = ['f1','f2','f3','f4','f1fino','f2fino'];\n" +
 "function implantStats(s){\n" +
-"  var total = computeSummary(combinedExtractionCounts(s), s.mode||'completo').foliculosExtraidos;\n" +
+"  var counts = combinedExtractionCounts(s);\n" +
 "  var list = (s.implant && s.implant.withdrawals) || [];\n" +
-"  var withdrawn = 0; list.forEach(function(w){ withdrawn += w.qty; });\n" +
-"  return { total: total, withdrawn: withdrawn, remaining: Math.max(0, total - withdrawn), over: withdrawn > total, list: list };\n" +
+"  var groups = IMPLANT_GROUP_IDS.map(function(id){\n" +
+"    var total = counts[id]||0, w = 0;\n" +
+"    list.forEach(function(x){ if (x.group===id) w += x.qty; });\n" +
+"    return { id:id, total:total, withdrawn:w, remaining:Math.max(0,total-w), over: w>total };\n" +
+"  });\n" +
+"  var st = { groups:groups, total:0, withdrawn:0, remaining:0, over:false, legacy:0, list:list };\n" +
+"  groups.forEach(function(g){\n" +
+"    st.total += g.total; st.withdrawn += g.withdrawn; st.remaining += g.remaining;\n" +
+"    if (g.over) st.over = true;\n" +
+"  });\n" +
+"  list.forEach(function(x){ if (!x.group) st.legacy += x.qty; });\n" +
+"  return st;\n" +
 "}\n" +
-"App.implWithdraw = function(qty){\n" +
+"App.implWithdrawGroup = function(g){\n" +
 "  var s = state.session; if (!s) return;\n" +
 "  if (!state.currentUser){ toast(t('impl.login_needed')); return; }\n" +
 "  if (!implantIsOwner(s)){ toast(t('impl.owner_only_hint')); return; }\n" +
-"  qty = Math.round(Number(qty));\n" +
-"  if (!isFinite(qty) || qty <= 0){ toast(t('impl.invalid_qty')); return; }\n" +
-"  var st = implantStats(s);\n" +
-"  if (qty > st.remaining){ toast(t('impl.over_balance',{n:fmtBig(st.remaining)})); return; }\n" +
-"  api('/api/session/'+state.currentId+'/implant/withdraw','POST',{qty:qty}).then(function(r){\n" +
+"  var el = document.getElementById('impl-q-'+g);\n" +
+"  var qty = Math.round(Number(el ? el.value : ''));\n" +
+"  if (!isFinite(qty) || qty<=0){ toast(t('impl.invalid_qty')); return; }\n" +
+"  var grp = implantStats(s).groups.filter(function(x){ return x.id===g; })[0];\n" +
+"  if (grp && qty > grp.remaining){ toast(t('impl.over_group',{label:t('cat.'+g), n:fmtBig(grp.remaining)})); return; }\n" +
+"  api('/api/session/'+state.currentId+'/implant/withdraw','POST',{group:g, qty:qty}).then(function(r){\n" +
 "    state.session = r; render();\n" +
-"    toast(t('impl.withdrawn_toast',{n:fmtBig(qty), left:fmtBig(implantStats(r).remaining)}));\n" +
+"    var left = implantStats(r).groups.filter(function(x){ return x.id===g; })[0];\n" +
+"    toast(t('impl.withdrawn_group_toast',{label:t('cat.'+g), n:fmtBig(qty), left:fmtBig(left ? left.remaining : 0)}));\n" +
 "  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
-"};\n" +
-"App.implWithdrawCustom = function(){\n" +
-"  var el = document.getElementById('impl-custom');\n" +
-"  var v = el ? el.value : '';\n" +
-"  App.implWithdraw(v);\n" +
-"  if (el) el.value = '';\n" +
 "};\n" +
 "App.implRemove = function(id){\n" +
 "  var w = (((state.session||{}).implant||{}).withdrawals||[]).filter(function(x){ return x.id===id; })[0];\n" +
@@ -4837,19 +4889,24 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  else { warn.style.display = 'none'; }\n" +
 "  document.getElementById('impl-controls').style.display = owner ? 'block' : 'none';\n" +
 "  document.getElementById('impl-readonly-hint').style.display = owner ? 'none' : 'block';\n" +
-"  var running = 0;\n" +
-"  var rows = st.list.map(function(w){\n" +
-"    running += w.qty;\n" +
-"    return {w:w, left: Math.max(0, st.total - running)};\n" +
-"  }).reverse();\n" +
+"  document.getElementById('impl-groups').innerHTML =\n" +
+"    '<div class=\"dash-table-wrap\"><table class=\"dash-table\">' +\n" +
+"    '<tr><th>'+escapeHtml(t('impl.col_group'))+'</th><th>'+escapeHtml(t('impl.col_extracted'))+'</th><th>'+escapeHtml(t('impl.col_withdrawn'))+'</th><th>'+escapeHtml(t('impl.col_remaining'))+'</th>'+(owner ? '<th>'+escapeHtml(t('impl.col_withdraw'))+'</th>' : '')+'</tr>' +\n" +
+"    st.groups.map(function(g){\n" +
+"      return '<tr><td>'+escapeHtml(t('cat.'+g.id))+'</td><td>'+fmtBig(g.total)+'</td><td>'+fmtBig(g.withdrawn)+'</td><td><b>'+fmtBig(g.remaining)+'</b></td>'+\n" +
+"        (owner ? '<td><div class=\"row\" style=\"gap:6px;flex-wrap:nowrap;\"><input type=\"number\" min=\"1\" inputmode=\"numeric\" id=\"impl-q-'+g.id+'\" style=\"width:78px;\"><button type=\"button\" class=\"btn secondary\" onclick=\"App.implWithdrawGroup(\\''+g.id+'\\')\">'+escapeHtml(t('impl.withdraw_btn'))+'</button></div></td>' : '')+'</tr>';\n" +
+"    }).join('') + '</table></div>' +\n" +
+"    (st.legacy>0 ? '<p class=\"hint\" style=\"margin-top:8px;\">'+escapeHtml(t('impl.legacy_note',{n:fmtBig(st.legacy)}))+'</p>' : '');\n" +
 "  var hist = document.getElementById('impl-history');\n" +
+"  var rows = st.list.slice().reverse();\n" +
 "  if (!rows.length){ hist.innerHTML = '<p class=\"hint\">'+escapeHtml(t('impl.history_empty'))+'</p>'; return; }\n" +
-"  hist.innerHTML = '<div class=\"dash-table-wrap\"><table class=\"dash-table\">'+\n" +
-"    '<tr><th>'+escapeHtml(t('impl.col_time'))+'</th><th>'+escapeHtml(t('impl.col_qty'))+'</th><th>'+escapeHtml(t('impl.col_left'))+'</th>'+(owner?'<th></th>':'')+'</tr>'+\n" +
-"    rows.map(function(r){\n" +
-"      return '<tr><td>'+escapeHtml(schedFromTs(r.w.at))+'</td><td>'+fmtBig(r.w.qty)+'</td><td>'+fmtBig(r.left)+'</td>'+\n" +
-"        (owner ? '<td><button type=\"button\" class=\"icon-btn\" style=\"background:var(--c-surface2);color:var(--c-text);\" title=\"'+escapeHtml(t('impl.remove_btn'))+'\" onclick=\"App.implRemove(\\''+escapeHtml(r.w.id)+'\\')\">✕</button></td>' : '')+'</tr>';\n" +
-"    }).join('')+'</table></div>';\n" +
+"  hist.innerHTML = '<div class=\"dash-table-wrap\"><table class=\"dash-table\">' +\n" +
+"    '<tr><th>'+escapeHtml(t('impl.col_time'))+'</th><th>'+escapeHtml(t('impl.col_group'))+'</th><th>'+escapeHtml(t('impl.col_qty'))+'</th>'+(owner ? '<th></th>' : '')+'</tr>' +\n" +
+"    rows.map(function(w){\n" +
+"      var lbl = w.group ? t('cat.'+w.group) : t('impl.legacy_label');\n" +
+"      return '<tr><td>'+escapeHtml(schedFromTs(w.at))+'</td><td>'+escapeHtml(lbl)+'</td><td>'+fmtBig(w.qty)+'</td>'+\n" +
+"        (owner ? '<td><button type=\"button\" class=\"icon-btn\" style=\"background:var(--c-surface2);color:var(--c-text);\" title=\"'+escapeHtml(t('impl.remove_btn'))+'\" onclick=\"App.implRemove(\\''+escapeHtml(w.id)+'\\')\">✕</button></td>' : '')+'</tr>';\n" +
+"    }).join('') + '</table></div>';\n" +
 "}\n" +
 "// ---------- contador de incisões (dentro da aba Pré-incisões) ----------\n" +
 "// A contagem roda no aparelho: cada toque responde na hora, mesmo sem internet.\n" +
@@ -6529,8 +6586,12 @@ var server = http.createServer(function (req, res) {
       if (!sImpl.implant || !Array.isArray(sImpl.implant.withdrawals)) sImpl.implant = emptyImplant();
       if (implAction === "withdraw") {
         var qty = Number(body.qty);
-        if (!Number.isInteger(qty) || qty < 1 || qty > 100000 || sImpl.implant.withdrawals.length >= 2000) { send(res, 400, { error: t("errors.invalid_withdrawal", implLang) }); return; }
-        sImpl.implant.withdrawals.push({ id: newId(6), qty: qty, at: Date.now() });
+        var grpW = String(body.group || "");
+        if (IMPLANT_GROUP_IDS.indexOf(grpW) === -1 || !Number.isInteger(qty) || qty < 1 || qty > 100000 || sImpl.implant.withdrawals.length >= 2000) { send(res, 400, { error: t("errors.invalid_withdrawal", implLang) }); return; }
+        // Saldo do grupo no servidor: não deixa retirar mais do que restou desse grupo.
+        var restGrp = implantExtractedByGroup(sImpl)[grpW] - implantWithdrawnByGroup(sImpl)[grpW];
+        if (qty > restGrp) { send(res, 409, { error: t("errors.implant_over_balance", implLang) }); return; }
+        sImpl.implant.withdrawals.push({ id: newId(6), group: grpW, qty: qty, at: Date.now() });
       } else {
         var before = sImpl.implant.withdrawals.length;
         sImpl.implant.withdrawals = sImpl.implant.withdrawals.filter(function (w) { return w.id !== String(body.id || ""); });

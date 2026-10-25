@@ -391,6 +391,7 @@
     "errors.invalid_time": "Hora inválida (use HH:MM).",
     "errors.login_required_implant": "Inicia sesión para registrar retiros del chiller.",
     "errors.invalid_withdrawal": "Cantidad inválida.",
+    "errors.implant_over_balance": "No se puede retirar más de lo que queda de este grupo.",
     "errors.withdrawal_not_found": "Retiro no encontrado.",
     "impl.title": "Implantación — stock en el chiller",
     "impl.hint": "Total de folículos íntegros extraídos menos lo que ya se retiró del chiller.",
@@ -410,9 +411,18 @@
     "impl.owner_only_hint": "Solo el médico responsable (con sesión iniciada) registra los retiros.",
     "impl.login_needed": "Inicia sesión para registrar retiros.",
     "impl.invalid_qty": "Ingrese una cantidad válida.",
-    "impl.count_changed_warning": "Atención: ya se retiraron {w}, pero el conteo actual solo tiene {total}. ¿Se modificó el conteo?",
+    "impl.count_changed_warning": "Atención: un grupo tiene más retirados que extraídos. ¿Cambió la cuenta?",
     "impl.withdrawn_toast": "Retirados {n}. Quedan {left} en el chiller.",
     "impl.removed_toast": "Retiro borrado.",
+    "impl.col_group": "Grupo",
+    "impl.col_extracted": "Extraídos",
+    "impl.col_withdrawn": "Retirados",
+    "impl.col_remaining": "Quedan",
+    "impl.col_withdraw": "Retirar",
+    "impl.over_group": "Solo quedan {n} de {label} en el chiller.",
+    "impl.withdrawn_group_toast": "{label}: retirados {n}. Quedan {left}.",
+    "impl.legacy_label": "sin grupo (antigua)",
+    "impl.legacy_note": "Retiradas antiguas sin grupo: {n} (no cuentan en el saldo por grupo).",
     "impl.done": "Chiller vacío: se retiraron todos los folículos.",
     "ctr.open_btn": "Contador de incisiones",
     "ctr.title": "Contador de incisiones",
@@ -666,6 +676,28 @@ function activePreincLock(session, area) {
   if (!lk) return null;
   if (Date.now() - lk.since > PREINC_LOCK_TTL_MS) { delete locks[area]; return null; }
   return lk;
+}
+// Grupos de folículo do chiller (os 6 íntegros) — mesma contagem da aba de implantação.
+var IMPLANT_GROUP_IDS = ["f1", "f2", "f3", "f4", "f1fino", "f2fino"];
+// Íntegros extraídos por grupo: soma dos 4 quadrantes.
+function implantExtractedByGroup(session) {
+  var out = {};
+  IMPLANT_GROUP_IDS.forEach(function (g) { out[g] = 0; });
+  QUADRANTS.forEach(function (qd) {
+    var q = session.quadrants && session.quadrants[qd.id];
+    var c = (q && q.counts) ? q.counts : {};
+    IMPLANT_GROUP_IDS.forEach(function (g) { out[g] += (c[g] || 0); });
+  });
+  return out;
+}
+// Já retirado por grupo (só retiradas com grupo; antigas sem grupo ficam de fora).
+function implantWithdrawnByGroup(session) {
+  var out = {};
+  IMPLANT_GROUP_IDS.forEach(function (g) { out[g] = 0; });
+  ((session.implant && session.implant.withdrawals) || []).forEach(function (w) {
+    if (Object.prototype.hasOwnProperty.call(out, w.group)) out[w.group] += w.qty;
+  });
+  return out;
 }
 function emptyImplant() { return { withdrawals: [] }; }
 // Confere se ligar quadId.carryFromId = candidateId criaria um ciclo (ex: A vem de B,

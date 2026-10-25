@@ -1259,6 +1259,13 @@ logado, registra/apaga** (o servidor confere: 401 sem login, 403 se não for o d
 Funciona também com a extração já finalizada. Se a contagem for reaberta e o total ficar menor que o já
 retirado, aparece um aviso. O saldo é sempre calculado, nunca guardado.
 
+**Retirada por grupo de folículo:** a aba Implantação mostra uma tabela com os 6 grupos íntegros
+(1 fio, 2 fios, 3 fios, 4 fios, 1 fio especial, 2 fios especial) — extraído, retirado e quanto resta de cada um.
+Cada retirada informa o grupo e o servidor não deixa tirar mais do que resta naquele grupo (409).
+O saldo total usa só os íntegros. Retiradas antigas, feitas antes da divisão por grupo, aparecem
+com "sem grupo" e não entram no saldo por grupo (há uma nota com a quantidade).
+Rotas: `POST /api/session/:id/implant/withdraw` com `{group, qty}`.
+
 Cirurgias antigas ganham `schedule` e `implant` vazios automaticamente (migração no boot).
 Código novo em `src/11-client-schedule-implant.part` (cliente) e `src/04-i18n-es.part` (helpers do servidor)
 e `src/16-routes-sessions.part` (rotas). Testes: `verify_schedule_implant_server.js`,

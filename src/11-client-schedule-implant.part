@@ -91,30 +91,40 @@
 "function implantIsOwner(s){\n" +
 "  return !!(state.currentUser && s && s.ownerBranding && s.ownerBranding.ownerId === state.currentUser.id);\n" +
 "}\n" +
+"// Saldo por grupo de folículo (os 6 grupos íntegros). Cada grupo tem o seu saldo:\n" +
+"// extraídos do grupo − retirados do grupo. Retiradas antigas (sem grupo) não entram\n" +
+"// no saldo por grupo; aparecem só como observação.\n" +
+"var IMPLANT_GROUP_IDS = ['f1','f2','f3','f4','f1fino','f2fino'];\n" +
 "function implantStats(s){\n" +
-"  var total = computeSummary(combinedExtractionCounts(s), s.mode||'completo').foliculosExtraidos;\n" +
+"  var counts = combinedExtractionCounts(s);\n" +
 "  var list = (s.implant && s.implant.withdrawals) || [];\n" +
-"  var withdrawn = 0; list.forEach(function(w){ withdrawn += w.qty; });\n" +
-"  return { total: total, withdrawn: withdrawn, remaining: Math.max(0, total - withdrawn), over: withdrawn > total, list: list };\n" +
+"  var groups = IMPLANT_GROUP_IDS.map(function(id){\n" +
+"    var total = counts[id]||0, w = 0;\n" +
+"    list.forEach(function(x){ if (x.group===id) w += x.qty; });\n" +
+"    return { id:id, total:total, withdrawn:w, remaining:Math.max(0,total-w), over: w>total };\n" +
+"  });\n" +
+"  var st = { groups:groups, total:0, withdrawn:0, remaining:0, over:false, legacy:0, list:list };\n" +
+"  groups.forEach(function(g){\n" +
+"    st.total += g.total; st.withdrawn += g.withdrawn; st.remaining += g.remaining;\n" +
+"    if (g.over) st.over = true;\n" +
+"  });\n" +
+"  list.forEach(function(x){ if (!x.group) st.legacy += x.qty; });\n" +
+"  return st;\n" +
 "}\n" +
-"App.implWithdraw = function(qty){\n" +
+"App.implWithdrawGroup = function(g){\n" +
 "  var s = state.session; if (!s) return;\n" +
 "  if (!state.currentUser){ toast(t('impl.login_needed')); return; }\n" +
 "  if (!implantIsOwner(s)){ toast(t('impl.owner_only_hint')); return; }\n" +
-"  qty = Math.round(Number(qty));\n" +
-"  if (!isFinite(qty) || qty <= 0){ toast(t('impl.invalid_qty')); return; }\n" +
-"  var st = implantStats(s);\n" +
-"  if (qty > st.remaining){ toast(t('impl.over_balance',{n:fmtBig(st.remaining)})); return; }\n" +
-"  api('/api/session/'+state.currentId+'/implant/withdraw','POST',{qty:qty}).then(function(r){\n" +
+"  var el = document.getElementById('impl-q-'+g);\n" +
+"  var qty = Math.round(Number(el ? el.value : ''));\n" +
+"  if (!isFinite(qty) || qty<=0){ toast(t('impl.invalid_qty')); return; }\n" +
+"  var grp = implantStats(s).groups.filter(function(x){ return x.id===g; })[0];\n" +
+"  if (grp && qty > grp.remaining){ toast(t('impl.over_group',{label:t('cat.'+g), n:fmtBig(grp.remaining)})); return; }\n" +
+"  api('/api/session/'+state.currentId+'/implant/withdraw','POST',{group:g, qty:qty}).then(function(r){\n" +
 "    state.session = r; render();\n" +
-"    toast(t('impl.withdrawn_toast',{n:fmtBig(qty), left:fmtBig(implantStats(r).remaining)}));\n" +
+"    var left = implantStats(r).groups.filter(function(x){ return x.id===g; })[0];\n" +
+"    toast(t('impl.withdrawn_group_toast',{label:t('cat.'+g), n:fmtBig(qty), left:fmtBig(left ? left.remaining : 0)}));\n" +
 "  }).catch(function(err){ toast(t('toast.generic_error',{msg:err.message})); });\n" +
-"};\n" +
-"App.implWithdrawCustom = function(){\n" +
-"  var el = document.getElementById('impl-custom');\n" +
-"  var v = el ? el.value : '';\n" +
-"  App.implWithdraw(v);\n" +
-"  if (el) el.value = '';\n" +
 "};\n" +
 "App.implRemove = function(id){\n" +
 "  var w = (((state.session||{}).implant||{}).withdrawals||[]).filter(function(x){ return x.id===id; })[0];\n" +
@@ -139,19 +149,24 @@
 "  else { warn.style.display = 'none'; }\n" +
 "  document.getElementById('impl-controls').style.display = owner ? 'block' : 'none';\n" +
 "  document.getElementById('impl-readonly-hint').style.display = owner ? 'none' : 'block';\n" +
-"  var running = 0;\n" +
-"  var rows = st.list.map(function(w){\n" +
-"    running += w.qty;\n" +
-"    return {w:w, left: Math.max(0, st.total - running)};\n" +
-"  }).reverse();\n" +
+"  document.getElementById('impl-groups').innerHTML =\n" +
+"    '<div class=\"dash-table-wrap\"><table class=\"dash-table\">' +\n" +
+"    '<tr><th>'+escapeHtml(t('impl.col_group'))+'</th><th>'+escapeHtml(t('impl.col_extracted'))+'</th><th>'+escapeHtml(t('impl.col_withdrawn'))+'</th><th>'+escapeHtml(t('impl.col_remaining'))+'</th>'+(owner ? '<th>'+escapeHtml(t('impl.col_withdraw'))+'</th>' : '')+'</tr>' +\n" +
+"    st.groups.map(function(g){\n" +
+"      return '<tr><td>'+escapeHtml(t('cat.'+g.id))+'</td><td>'+fmtBig(g.total)+'</td><td>'+fmtBig(g.withdrawn)+'</td><td><b>'+fmtBig(g.remaining)+'</b></td>'+\n" +
+"        (owner ? '<td><div class=\"row\" style=\"gap:6px;flex-wrap:nowrap;\"><input type=\"number\" min=\"1\" inputmode=\"numeric\" id=\"impl-q-'+g.id+'\" style=\"width:78px;\"><button type=\"button\" class=\"btn secondary\" onclick=\"App.implWithdrawGroup(\\''+g.id+'\\')\">'+escapeHtml(t('impl.withdraw_btn'))+'</button></div></td>' : '')+'</tr>';\n" +
+"    }).join('') + '</table></div>' +\n" +
+"    (st.legacy>0 ? '<p class=\"hint\" style=\"margin-top:8px;\">'+escapeHtml(t('impl.legacy_note',{n:fmtBig(st.legacy)}))+'</p>' : '');\n" +
 "  var hist = document.getElementById('impl-history');\n" +
+"  var rows = st.list.slice().reverse();\n" +
 "  if (!rows.length){ hist.innerHTML = '<p class=\"hint\">'+escapeHtml(t('impl.history_empty'))+'</p>'; return; }\n" +
-"  hist.innerHTML = '<div class=\"dash-table-wrap\"><table class=\"dash-table\">'+\n" +
-"    '<tr><th>'+escapeHtml(t('impl.col_time'))+'</th><th>'+escapeHtml(t('impl.col_qty'))+'</th><th>'+escapeHtml(t('impl.col_left'))+'</th>'+(owner?'<th></th>':'')+'</tr>'+\n" +
-"    rows.map(function(r){\n" +
-"      return '<tr><td>'+escapeHtml(schedFromTs(r.w.at))+'</td><td>'+fmtBig(r.w.qty)+'</td><td>'+fmtBig(r.left)+'</td>'+\n" +
-"        (owner ? '<td><button type=\"button\" class=\"icon-btn\" style=\"background:var(--c-surface2);color:var(--c-text);\" title=\"'+escapeHtml(t('impl.remove_btn'))+'\" onclick=\"App.implRemove(\\''+escapeHtml(r.w.id)+'\\')\">✕</button></td>' : '')+'</tr>';\n" +
-"    }).join('')+'</table></div>';\n" +
+"  hist.innerHTML = '<div class=\"dash-table-wrap\"><table class=\"dash-table\">' +\n" +
+"    '<tr><th>'+escapeHtml(t('impl.col_time'))+'</th><th>'+escapeHtml(t('impl.col_group'))+'</th><th>'+escapeHtml(t('impl.col_qty'))+'</th>'+(owner ? '<th></th>' : '')+'</tr>' +\n" +
+"    rows.map(function(w){\n" +
+"      var lbl = w.group ? t('cat.'+w.group) : t('impl.legacy_label');\n" +
+"      return '<tr><td>'+escapeHtml(schedFromTs(w.at))+'</td><td>'+escapeHtml(lbl)+'</td><td>'+fmtBig(w.qty)+'</td>'+\n" +
+"        (owner ? '<td><button type=\"button\" class=\"icon-btn\" style=\"background:var(--c-surface2);color:var(--c-text);\" title=\"'+escapeHtml(t('impl.remove_btn'))+'\" onclick=\"App.implRemove(\\''+escapeHtml(w.id)+'\\')\">✕</button></td>' : '')+'</tr>';\n" +
+"    }).join('') + '</table></div>';\n" +
 "}\n" +
 "// ---------- contador de incisões (dentro da aba Pré-incisões) ----------\n" +
 "// A contagem roda no aparelho: cada toque responde na hora, mesmo sem internet.\n" +

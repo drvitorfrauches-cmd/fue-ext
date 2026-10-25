@@ -466,17 +466,7 @@
 "        </div>\n" +
 "        <div class=\"impl-bar\"><i id=\"impl-progress\"></i></div>\n" +
 "        <p class=\"hint\" id=\"impl-warning\" style=\"display:none;font-weight:700;\"></p>\n" +
-"        <div id=\"impl-controls\" style=\"display:none;margin-top:10px;\">\n" +
-"          <div class=\"row\" style=\"gap:8px;flex-wrap:wrap;\">\n" +
-"            <button type=\"button\" class=\"btn\" style=\"font-size:18px;padding:12px 18px;\" onclick=\"App.implWithdraw(100)\">−100</button>\n" +
-"            <button type=\"button\" class=\"btn\" style=\"font-size:18px;padding:12px 18px;\" onclick=\"App.implWithdraw(200)\">−200</button>\n" +
-"            <button type=\"button\" class=\"btn\" style=\"font-size:18px;padding:12px 18px;\" onclick=\"App.implWithdraw(300)\">−300</button>\n" +
-"          </div>\n" +
-"          <div class=\"row\" style=\"gap:8px;margin-top:10px;align-items:center;\">\n" +
-"            <input type=\"number\" id=\"impl-custom\" inputmode=\"numeric\" min=\"1\" style=\"width:130px;\" placeholder=\"Ex: 250\" data-i18n-placeholder=\"impl.custom_placeholder\" onkeydown=\"if(event.key==='Enter'){event.preventDefault();App.implWithdrawCustom();}\">\n" +
-"            <button type=\"button\" class=\"btn secondary\" data-i18n=\"impl.withdraw_btn\" onclick=\"App.implWithdrawCustom()\">Retirar</button>\n" +
-"          </div>\n" +
-"        </div>\n" +
+"<div id='impl-controls' style='display:none;margin-top:10px;'><div id='impl-groups'></div></div>\n" +
 "        <p class=\"hint\" id=\"impl-readonly-hint\" style=\"display:none;margin-top:10px;\" data-i18n=\"impl.owner_only_hint\">Só o médico responsável (logado) registra as retiradas.</p>\n" +
 "      </div>\n" +
 "      <div class=\"card\">\n" +

@@ -69,18 +69,21 @@ state.session = mk({ schedule:{} }); state.session.globalTimerStartedAt = ts.get
 render();
 console.log('sugere usar o cronômetro (09:30) quando o início está vazio:', elements['sched-rows'].innerHTML.indexOf('Usar cronômetro (09:30)')!==-1);
 
-console.log('--- aba Implantação: saldo ---');
+console.log('--- aba Implantação: saldo por grupo ---');
 var t0 = Date.now();
-state.session = mk({ w:[{id:'a',qty:100,at:t0},{id:'b',qty:150,at:t0}] });
+state.session = mk({ w:[{id:'a',group:'f1',qty:100,at:t0},{id:'b',group:'f2',qty:150,at:t0}] });
 console.log('total extraído = íntegros (500):', implantStats(state.session).total === 500);
+var gs = implantStats(state.session).groups;
+console.log('1 fio: extraído 300, retirado 100, restam 200:', gs[0].total===300 && gs[0].withdrawn===100 && gs[0].remaining===200);
+console.log('2 fios: extraído 200, retirado 150, restam 50:', gs[1].total===200 && gs[1].withdrawn===150 && gs[1].remaining===50);
 render();
 console.log('mostra total 500:', elements['impl-total'].textContent==='500');
 console.log('mostra retirados 250:', elements['impl-withdrawn'].textContent==='250');
 console.log('mostra restam 250:', elements['impl-remaining'].textContent==='250');
 console.log('barra de progresso em 50%:', elements['impl-progress'].style.width==='50.0%');
+console.log('tabela tem linha de 1 fio com restam 200:', elements['impl-groups'].innerHTML.indexOf('<b>200</b>')!==-1);
 console.log('sem aviso quando está tudo certo:', elements['impl-warning'].style.display==='none');
-console.log('lista mostra as 2 retiradas, mais recente primeiro:', (function(){ var hh = elements['impl-history'].innerHTML; return hh.indexOf('>150<') !== -1 && hh.indexOf('>100<') !== -1 && hh.indexOf('>150<') < hh.indexOf('>100<'); })());
-console.log('saldo após cada retirada na lista (400 e 250):', elements['impl-history'].innerHTML.indexOf('>400<')!==-1 && elements['impl-history'].innerHTML.indexOf('>250<')!==-1);
+console.log('lista mostra o grupo de cada retirada, mais recente primeiro:', (function(){ var hh = elements['impl-history'].innerHTML; return hh.indexOf('2 fios') !== -1 && hh.indexOf('1 fio') !== -1 && hh.indexOf('>150<') < hh.indexOf('>100<'); })());
 console.log('dono vê botões e o botão de apagar:', elements['impl-controls'].style.display==='block' && elements['impl-history'].innerHTML.indexOf('App.implRemove')!==-1);
 console.log('dono não vê o aviso de somente leitura:', elements['impl-readonly-hint'].style.display==='none');
 
@@ -90,29 +93,35 @@ console.log('sem login: botões escondidos e aviso aparece:', elements['impl-con
 console.log('sem login: não aparece botão de apagar:', elements['impl-history'].innerHTML.indexOf('App.implRemove')===-1);
 state.currentUser = { id:'outro' }; render();
 console.log('outro médico: botões escondidos:', elements['impl-controls'].style.display==='none');
-calls = []; App.implWithdraw(100);
-console.log('outro médico/sem login: retirada nem chega ao servidor:', calls.length===0);
+calls = []; App.implWithdrawGroup('f1');
+console.log('outro médico: retirada nem chega ao servidor:', calls.length===0);
 state.currentUser = { id:'dono1' }; render();
 
-console.log('--- aba Implantação: retirar ---');
-calls = []; App.implWithdraw(300);
-console.log('retirar 300 com 250 no chiller é bloqueado (sem chamada):', calls.length===0);
-calls = []; App.implWithdraw(0); App.implWithdraw(-5); App.implWithdraw('abc');
+console.log('--- aba Implantação: retirar por grupo ---');
+calls = []; fakeEl('impl-q-f1').value = '250'; App.implWithdrawGroup('f1');
+console.log('1 fio: 250 com 200 restantes é bloqueado (sem chamada):', calls.length===0);
+calls = []; fakeEl('impl-q-f1').value = '0'; App.implWithdrawGroup('f1');
+fakeEl('impl-q-f1').value = '-5'; App.implWithdrawGroup('f1');
+fakeEl('impl-q-f1').value = 'abc'; App.implWithdrawGroup('f1');
 console.log('quantidade inválida é bloqueada:', calls.length===0);
-calls = []; App.implWithdraw(200);
-console.log('retirar 200 chama /implant/withdraw com qty 200:', calls.length===1 && calls[0].url.indexOf('/api/session/abc123/implant/withdraw')!==-1 && calls[0].body.qty===200);
-calls = []; fakeEl('impl-custom').value = '250'; App.implWithdrawCustom();
-console.log('campo livre: 250 (igual ao saldo) é aceito:', calls.length===1 && calls[0].body.qty===250);
-console.log('campo livre é limpo depois:', fakeEl('impl-custom').value==='');
+calls = []; fakeEl('impl-q-f1').value = '200'; App.implWithdrawGroup('f1');
+console.log('1 fio 200 chama /implant/withdraw com group e qty:', calls.length===1 && calls[0].url.indexOf('/api/session/abc123/implant/withdraw')!==-1 && calls[0].body.group==='f1' && calls[0].body.qty===200);
+calls = []; fakeEl('impl-q-f2').value = '60'; App.implWithdrawGroup('f2');
+console.log('2 fios 60 bloqueado (só restam 50):', calls.length===0);
+calls = []; fakeEl('impl-q-f2').value = '50'; App.implWithdrawGroup('f2');
+console.log('2 fios 50 (igual ao saldo) é aceito:', calls.length===1 && calls[0].body.group==='f2' && calls[0].body.qty===50);
+
+console.log('--- apagar e avisos ---');
 calls = []; App.implRemove('a'); App.dialogModalOk();
 setTimeout(function(){
   console.log('apagar chama /implant/remove com o id:', calls.length===1 && calls[0].url.indexOf('/implant/remove')!==-1 && calls[0].body.id==='a');
-
-  console.log('--- avisos ---');
-  state.session = mk({ w:[{id:'a',qty:600,at:Date.now()}] }); render();
-  console.log('retirado > extraído: mostra aviso e restam 0:', elements['impl-warning'].style.display==='block' && elements['impl-warning'].textContent.indexOf('600')!==-1 && elements['impl-remaining'].textContent==='0');
-  state.session = mk({ w:[{id:'a',qty:500,at:Date.now()}] }); render();
+  state.session = mk({ w:[{id:'a',group:'f1',qty:400,at:Date.now()}] }); render();
+  console.log('1 fio retirado > extraído: mostra aviso:', elements['impl-warning'].style.display==='block' && elements['impl-warning'].textContent.indexOf('Atenção')!==-1);
+  state.session = mk({ w:[{id:'a',group:'f1',qty:300,at:Date.now()},{id:'b',group:'f2',qty:200,at:Date.now()}] }); render();
   console.log('chiller zerado: mostra mensagem de conclusão:', elements['impl-warning'].style.display==='block' && elements['impl-warning'].textContent.indexOf('zerado')!==-1);
+  state.session = mk({ w:[{id:'x',qty:100,at:Date.now()}] }); render();
+  console.log('retirada antiga sem grupo: não mexe no saldo por grupo (restam 500):', elements['impl-remaining'].textContent==='500');
+  console.log('retirada antiga sem grupo: nota explicativa aparece:', elements['impl-groups'].innerHTML.indexOf('Retiradas antigas')!==-1);
   state.session = mk({ w:[] }); render();
   console.log('sem retiradas: histórico vazio com mensagem:', elements['impl-history'].innerHTML.indexOf('Nenhuma retirada')!==-1);
 

@@ -32,8 +32,12 @@
       if (!sImpl.implant || !Array.isArray(sImpl.implant.withdrawals)) sImpl.implant = emptyImplant();
       if (implAction === "withdraw") {
         var qty = Number(body.qty);
-        if (!Number.isInteger(qty) || qty < 1 || qty > 100000 || sImpl.implant.withdrawals.length >= 2000) { send(res, 400, { error: t("errors.invalid_withdrawal", implLang) }); return; }
-        sImpl.implant.withdrawals.push({ id: newId(6), qty: qty, at: Date.now() });
+        var grpW = String(body.group || "");
+        if (IMPLANT_GROUP_IDS.indexOf(grpW) === -1 || !Number.isInteger(qty) || qty < 1 || qty > 100000 || sImpl.implant.withdrawals.length >= 2000) { send(res, 400, { error: t("errors.invalid_withdrawal", implLang) }); return; }
+        // Saldo do grupo no servidor: não deixa retirar mais do que restou desse grupo.
+        var restGrp = implantExtractedByGroup(sImpl)[grpW] - implantWithdrawnByGroup(sImpl)[grpW];
+        if (qty > restGrp) { send(res, 409, { error: t("errors.implant_over_balance", implLang) }); return; }
+        sImpl.implant.withdrawals.push({ id: newId(6), group: grpW, qty: qty, at: Date.now() });
       } else {
         var before = sImpl.implant.withdrawals.length;
         sImpl.implant.withdrawals = sImpl.implant.withdrawals.filter(function (w) { return w.id !== String(body.id || ""); });

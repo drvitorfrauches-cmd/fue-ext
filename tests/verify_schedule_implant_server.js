@@ -63,31 +63,38 @@ function check(label, ok) { allChecks.push(!!ok); console.log(label + ':', !!ok)
     check('chave desconhecida é ignorada', s6.status === 200 && s6.body.schedule.campoInventado === undefined);
     check('cirurgia inexistente => 404', (await req('POST', '/api/session/aaaaaa/schedule', { entrada: '07:00' })).status === 404);
 
-    console.log('--- retiradas do chiller (só dono logado) ---');
-    check('anônimo => 401', (await req('POST', `/api/session/${id}/implant/withdraw`, { qty: 100 })).status === 401);
-    check('outro médico => 403', (await req('POST', `/api/session/${id}/implant/withdraw`, { qty: 100 }, cookieB)).status === 403);
-    const w1 = await req('POST', `/api/session/${id}/implant/withdraw`, { qty: 500 }, cookieA);
-    check('dono registra retirada de 500', w1.status === 200 && w1.body.implant.withdrawals.length === 1 && w1.body.implant.withdrawals[0].qty === 500);
-    const w2 = await req('POST', `/api/session/${id}/implant/withdraw`, { qty: 300 }, cookieA);
-    check('segunda retirada soma na lista (2 itens)', w2.body.implant.withdrawals.length === 2);
+    console.log('--- retiradas do chiller por grupo (só dono logado) ---');
+    const adj1 = await req('POST', `/api/session/${id}/adjust`, { quadrant: 'occipital_dir', category: 'f1', delta: 600 }, cookieA);
+    const adj2 = await req('POST', `/api/session/${id}/adjust`, { quadrant: 'occipital_dir', category: 'f2', delta: 200 }, cookieA);
+    check('seed: 600 de 1 fio e 200 de 2 fios extraídos', adj1.status === 200 && adj2.status === 200);
+    check('anônimo => 401', (await req('POST', `/api/session/${id}/implant/withdraw`, { group: 'f1', qty: 100 })).status === 401);
+    check('outro médico => 403', (await req('POST', `/api/session/${id}/implant/withdraw`, { group: 'f1', qty: 100 }, cookieB)).status === 403);
+    check('sem grupo => 400', (await req('POST', `/api/session/${id}/implant/withdraw`, { qty: 100 }, cookieA)).status === 400);
+    check('grupo parcial (t2_1) não é grupo de retirada => 400', (await req('POST', `/api/session/${id}/implant/withdraw`, { group: 't2_1', qty: 1 }, cookieA)).status === 400);
+    const w1 = await req('POST', `/api/session/${id}/implant/withdraw`, { group: 'f1', qty: 500 }, cookieA);
+    check('dono retira 500 de 1 fio', w1.status === 200 && w1.body.implant.withdrawals.length === 1 && w1.body.implant.withdrawals[0].group === 'f1' && w1.body.implant.withdrawals[0].qty === 500);
+    const over = await req('POST', `/api/session/${id}/implant/withdraw`, { group: 'f1', qty: 200 }, cookieA);
+    check('retirar 200 de 1 fio (restam 100) => 409', over.status === 409);
+    const other = await req('POST', `/api/session/${id}/implant/withdraw`, { group: 'f2', qty: 150 }, cookieA);
+    check('saldo de 1 fio não vale para 2 fios (2 fios: 200 extraídos, retira 150) => 200', other.status === 200);
+    check('1 fio ainda tem 100 (saldo por grupo)', (await req('POST', `/api/session/${id}/implant/withdraw`, { group: 'f1', qty: 100 }, cookieA)).status === 200);
     const bads = [0, -5, 1.5, 'abc', 100001, null];
     var allBad = true;
-    for (const q of bads) { const r = await req('POST', `/api/session/${id}/implant/withdraw`, { qty: q }, cookieA); if (r.status !== 400) allBad = false; }
+    for (const q of bads) { const r = await req('POST', `/api/session/${id}/implant/withdraw`, { group: 'f1', qty: q }, cookieA); if (r.status !== 400) allBad = false; }
     check('quantidades inválidas (0, -5, 1.5, texto, >100000, null) => 400', allBad);
     const g2 = await req('GET', `/api/session/${id}`);
-    check('quem tem só o link enxerga as retiradas (somente leitura)', g2.body.implant.withdrawals.length === 2);
-    const rmAnon = await req('POST', `/api/session/${id}/implant/remove`, { id: w1.body.implant.withdrawals[0].id });
-    check('apagar sem login => 401', rmAnon.status === 401);
-    const rmOther = await req('POST', `/api/session/${id}/implant/remove`, { id: w1.body.implant.withdrawals[0].id }, cookieB);
-    check('apagar por outro médico => 403', rmOther.status === 403);
-    const rm = await req('POST', `/api/session/${id}/implant/remove`, { id: w1.body.implant.withdrawals[0].id }, cookieA);
-    check('dono apaga a retirada de 500 (sobra 1)', rm.status === 200 && rm.body.implant.withdrawals.length === 1 && rm.body.implant.withdrawals[0].qty === 300);
+    check('quem tem só o link enxerga as retiradas (somente leitura)', g2.body.implant.withdrawals.length === 3);
+    const w1id = w1.body.implant.withdrawals[0].id;
+    check('apagar sem login => 401', (await req('POST', `/api/session/${id}/implant/remove`, { id: w1id })).status === 401);
+    check('apagar por outro médico => 403', (await req('POST', `/api/session/${id}/implant/remove`, { id: w1id }, cookieB)).status === 403);
+    const rm = await req('POST', `/api/session/${id}/implant/remove`, { id: w1id }, cookieA);
+    check('dono apaga a retirada de 500 (volta o saldo de 1 fio)', rm.status === 200 && rm.body.implant.withdrawals.length === 2);
+    check('com o saldo devolvido, 1 fio aceita 500 de novo', (await req('POST', `/api/session/${id}/implant/withdraw`, { group: 'f1', qty: 500 }, cookieA)).status === 200);
     check('apagar id inexistente => 404', (await req('POST', `/api/session/${id}/implant/remove`, { id: 'naoexiste' }, cookieA)).status === 404);
 
     console.log('--- implantação depois de finalizar a extração ---');
     const fin = await req('POST', `/api/session/${id}/finalize`, {});
-    const w3 = await req('POST', `/api/session/${id}/implant/withdraw`, { qty: 100 }, cookieA);
-    check('cirurgia finalizada ainda aceita retirada', (fin.status === 200) && w3.status === 200 && w3.body.implant.withdrawals.length === 2);
+    check('cirurgia finalizada ainda aceita retirada dentro do saldo', fin.status === 200 && (await req('POST', `/api/session/${id}/implant/withdraw`, { group: 'f2', qty: 1 }, cookieA)).status === 200);
     const sf = await req('POST', `/api/session/${id}/schedule`, { impCoroaIni: '14:00', impCoroaFim: '16:04' });
     check('cirurgia finalizada ainda aceita horários', sf.status === 200 && sf.body.schedule.impCoroaFim === '16:04');
 
