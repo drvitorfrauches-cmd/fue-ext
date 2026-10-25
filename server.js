@@ -141,7 +141,7 @@ const DIST_FIO_IDS = new Set(DIST_FIOS.map(function (d) { return d.id; }));
 // Identidade visual por médico — presets de cor (as cores clínicas das categorias
 // NÃO entram aqui de propósito: ficam sempre fixas, iguais pra todo mundo, porque
 // têm significado clínico consistente entre toda a equipe).
-const THEME_IDS = new Set(["padrao", "azul", "roxo", "grafite", "marinho"]);
+const THEME_IDS = new Set(["padrao", "azul", "roxo", "grafite", "marinho", "rosa"]);
 function emptyBranding() {
   return { logoFilename: null, theme: "padrao", darkMode: false, language: "pt" };
 }
@@ -3853,9 +3853,10 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  azul:    { label:'Azul',                primary:'#1d63c9', primaryDark:'#134a99' },\n" +
 "  roxo:    { label:'Roxo',                primary:'#6a3fc7', primaryDark:'#4e2b99' },\n" +
 "  grafite: { label:'Grafite',             primary:'#4b5563', primaryDark:'#333b45' },\n" +
-"  marinho: { label:'Marinho',             primary:'#1e3a5c', primaryDark:'#14283f' }\n" +
+"  marinho: { label:'Marinho',             primary:'#1e3a5c', primaryDark:'#14283f' },\n" +
+"  rosa:    { label:'Rosa',                primary:'#c2457a', primaryDark:'#93305d' }\n" +
 "};\n" +
-"var THEME_ORDER = ['padrao','azul','roxo','grafite','marinho'];\n" +
+"var THEME_ORDER = ['padrao','azul','roxo','grafite','marinho','rosa'];\n" +
 "var LIGHT_VARS = { bg:'#f4f6f7', card:'#fff', text:'#1c2b2e', muted:'#5c6b6e', border:'#dde3e4', tint:'#fafcfc', tintActive:'#e8f4f5', surface2:'#e8edee', toastBg:'#1c2b2e', toastText:'#fff' };\n" +
 "var DARK_VARS  = { bg:'#12181a', card:'#1c2528', text:'#e7edee', muted:'#9aa8ab', border:'#313d40', tint:'#222c2f', tintActive:'#2a3d40', surface2:'#2a3336', toastBg:'#e7edee', toastText:'#1c2528' };\n" +
 "function applyBranding(branding){\n" +
@@ -4851,12 +4852,12 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  list.forEach(function(x){ if (!x.group) st.legacy += x.qty; });\n" +
 "  return st;\n" +
 "}\n" +
-"App.implWithdrawGroup = function(g){\n" +
+"App.implWithdrawGroup = function(g, fixed){\n" +
 "  var s = state.session; if (!s) return;\n" +
 "  if (!state.currentUser){ toast(t('impl.login_needed')); return; }\n" +
 "  if (!implantIsOwner(s)){ toast(t('impl.owner_only_hint')); return; }\n" +
 "  var el = document.getElementById('impl-q-'+g);\n" +
-"  var qty = Math.round(Number(el ? el.value : ''));\n" +
+"  var qty = fixed != null ? fixed : Math.round(Number(el ? el.value : ''));\n" +
 "  if (!isFinite(qty) || qty<=0){ toast(t('impl.invalid_qty')); return; }\n" +
 "  var grp = implantStats(s).groups.filter(function(x){ return x.id===g; })[0];\n" +
 "  if (grp && qty > grp.remaining){ toast(t('impl.over_group',{label:t('cat.'+g), n:fmtBig(grp.remaining)})); return; }\n" +
@@ -4894,7 +4895,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "    '<tr><th>'+escapeHtml(t('impl.col_group'))+'</th><th>'+escapeHtml(t('impl.col_extracted'))+'</th><th>'+escapeHtml(t('impl.col_withdrawn'))+'</th><th>'+escapeHtml(t('impl.col_remaining'))+'</th>'+(owner ? '<th>'+escapeHtml(t('impl.col_withdraw'))+'</th>' : '')+'</tr>' +\n" +
 "    st.groups.map(function(g){\n" +
 "      return '<tr><td>'+escapeHtml(t('cat.'+g.id))+'</td><td>'+fmtBig(g.total)+'</td><td>'+fmtBig(g.withdrawn)+'</td><td><b>'+fmtBig(g.remaining)+'</b></td>'+\n" +
-"        (owner ? '<td><div class=\"row\" style=\"gap:6px;flex-wrap:nowrap;\"><input type=\"number\" min=\"1\" inputmode=\"numeric\" id=\"impl-q-'+g.id+'\" style=\"width:78px;\"><button type=\"button\" class=\"btn secondary\" onclick=\"App.implWithdrawGroup(\\''+g.id+'\\')\">'+escapeHtml(t('impl.withdraw_btn'))+'</button></div></td>' : '')+'</tr>';\n" +
+"        (owner ? '<td><div class=\"row\" style=\"gap:6px;flex-wrap:wrap;\"><input type=\"number\" min=\"1\" inputmode=\"numeric\" id=\"impl-q-'+g.id+'\" style=\"width:78px;\"><button type=\"button\" class=\"btn secondary\" onclick=\"App.implWithdrawGroup(\\''+g.id+'\\')\">'+escapeHtml(t('impl.withdraw_btn'))+'</button>'+[100,200,300].map(function(n){ return '<button type=\"button\" class=\"btn secondary\" style=\"padding:4px 8px;\" onclick=\"App.implWithdrawGroup(\\''+g.id+'\\','+n+')\">−'+n+'</button>'; }).join('')+'</div></td>' : '')+'</tr>';\n" +
 "    }).join('') + '</table></div>' +\n" +
 "    (st.legacy>0 ? '<p class=\"hint\" style=\"margin-top:8px;\">'+escapeHtml(t('impl.legacy_note',{n:fmtBig(st.legacy)}))+'</p>' : '');\n" +
 "  var hist = document.getElementById('impl-history');\n" +

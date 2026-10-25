@@ -1265,6 +1265,9 @@ Cada retirada informa o grupo e o servidor não deixa tirar mais do que resta na
 O saldo total usa só os íntegros. Retiradas antigas, feitas antes da divisão por grupo, aparecem
 com "sem grupo" e não entram no saldo por grupo (há uma nota com a quantidade).
 Rotas: `POST /api/session/:id/implant/withdraw` com `{group, qty}`.
+Cada grupo também tem botões rápidos −100, −200 e −300 (retiram esse valor direto do grupo, com a mesma checagem de saldo).
+
+Tema de cor novo: **Rosa** (além de Padrão, Azul, Roxo, Grafite e Marinho), em Configurações.
 
 Cirurgias antigas ganham `schedule` e `implant` vazios automaticamente (migração no boot).
 Código novo em `src/11-client-schedule-implant.part` (cliente) e `src/04-i18n-es.part` (helpers do servidor)

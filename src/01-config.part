@@ -141,7 +141,7 @@ const DIST_FIO_IDS = new Set(DIST_FIOS.map(function (d) { return d.id; }));
 // Identidade visual por médico — presets de cor (as cores clínicas das categorias
 // NÃO entram aqui de propósito: ficam sempre fixas, iguais pra todo mundo, porque
 // têm significado clínico consistente entre toda a equipe).
-const THEME_IDS = new Set(["padrao", "azul", "roxo", "grafite", "marinho"]);
+const THEME_IDS = new Set(["padrao", "azul", "roxo", "grafite", "marinho", "rosa"]);
 function emptyBranding() {
   return { logoFilename: null, theme: "padrao", darkMode: false, language: "pt" };
 }

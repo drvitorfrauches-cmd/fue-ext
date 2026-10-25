@@ -111,12 +111,12 @@
 "  list.forEach(function(x){ if (!x.group) st.legacy += x.qty; });\n" +
 "  return st;\n" +
 "}\n" +
-"App.implWithdrawGroup = function(g){\n" +
+"App.implWithdrawGroup = function(g, fixed){\n" +
 "  var s = state.session; if (!s) return;\n" +
 "  if (!state.currentUser){ toast(t('impl.login_needed')); return; }\n" +
 "  if (!implantIsOwner(s)){ toast(t('impl.owner_only_hint')); return; }\n" +
 "  var el = document.getElementById('impl-q-'+g);\n" +
-"  var qty = Math.round(Number(el ? el.value : ''));\n" +
+"  var qty = fixed != null ? fixed : Math.round(Number(el ? el.value : ''));\n" +
 "  if (!isFinite(qty) || qty<=0){ toast(t('impl.invalid_qty')); return; }\n" +
 "  var grp = implantStats(s).groups.filter(function(x){ return x.id===g; })[0];\n" +
 "  if (grp && qty > grp.remaining){ toast(t('impl.over_group',{label:t('cat.'+g), n:fmtBig(grp.remaining)})); return; }\n" +
@@ -154,7 +154,7 @@
 "    '<tr><th>'+escapeHtml(t('impl.col_group'))+'</th><th>'+escapeHtml(t('impl.col_extracted'))+'</th><th>'+escapeHtml(t('impl.col_withdrawn'))+'</th><th>'+escapeHtml(t('impl.col_remaining'))+'</th>'+(owner ? '<th>'+escapeHtml(t('impl.col_withdraw'))+'</th>' : '')+'</tr>' +\n" +
 "    st.groups.map(function(g){\n" +
 "      return '<tr><td>'+escapeHtml(t('cat.'+g.id))+'</td><td>'+fmtBig(g.total)+'</td><td>'+fmtBig(g.withdrawn)+'</td><td><b>'+fmtBig(g.remaining)+'</b></td>'+\n" +
-"        (owner ? '<td><div class=\"row\" style=\"gap:6px;flex-wrap:nowrap;\"><input type=\"number\" min=\"1\" inputmode=\"numeric\" id=\"impl-q-'+g.id+'\" style=\"width:78px;\"><button type=\"button\" class=\"btn secondary\" onclick=\"App.implWithdrawGroup(\\''+g.id+'\\')\">'+escapeHtml(t('impl.withdraw_btn'))+'</button></div></td>' : '')+'</tr>';\n" +
+"        (owner ? '<td><div class=\"row\" style=\"gap:6px;flex-wrap:wrap;\"><input type=\"number\" min=\"1\" inputmode=\"numeric\" id=\"impl-q-'+g.id+'\" style=\"width:78px;\"><button type=\"button\" class=\"btn secondary\" onclick=\"App.implWithdrawGroup(\\''+g.id+'\\')\">'+escapeHtml(t('impl.withdraw_btn'))+'</button>'+[100,200,300].map(function(n){ return '<button type=\"button\" class=\"btn secondary\" style=\"padding:4px 8px;\" onclick=\"App.implWithdrawGroup(\\''+g.id+'\\','+n+')\">−'+n+'</button>'; }).join('')+'</div></td>' : '')+'</tr>';\n" +
 "    }).join('') + '</table></div>' +\n" +
 "    (st.legacy>0 ? '<p class=\"hint\" style=\"margin-top:8px;\">'+escapeHtml(t('impl.legacy_note',{n:fmtBig(st.legacy)}))+'</p>' : '');\n" +
 "  var hist = document.getElementById('impl-history');\n" +

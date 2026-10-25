@@ -290,9 +290,10 @@
 "  azul:    { label:'Azul',                primary:'#1d63c9', primaryDark:'#134a99' },\n" +
 "  roxo:    { label:'Roxo',                primary:'#6a3fc7', primaryDark:'#4e2b99' },\n" +
 "  grafite: { label:'Grafite',             primary:'#4b5563', primaryDark:'#333b45' },\n" +
-"  marinho: { label:'Marinho',             primary:'#1e3a5c', primaryDark:'#14283f' }\n" +
+"  marinho: { label:'Marinho',             primary:'#1e3a5c', primaryDark:'#14283f' },\n" +
+"  rosa:    { label:'Rosa',                primary:'#c2457a', primaryDark:'#93305d' }\n" +
 "};\n" +
-"var THEME_ORDER = ['padrao','azul','roxo','grafite','marinho'];\n" +
+"var THEME_ORDER = ['padrao','azul','roxo','grafite','marinho','rosa'];\n" +
 "var LIGHT_VARS = { bg:'#f4f6f7', card:'#fff', text:'#1c2b2e', muted:'#5c6b6e', border:'#dde3e4', tint:'#fafcfc', tintActive:'#e8f4f5', surface2:'#e8edee', toastBg:'#1c2b2e', toastText:'#fff' };\n" +
 "var DARK_VARS  = { bg:'#12181a', card:'#1c2528', text:'#e7edee', muted:'#9aa8ab', border:'#313d40', tint:'#222c2f', tintActive:'#2a3d40', surface2:'#2a3336', toastBg:'#e7edee', toastText:'#1c2528' };\n" +
 "function applyBranding(branding){\n" +

@@ -111,6 +111,18 @@ console.log('2 fios 60 bloqueado (só restam 50):', calls.length===0);
 calls = []; fakeEl('impl-q-f2').value = '50'; App.implWithdrawGroup('f2');
 console.log('2 fios 50 (igual ao saldo) é aceito:', calls.length===1 && calls[0].body.group==='f2' && calls[0].body.qty===50);
 
+console.log('--- botões rápidos −100 / −200 / −300 ---');
+state.currentUser = { id:'dono1' }; state.session = mk({ w:[] }); render();
+var gh = elements['impl-groups'].innerHTML;
+console.log('botões −100, −200, −300 aparecem para o dono:', gh.indexOf('−100')!==-1 && gh.indexOf('−200')!==-1 && gh.indexOf('−300')!==-1);
+calls = []; App.implWithdrawGroup('f1', 300);
+console.log('−300 em 1 fio (restam 300) manda qty 300 do grupo f1:', calls.length===1 && calls[0].body.group==='f1' && calls[0].body.qty===300);
+calls = []; App.implWithdrawGroup('f2', 300);
+console.log('−300 em 2 fios (restam 200) é bloqueado:', calls.length===0);
+state.currentUser = null; render();
+console.log('sem login: botões rápidos não aparecem:', elements['impl-groups'].innerHTML.indexOf('−100')===-1);
+state.currentUser = { id:'dono1' }; render();
+
 console.log('--- apagar e avisos ---');
 calls = []; App.implRemove('a'); App.dialogModalOk();
 setTimeout(function(){
