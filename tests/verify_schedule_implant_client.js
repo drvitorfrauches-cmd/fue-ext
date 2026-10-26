@@ -2,7 +2,7 @@
 // Implantação (saldo, avisos, quem vê os botões, bloqueio de retirada acima do saldo).
 const fs = require('fs');
 var elements = {};
-function fakeEl(id){ if (!elements[id]) { var el = { id:id, className:'', style:{}, _show:false, classList:{add:function(c){ if(c==='show') el._show=true; },remove:function(c){ if(c==='show') el._show=false; }}, innerHTML:'', textContent:'', value:'', placeholder:'', disabled:false, getAttribute:function(){return null;}, setAttribute:function(){} }; elements[id]=el; } return elements[id]; }
+function fakeEl(id){ if (!elements[id]) { var el = { id:id, className:'', style:{}, _show:false, classList:{add:function(c){ if(c==='show') el._show=true; },remove:function(c){ if(c==='show') el._show=false; }}, innerHTML:'', textContent:'', value:'', placeholder:'', disabled:false, getAttribute:function(){return null;}, setAttribute:function(){}, querySelectorAll:function(){return [];} }; elements[id]=el; } return elements[id]; }
 var keyHandlers = [];
 global.document = { documentElement:{style:{setProperty:function(){}}, classList:{add:function(){},remove:function(){},toggle:function(){}}, lang:''}, addEventListener:function(ev, fn){ if (ev==='keydown') keyHandlers.push(fn); }, getElementById:function(id){return fakeEl(id);}, createElement:function(){return {};}, querySelectorAll:function(){return [];}, activeElement:null };
 global.window = { addEventListener:function(){}, location:{hostname:'localhost',origin:'http://localhost:3000',pathname:'/'}, history:{}, confirm:function(){return true;} };
@@ -111,6 +111,13 @@ console.log('2 fios 60 bloqueado (só restam 50):', calls.length===0);
 calls = []; fakeEl('impl-q-f2').value = '50'; App.implWithdrawGroup('f2');
 console.log('2 fios 50 (igual ao saldo) é aceito:', calls.length===1 && calls[0].body.group==='f2' && calls[0].body.qty===50);
 
+console.log('--- polling não desmonta a tabela (cliques e valores digitados sobrevivem) ---');
+state.currentUser = { id:'dono1' }; state.session = mk({ w:[] }); render();
+elements['impl-groups'].innerHTML = 'SENTINELA';
+render();
+console.log('mesmo estado: a tabela não é redesenhada a cada polling:', elements['impl-groups'].innerHTML === 'SENTINELA');
+state.session = mk({ w:[{id:'z',group:'f2',qty:10,at:Date.now()}] }); render();
+console.log('estado mudou: a tabela é redesenhada:', elements['impl-groups'].innerHTML.indexOf('SENTINELA')===-1);
 console.log('--- botões rápidos −100 / −200 / −300 ---');
 state.currentUser = { id:'dono1' }; state.session = mk({ w:[] }); render();
 var gh = elements['impl-groups'].innerHTML;

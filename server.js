@@ -4890,7 +4890,7 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "  else { warn.style.display = 'none'; }\n" +
 "  document.getElementById('impl-controls').style.display = owner ? 'block' : 'none';\n" +
 "  document.getElementById('impl-readonly-hint').style.display = owner ? 'none' : 'block';\n" +
-"  document.getElementById('impl-groups').innerHTML =\n" +
+"  var groupsHtml =\n" +
 "    '<div class=\"dash-table-wrap\"><table class=\"dash-table\">' +\n" +
 "    '<tr><th>'+escapeHtml(t('impl.col_group'))+'</th><th>'+escapeHtml(t('impl.col_extracted'))+'</th><th>'+escapeHtml(t('impl.col_withdrawn'))+'</th><th>'+escapeHtml(t('impl.col_remaining'))+'</th>'+(owner ? '<th>'+escapeHtml(t('impl.col_withdraw'))+'</th>' : '')+'</tr>' +\n" +
 "    st.groups.map(function(g){\n" +
@@ -4898,6 +4898,13 @@ const INDEX_HTML = "<!DOCTYPE html>\n" +
 "        (owner ? '<td><div class=\"row\" style=\"gap:6px;flex-wrap:wrap;\"><input type=\"number\" min=\"1\" inputmode=\"numeric\" id=\"impl-q-'+g.id+'\" style=\"width:78px;\"><button type=\"button\" class=\"btn secondary\" onclick=\"App.implWithdrawGroup(\\''+g.id+'\\')\">'+escapeHtml(t('impl.withdraw_btn'))+'</button>'+[100,200,300].map(function(n){ return '<button type=\"button\" class=\"btn secondary\" style=\"padding:4px 8px;\" onclick=\"App.implWithdrawGroup(\\''+g.id+'\\','+n+')\">−'+n+'</button>'; }).join('')+'</div></td>' : '')+'</tr>';\n" +
 "    }).join('') + '</table></div>' +\n" +
 "    (st.legacy>0 ? '<p class=\"hint\" style=\"margin-top:8px;\">'+escapeHtml(t('impl.legacy_note',{n:fmtBig(st.legacy)}))+'</p>' : '');\n" +
+"  var gbox = document.getElementById('impl-groups');\n" +
+"  if (state.implGroupsHtml !== groupsHtml || state.implGroupsOwner !== owner) {\n" +
+"    var keep = {}; gbox.querySelectorAll('input').forEach(function(inp){ if (inp.value) keep[inp.id] = inp.value; });\n" +
+"    gbox.innerHTML = groupsHtml;\n" +
+"    Object.keys(keep).forEach(function(k){ var el = document.getElementById(k); if (el) el.value = keep[k]; });\n" +
+"    state.implGroupsHtml = groupsHtml; state.implGroupsOwner = owner;\n" +
+"  }\n" +
 "  var hist = document.getElementById('impl-history');\n" +
 "  var rows = st.list.slice().reverse();\n" +
 "  if (!rows.length){ hist.innerHTML = '<p class=\"hint\">'+escapeHtml(t('impl.history_empty'))+'</p>'; return; }\n" +
